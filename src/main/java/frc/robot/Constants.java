@@ -122,6 +122,8 @@ public final class Constants {
                 public static final int kBACK_LEFT_DRIVE_MOTOR_CANID = 26;
                 public static final int kBACK_LEFT_STEER_MOTOR_CANID = 27;
 
+                public static final int kPigeon_CANID = 10;
+
                 public static final Rotation2d shooterSide = new Rotation2d(0);
                 public static final Rotation2d intakeSide = new Rotation2d(180);
 
