@@ -7,8 +7,7 @@ package frc.robot.subsystems;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.studica.frc.AHRS;
-
+import com.ctre.phoenix6.hardware.Pigeon2;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -100,7 +99,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   private FieldRelativeSpeed m_lastFieldRelVel = new FieldRelativeSpeed();
   private FieldRelativeAccel m_fieldRelAccel = new FieldRelativeAccel();;
 
-  AHRS navx = new AHRS(AHRS.NavXComType.kMXP_SPI);
+  private final Pigeon2 pigeon2 = new Pigeon2(Drivetrain.kPigeon_CANID);
 
   private double m_currentRotation = 0.0;
   private double m_currentTranslationDir = 0.0;
@@ -149,7 +148,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     m_fieldRelVel = new FieldRelativeSpeed(
         Constants.Drivetrain.kDriveKinematics.toChassisSpeeds(frontLeft.getState(),
             frontRight.getState(), backLeft.getState(), backRight.getState()),
-        navx.getRotation2d());
+        Rotation2d.fromDegrees(pigeon2.getYaw().getValueAsDouble())); //TODO: Confirm sign and CCW vs CW
     m_fieldRelAccel = new FieldRelativeAccel(m_fieldRelVel, m_lastFieldRelVel, 0.02);
     m_lastFieldRelVel = m_fieldRelVel;
 
@@ -178,7 +177,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
     currentStatePublisher.set(getModuleStates());
 
-    SmartDashboard.putNumber("NavX angle", Units.degreesToRadians(getAngle()));
+    SmartDashboard.putNumber("Pigeon2 angle", Units.degreesToRadians(getAngle())); //TODO: Confirm accuracy
 
   }
 
@@ -330,13 +329,13 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {
-    navx.zeroYaw();
-    m_poseEstimator.resetRotation(Rotation2d.fromDegrees(navx.getAngle()));
+      pigeon2.setYaw(0); //TODO: Confirm this works as intended
+      m_poseEstimator.resetRotation(Rotation2d.fromDegrees(pigeon2.getYaw().getValueAsDouble()));
   }
 
 
   public double getAngle() {
-    return -navx.getAngle();
+    return -pigeon2.getYaw().getValueAsDouble(); // TODO: Confirm negative sign and CCW vs CW
   }
 
   /**
@@ -358,7 +357,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
    * @return The turn rate of the robot, in degrees per second
    */
   public double getTurnRate() {
-    return navx.getRate() * (Constants.Drivetrain.kGyroReversed ? -1.0 : 1.0);
+    return pigeon2.getAngularVelocityZWorld().getValueAsDouble() * (Constants.Drivetrain.kGyroReversed ? -1.0 : 1.0); //TODO: Confirm sign/ CCW vs CW
   }
 
   public SwerveModuleState[] getModuleStates() {
@@ -399,7 +398,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     ChassisSpeeds adjustedSpeeds = new ChassisSpeeds(
       robotRelativeSpeeds.vxMetersPerSecond,
       robotRelativeSpeeds.vyMetersPerSecond,
-      robotRelativeSpeeds.omegaRadiansPerSecond //Unstable.
+      robotRelativeSpeeds.omegaRadiansPerSecond //TODO: Unstable, should we remove?
     );
     ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
 
