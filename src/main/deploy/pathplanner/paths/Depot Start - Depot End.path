@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 0.426,
+        "y": 6.864268018018018
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7400361236938013,
-        "y": 7.4297378920285935
+        "x": 0.38895026148737427,
+        "y": 5.740269648246453
       },
       "isLocked": false,
-      "linkedName": "Left Trough"
+      "linkedName": "Depot Start"
     },
     {
       "anchor": {
-        "x": 0.4256756756756762,
-        "y": 6.864268018018018
+        "x": 0.426,
+        "y": 5.9
       },
       "prevControl": {
-        "x": 0.6446527858526625,
-        "y": 6.984887358169322
+        "x": 0.4488171866420268,
+        "y": 6.951380516722001
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Start"
+      "linkedName": "Depot End"
     }
   ],
   "rotationTargets": [],
@@ -48,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

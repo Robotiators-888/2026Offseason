@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 0.47956708147923055,
+        "y": 0.66
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7400361236938013,
-        "y": 7.4297378920285935
+        "x": 0.6858798586306156,
+        "y": 1.241957486636946
       },
       "isLocked": false,
-      "linkedName": "Left Trough"
+      "linkedName": "Outpost"
     },
     {
       "anchor": {
-        "x": 0.4256756756756762,
-        "y": 6.864268018018018
+        "x": 2.9049949652613565,
+        "y": 4.006361396791157
       },
       "prevControl": {
-        "x": 0.6446527858526625,
-        "y": 6.984887358169322
+        "x": 1.1508671171171176,
+        "y": 2.5744031531531535
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Start"
+      "linkedName": "Shoot"
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,

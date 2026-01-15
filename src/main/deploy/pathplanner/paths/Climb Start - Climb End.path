@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 1.6124492629268814,
+        "y": 3.7468288832587087
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7400361236938013,
-        "y": 7.4297378920285935
+        "x": 1.2625413182497827,
+        "y": 3.744700931583542
       },
       "isLocked": false,
-      "linkedName": "Left Trough"
+      "linkedName": "Climb Start"
     },
     {
       "anchor": {
-        "x": 0.4256756756756762,
-        "y": 6.864268018018018
+        "x": 1.4850153538724626,
+        "y": 3.7468288832587087
       },
       "prevControl": {
-        "x": 0.6446527858526625,
-        "y": 6.984887358169322
+        "x": 2.064039082293668,
+        "y": 3.7391226431343276
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Start"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }
