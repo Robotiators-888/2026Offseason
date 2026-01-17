@@ -16,8 +16,10 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+// import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PhotonVision;
+import frc.robot.utils.Alert;
 
 public class SUB_PhotonVision extends SubsystemBase {
   private static SUB_PhotonVision INSTANCE = null;
@@ -102,6 +104,11 @@ public class SUB_PhotonVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-
+   if (!cam1.isConnected()) {
+      Alert.getInstance().registerError("PhotonVision Camera 1 Disconnected");
+    }
+    if (!cam2.isConnected()) {
+      Alert.getInstance().registerError("PhotonVision Camera 2 Disconnected");
+    }
   }
 }
