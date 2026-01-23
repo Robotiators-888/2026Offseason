@@ -1,0 +1,1 @@
+Get-ChildItem -Path . -Recurse | ForEach-Object { clang-format -i -style=file --assume-filename java $_.FullName }
