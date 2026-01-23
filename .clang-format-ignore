@@ -1,0 +1,20 @@
+# Ignore all needed
+.github
+.gradle
+.vscode
+.wpilib
+build
+FRC_Elastic_Configs
+gradle
+src/main/deploy
+vendordeps
+.clang-format
+.clang-format-ignore
+.gitignore
+build.gradle
+gradlew
+gradlew.bat
+README.md
+settings.gradle
+simgui-ds.json
+WPILib-Liscense.md
