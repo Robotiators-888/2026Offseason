@@ -37,5 +37,7 @@ jobs:
   #     run: git config --global --add safe.directory $GITHUB_WORKSPACE
   #   - name: Install clang-format
   #     run: sudo apt update -y && sudo apt install clang-format -y
+  #   - name: Give the clang format script permissions
+  #     run: chmod +x $GITHUB_WORKSPACE/clang-format.sh
   #   - name: Run the clang format script
   #     run: $GITHUB_WORKSPACE/clang-format.sh
