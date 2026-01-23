@@ -12,6 +12,8 @@ vendordeps
 .clang-format-ignore
 .gitignore
 build.gradle
+clang-format.bat
+clang-format.sh
 gradlew
 gradlew.bat
 README.md
