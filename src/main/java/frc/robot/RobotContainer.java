@@ -144,7 +144,7 @@ public class RobotContainer {
                                         Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
                         return AutoBuilder.pathfindThenFollowPath(path, constraints);
                 } catch (Exception e) {
-                        Alert.getInstance().registerError("Big oops: " + e.getMessage());
+                        Alert.getInstance().registerError("Failed to retreive path command: " + e.getMessage());
                         return Commands.none();
                 }
         }
