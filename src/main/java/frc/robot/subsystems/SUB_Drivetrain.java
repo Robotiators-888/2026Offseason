@@ -110,8 +110,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   private double m_currentTranslationMag = 0.0;
 
   private SlewRateLimiter m_magLimiter =
-      new SlewRateLimiter(Constants.Drivetrain.kMagnitudeSlewRate);
-  private SlewRateLimiter m_rotLimiter =
+      new SlewRateLimiter(Constants.Drivetrain.kMagnitudeSlewRate); private SlewRateLimiter m_rotLimiter =
       new SlewRateLimiter(Constants.Drivetrain.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
@@ -141,10 +140,11 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
   @Override
   public void periodic() {
-    checkCANErrors(frontLeft, Constants.Drivetrain.kFRONT_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_LEFT_STEER_MOTOR_CANID);
-    checkCANErrors(frontRight, Constants.Drivetrain.kFRONT_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_RIGHT_STEER_MOTOR_CANID);
-    checkCANErrors(backLeft, Constants.Drivetrain.kBACK_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_LEFT_STEER_MOTOR_CANID);
-    checkCANErrors(backRight, Constants.Drivetrain.kBACK_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_RIGHT_STEER_MOTOR_CANID);
+    if (canHealthTimer.hasElapsed(2.0)) {
+      checkCANErrors(frontLeft, Constants.Drivetrain.kFRONT_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_LEFT_STEER_MOTOR_CANID);
+      checkCANErrors(frontRight, Constants.Drivetrain.kFRONT_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_RIGHT_STEER_MOTOR_CANID);
+      checkCANErrors(backLeft, Constants.Drivetrain.kBACK_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_LEFT_STEER_MOTOR_CANID);
+      checkCANErrors(backRight, Constants.Drivetrain.kBACK_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_RIGHT_STEER_MOTOR_CANID); }
     m_poseEstimator.update(Rotation2d.fromDegrees(getAngle()),
         new SwerveModulePosition[] {frontLeft.getPosition(), frontRight.getPosition(),
             backLeft.getPosition(), backRight.getPosition()});
@@ -516,41 +516,41 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   }
 
   private void checkCANErrors(MAXSwerveModule motor, int canidDrive, int canidSteer) {
-    sendFaultsWarnings(motor.getFaults().get_0(), motor.getWarnings().get_0(), canidDrive);
-    sendFaultsWarnings(motor.getFaults().get_1(), motor.getWarnings().get_1(), canidSteer);
+    sendFaultsWarnings(motor.getFaults().get_0(), motor.getWarnings().get_0(), canidDrive, "Drive");
+    sendFaultsWarnings(motor.getFaults().get_1(), motor.getWarnings().get_1(), canidSteer, "Steer");
     if (pigeon2.getTemperature().getStatus() != StatusCode.OK) {
       Alert.getInstance().registerError("Pigeon2 ID " + pigeon2.getDeviceID() + " Disconnected");
     }
     canHealthTimer.restart();
   }
 
-  private void sendFaultsWarnings (SparkBase.Faults faults, SparkBase.Warnings warnings, int canid) {
+  private void sendFaultsWarnings (SparkBase.Faults faults, SparkBase.Warnings warnings, int canid, String motorType) {
     if (faults.can) {
-      Alert.getInstance().registerError("Drive Motor ID " + canid + " CAN fault");
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " CAN fault");
     }
     if (faults.temperature) {
-      Alert.getInstance().registerError("Drive Motor ID " + canid + " temp fault");
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " temp fault");
     }
     if (faults.sensor) {
-      Alert.getInstance().registerError("Drive Motor ID " + canid + " sensor fault");
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " sensor fault");
     }
     if (faults.other) {
-      Alert.getInstance().registerError("Drive Motor ID " + canid + " other fault");
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " other fault");
     }
     if (warnings.brownout) {
-      Alert.getInstance().registerWarning("Drive Motor ID " + canid + " Brownout");
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " Brownout");
     }
     if (warnings.stall) {
-      Alert.getInstance().registerWarning("Drive Motor ID " + canid + " stall");
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " stall");
     }
     if (warnings.overcurrent) {
-      Alert.getInstance().registerWarning("Drive Motor ID " + canid + " overcurrent");
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " overcurrent");
     }
     if (warnings.sensor) {
-      Alert.getInstance().registerWarning("Drive Motor ID " + canid + " sensor warning");
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " sensor warning");
     }
     if (warnings.other) {
-      Alert.getInstance().registerWarning("Drive Motor ID " + canid + " other warning");
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " other warning");
     }
   }
 }
