@@ -110,7 +110,8 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   private double m_currentTranslationMag = 0.0;
 
   private SlewRateLimiter m_magLimiter =
-      new SlewRateLimiter(Constants.Drivetrain.kMagnitudeSlewRate); private SlewRateLimiter m_rotLimiter =
+      new SlewRateLimiter(Constants.Drivetrain.kMagnitudeSlewRate);
+  private SlewRateLimiter m_rotLimiter =
       new SlewRateLimiter(Constants.Drivetrain.kRotationalSlewRate);
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
@@ -144,7 +145,8 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
       checkCANErrors(frontLeft, Constants.Drivetrain.kFRONT_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_LEFT_STEER_MOTOR_CANID);
       checkCANErrors(frontRight, Constants.Drivetrain.kFRONT_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_RIGHT_STEER_MOTOR_CANID);
       checkCANErrors(backLeft, Constants.Drivetrain.kBACK_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_LEFT_STEER_MOTOR_CANID);
-      checkCANErrors(backRight, Constants.Drivetrain.kBACK_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_RIGHT_STEER_MOTOR_CANID); }
+      checkCANErrors(backRight, Constants.Drivetrain.kBACK_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_RIGHT_STEER_MOTOR_CANID);
+    }
     m_poseEstimator.update(Rotation2d.fromDegrees(getAngle()),
         new SwerveModulePosition[] {frontLeft.getPosition(), frontRight.getPosition(),
             backLeft.getPosition(), backRight.getPosition()});
