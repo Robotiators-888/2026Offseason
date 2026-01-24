@@ -22,13 +22,13 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -38,18 +38,19 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
-import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
-import frc.robot.subsystems.SUB_Drivetrain;
-import frc.robot.subsystems.SUB_LEDs;
+
+import frc.robot.generated.TunerConstants;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+
+
 import frc.robot.subsystems.SUB_PhotonVision;
-import frc.robot.utils.AutoGenerator;
-import frc.robot.utils.Elastic;
 import frc.robot.utils.Alert;
+import frc.robot.utils.Elastic;
 
 
 /**
@@ -60,11 +61,11 @@ import frc.robot.utils.Alert;
  */
 public class RobotContainer {
         // The robot's subsystems and commands are defined here...
-        private static final SUB_Drivetrain drivetrain = SUB_Drivetrain.getInstance();
+        private static final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
-        private static final AutoGenerator autoGenerator = AutoGenerator.getInstance();
+        private static final Alert alert = Alert.getInstance();
+
         private final SendableChooser<Command> autoChooser;
-        public static SUB_LEDs leds = SUB_LEDs.getInstance();
         public static PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -80,29 +81,28 @@ public class RobotContainer {
         private final CommandXboxController Driver2 =
                         new CommandXboxController(Operator.kDriver2ControllerPort);
 
+        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(Operator.kDriveDeadband)
+            .withRotationalDeadband(Operator.kDriveDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                drivetrain.setDefaultCommand(new RunCommand( // Unstable
-                                () -> drivetrain.drive(
-                                                MathUtil.applyDeadband(Driver1.getRawAxis(1),
-                                                                Operator.kDriveDeadband),
-                                                MathUtil.applyDeadband(Driver1.getRawAxis(0),
-                                                                Operator.kDriveDeadband),
-                                                -MathUtil.applyDeadband(Driver1.getRawAxis(4),
-                                                                Operator.kDriveDeadband),
-                                                true, true),
-                                drivetrain));
+                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12VoltsMps)
+                        .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12VoltsMps)
+                        .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
 
+                
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
-                                () -> autoGenerator.setreachedtarget(true)));
+                                () -> drivetrain.setReachedTarget(true)));
 
                 NamedCommands.registerCommand("ResetReachedTarget",
-                                new InstantCommand(() -> autoGenerator.setreachedtarget(false)));
+                                new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
-
+                
                 // Configure the trigger bindings
                 configureBindings();
 
@@ -125,8 +125,20 @@ public class RobotContainer {
 
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
                                                                                                 // Change
-                
+               
 
+
+
+
+        }                
+
+        public double deadbandCompensate(double axis){
+                if (Math.abs(axis) < .1){
+                        return 0.0;
+                }
+                else{
+                        return Math.copySign((Math.abs(axis) - .1) * (1/0.9), axis);
+                }
         }
 
         public void robotInit() {
@@ -144,12 +156,12 @@ public class RobotContainer {
                                         Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
                         return AutoBuilder.pathfindThenFollowPath(path, constraints);
                 } catch (Exception e) {
-                        Alert.getInstance().registerError("Big oops: " + e.getMessage());
+                        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
                         return Commands.none();
                 }
         }
 
-       
+        
 
         /**
          * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -158,24 +170,20 @@ public class RobotContainer {
          */
         public Command getAutonomousCommand() {
                 return autoChooser.getSelected();
-                
-                
         }
 
-        
 
         public void robotPeriodic() {
-                
+
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
         }
 
         public void autonomousInit() {
-                autoGenerator.setintakecomplete(true);
-                autoGenerator.setreachedtarget(false);
+                drivetrain.setIntakeComplete(true);
+                drivetrain.setReachedTarget(false);
                 Elastic.selectTab("Autonomous");
-                leds.set(LEDs.kParty_Palette_Twinkles);
                 PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
 
                         Pose2d currentPose = drivetrain.getPose();
@@ -192,14 +200,11 @@ public class RobotContainer {
         }
 
         public void autonomousPeriodic() {
-                photonAutonPoseUpdate();
+                photonPoseUpdate();
         }
 
         public void teleopInit() {
-                leds.setAllianceColor();
                 Elastic.selectTab("Teleoperated");
-                Elastic.Notification notification = new Elastic.Notification(Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
-                Elastic.sendNotification(notification);
         }
 
         public void teleopPeriodic() {
@@ -244,10 +249,10 @@ public class RobotContainer {
                                         }
                                         autoField.getObject("path").setPoses(poses);
                                 } catch (IOException e) {
-                                        Alert.getInstance().registerError("Failed to read path file: " + e.getMessage());
+                                        e.printStackTrace();
                                         return;
                                 } catch (ParseException e) {
-                                        Alert.getInstance().registerError("Failed to parse path file: " + e.getMessage());
+                                        e.printStackTrace();
                                         return;
                                 }
                         }
@@ -256,124 +261,35 @@ public class RobotContainer {
         }
 
         public static void photonPoseUpdate() {
-                Optional<EstimatedRobotPose> photonPoseOptional = photonVision.getCam1Pose();
+                processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
+                processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
+        }
 
-                if (photonPoseOptional.isPresent()) {
-                        Pose3d photonPose = photonPoseOptional.get().estimatedPose;
-
+        private static void processCameraPose(Optional<EstimatedRobotPose> poseOptional, StructPublisher<Pose2d> publisher) {
+                if (poseOptional.isPresent()) {
+                        EstimatedRobotPose estimatedPose = poseOptional.get();
+                        Pose3d photonPose = estimatedPose.estimatedPose;
+                        
                         if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0
-                                        && photonPose.getY() <= Field.fieldWidth
-                                        && photonVision.getCam1BestTarget() != null) {
+                                        && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
+                                        && !estimatedPose.targetsUsed.isEmpty()) {
 
-                                Pose2d closestTag = photonVision.at_field.getTagPose(
-                                                photonVision.getCam1BestTarget().getFiducialId())
-                                                .get().toPose2d();
-                                Translation2d translate = closestTag.minus(photonPose.toPose2d())
-                                                .getTranslation();
+                                double minDist = Double.MAX_VALUE;
+                                for (var target : estimatedPose.targetsUsed) {
+                                        double dist = target.getBestCameraToTarget().getTranslation().getNorm();
+                                        if (dist < minDist) minDist = dist;
+                                }
 
-                                double distance = translate.getNorm();
-                                double xStddev = Math.pow(distance, 2) / (8.0088 * 0.5);
-                                double yStddev = xStddev;
+                                double xyStddev = Math.pow(minDist, 2) / 16.0;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
-                                drivetrain.m_poseEstimator.setVisionMeasurementStdDevs(
-                                                VecBuilder.fill(xStddev, yStddev, rotStddev));
-                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                                photonPoseOptional.get().timestampSeconds);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
-                        }
-                }
 
-                photonPoseOptional = photonVision.getCam2Pose();
-
-                if (photonPoseOptional.isPresent()) {
-                        Pose3d photonPose = photonPoseOptional.get().estimatedPose;
-
-                        if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0
-                                        && photonPose.getY() <= Field.fieldWidth
-                                        && photonVision.getCam2BestTarget() != null) {
-
-                                Pose2d closestTag = photonVision.at_field.getTagPose(
-                                                photonVision.getCam2BestTarget().getFiducialId())
-                                                .get().toPose2d();
-                                Translation2d translate = closestTag.minus(photonPose.toPose2d())
-                                                .getTranslation();
-
-                                double distance = translate.getNorm();
-                                double xStddev = Math.pow(distance, 2) / 8.0088;
-                                double yStddev = xStddev;
-                                double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher4.set(photonPose.toPose2d());
-                                drivetrain.m_poseEstimator.setVisionMeasurementStdDevs(
-                                                VecBuilder.fill(xStddev, yStddev, rotStddev));
-                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                                photonPoseOptional.get().timestampSeconds);
-
-                                drivetrain.publisher4.set(photonPose.toPose2d());
+                                drivetrain.addVisionMeasurement(
+                                                photonPose.toPose2d(),
+                                                estimatedPose.timestampSeconds,
+                                                VecBuilder.fill(xyStddev, xyStddev, rotStddev));
+                                publisher.set(photonPose.toPose2d());
                         }
                 }
         }
 
-        public static void photonAutonPoseUpdate() {
-                Optional<EstimatedRobotPose> photonPoseOptional = photonVision.getCam1Pose();
-
-                if (photonPoseOptional.isPresent()) {
-                        Pose3d photonPose = photonPoseOptional.get().estimatedPose;
-
-                        if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0
-                                        && photonPose.getY() <= Field.fieldWidth
-                                        && photonVision.getCam1BestTarget() != null) {
-
-                                Pose2d closestTag = photonVision.at_field.getTagPose(
-                                                photonVision.getCam1BestTarget().getFiducialId())
-                                                .get().toPose2d();
-                                Translation2d translate = closestTag.minus(photonPose.toPose2d())
-                                                .getTranslation();
-
-                                double distance = translate.getNorm();
-                                double xStddev = Math.pow(distance, 1.75) * (3 * (Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond,2)+Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond,2)))/ 4.92) / 3.6;
-                                double yStddev = xStddev;
-                                double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
-                                drivetrain.m_poseEstimator.setVisionMeasurementStdDevs(
-                                                VecBuilder.fill(xStddev, yStddev, rotStddev));
-                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                                photonPoseOptional.get().timestampSeconds);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
-                        }
-                }
-
-                photonPoseOptional = photonVision.getCam2Pose();
-
-                if (photonPoseOptional.isPresent()) {
-                        Pose3d photonPose = photonPoseOptional.get().estimatedPose;
-
-                        if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0
-                                        && photonPose.getY() <= Field.fieldWidth
-                                        && photonVision.getCam2BestTarget() != null) {
-
-                                Pose2d closestTag = photonVision.at_field.getTagPose(
-                                                photonVision.getCam2BestTarget().getFiducialId())
-                                                .get().toPose2d();
-                                Translation2d translate = closestTag.minus(photonPose.toPose2d())
-                                                .getTranslation();
-
-                                double distance = translate.getNorm();
-                                double xStddev = Math.pow(distance, 1.75) * (3 * (Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond,2)+Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond,2)))/ 4.92) / 3.6;
-                                double yStddev = xStddev;
-                                double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher4.set(photonPose.toPose2d());
-                                drivetrain.m_poseEstimator.setVisionMeasurementStdDevs(
-                                                VecBuilder.fill(xStddev, yStddev, rotStddev));
-                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                                photonPoseOptional.get().timestampSeconds);
-
-                                drivetrain.publisher4.set(photonPose.toPose2d());
-                        }
-                }
-        }
 }
