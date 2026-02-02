@@ -49,6 +49,7 @@ import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.utils.AutoGenerator;
 import frc.robot.utils.Elastic;
+import frc.robot.utils.Alert;
 
 
 /**
@@ -143,7 +144,7 @@ public class RobotContainer {
                                         Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
                         return AutoBuilder.pathfindThenFollowPath(path, constraints);
                 } catch (Exception e) {
-                        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+                        Alert.getInstance().registerError("Failed to retreive path command: " + e.getMessage());
                         return Commands.none();
                 }
         }
@@ -243,10 +244,10 @@ public class RobotContainer {
                                         }
                                         autoField.getObject("path").setPoses(poses);
                                 } catch (IOException e) {
-                                        e.printStackTrace();
+                                        Alert.getInstance().registerError("Failed to read path file: " + e.getMessage());
                                         return;
                                 } catch (ParseException e) {
-                                        e.printStackTrace();
+                                        Alert.getInstance().registerError("Failed to parse path file: " + e.getMessage());
                                         return;
                                 }
                         }

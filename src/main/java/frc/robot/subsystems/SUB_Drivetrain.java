@@ -7,7 +7,10 @@ package frc.robot.subsystems;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.revrobotics.spark.SparkBase;
+
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -25,6 +28,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.util.WPIUtilJNI;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -112,6 +116,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   private double m_prevTime = WPIUtilJNI.now() * 1e-6;
 
   Pose2d pose = new Pose2d();
+  private final Timer canHealthTimer = new Timer();
   // Odometry class for tracking robot pose
 
   public SwerveDrivePoseEstimator m_poseEstimator;
@@ -131,12 +136,17 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
         backLeft.getPosition(), backRight.getPosition()},
     new Pose2d(0, 0, new Rotation2d(0)));
     zeroHeading();
-    
+    canHealthTimer.start();
   }
 
   @Override
   public void periodic() {
-
+    if (canHealthTimer.hasElapsed(2.0)) {
+      checkCANErrors(frontLeft, Constants.Drivetrain.kFRONT_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_LEFT_STEER_MOTOR_CANID);
+      checkCANErrors(frontRight, Constants.Drivetrain.kFRONT_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kFRONT_RIGHT_STEER_MOTOR_CANID);
+      checkCANErrors(backLeft, Constants.Drivetrain.kBACK_LEFT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_LEFT_STEER_MOTOR_CANID);
+      checkCANErrors(backRight, Constants.Drivetrain.kBACK_RIGHT_DRIVE_MOTOR_CANID, Constants.Drivetrain.kBACK_RIGHT_STEER_MOTOR_CANID);
+    }
     m_poseEstimator.update(Rotation2d.fromDegrees(getAngle()),
         new SwerveModulePosition[] {frontLeft.getPosition(), frontRight.getPosition(),
             backLeft.getPosition(), backRight.getPosition()});
@@ -507,4 +517,42 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     return m_fieldRelAccel;
   }
 
+  private void checkCANErrors(MAXSwerveModule motor, int canidDrive, int canidSteer) {
+    sendFaultsWarnings(motor.getFaults().get_0(), motor.getWarnings().get_0(), canidDrive, "Drive");
+    sendFaultsWarnings(motor.getFaults().get_1(), motor.getWarnings().get_1(), canidSteer, "Steer");
+    if (pigeon2.getTemperature().getStatus() != StatusCode.OK) {
+      Alert.getInstance().registerError("Pigeon2 ID " + pigeon2.getDeviceID() + " Disconnected");
+    }
+    canHealthTimer.restart();
+  }
+
+  private void sendFaultsWarnings (SparkBase.Faults faults, SparkBase.Warnings warnings, int canid, String motorType) {
+    if (faults.can) {
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " CAN fault");
+    }
+    if (faults.temperature) {
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " temp fault");
+    }
+    if (faults.sensor) {
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " sensor fault");
+    }
+    if (faults.other) {
+      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " other fault");
+    }
+    if (warnings.brownout) {
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " Brownout");
+    }
+    if (warnings.stall) {
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " stall");
+    }
+    if (warnings.overcurrent) {
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " overcurrent");
+    }
+    if (warnings.sensor) {
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " sensor warning");
+    }
+    if (warnings.other) {
+      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " other warning");
+    }
+  }
 }

@@ -3,6 +3,9 @@ package frc.robot.subsystems;
 import com.revrobotics.spark.*;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+
+import org.opencv.core.Mat.Tuple2;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -118,5 +121,12 @@ public class MAXSwerveModule {
 
   public double getVelocitySteer() {
     return m_turningEncoder.getVelocity();
+  }
+
+  public Tuple2<SparkBase.Faults> getFaults () {
+    return new Tuple2<SparkBase.Faults>(m_drivingSparkFlex.getFaults(), m_turningSparkMax.getFaults());
+  }
+  public Tuple2<SparkBase.Warnings> getWarnings() {
+    return new Tuple2<SparkBase.Warnings>(m_drivingSparkFlex.getWarnings(), m_turningSparkMax.getWarnings());
   }
 }
