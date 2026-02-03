@@ -12,6 +12,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
+import frc.robot.Robot;
+
 public class MAXSwerveModule {
   private final SparkFlex m_drivingSparkFlex;
   private final SparkMax m_turningSparkMax;
@@ -24,6 +26,9 @@ public class MAXSwerveModule {
 
   private double m_chassisAngularOffset = 0;
   private SwerveModuleState m_desiredState = new SwerveModuleState(0.0, new Rotation2d());
+
+  private SwerveModuleState m_simModuleState = new SwerveModuleState(0.0, new Rotation2d());
+  private SwerveModulePosition m_simModulePosition = new SwerveModulePosition(0.0, new Rotation2d());
 
   /**
    * Constructs a MAXSwerveModule and configures the driving and turning motor, encoder, and PID
@@ -62,6 +67,9 @@ public class MAXSwerveModule {
    * @return The current state of the module.
    */
   public SwerveModuleState getState() {
+    if (Robot.isSimulation()) {
+      return m_simModuleState;
+    }
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
     return new SwerveModuleState(m_drivingEncoder.getVelocity(),
@@ -74,6 +82,9 @@ public class MAXSwerveModule {
    * @return The current position of the module.
    */
   public SwerveModulePosition getPosition() {
+    if (Robot.isSimulation()) {
+      return m_simModulePosition;
+    }
     // Apply chassis angular offset to the encoder position to get the position
     // relative to the chassis.
     return new SwerveModulePosition(m_drivingEncoder.getPosition(),
@@ -108,6 +119,18 @@ public class MAXSwerveModule {
         SparkMax.ControlType.kPosition);
 
     m_desiredState = desiredState;
+  }
+
+  public SwerveModuleState getDesiredState() {
+    return m_desiredState;
+  }
+
+  public void simulationUpdate(SwerveModuleState state, double dt) {
+    m_simModuleState = state;
+    m_simModulePosition = new SwerveModulePosition(
+      m_simModulePosition.distanceMeters + (state.speedMetersPerSecond * dt),
+      state.angle
+    );
   }
 
   /** Zeroes all the SwerveModule encoders. */

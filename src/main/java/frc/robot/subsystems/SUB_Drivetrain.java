@@ -44,6 +44,9 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation; // Concrete imp
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController.GenericMotorController;
+import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.*;
 
 public class SUB_Drivetrain extends SubsystemBase {
@@ -125,7 +128,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   Pose2d pose = new Pose2d();
   private final Timer canHealthTimer = new Timer();
 
-  private AbstractDriveTrainSimulation driveSimulation;
+  private SwerveDriveSimulation driveSimulation;
 
 
   // Odometry class for tracking robot pose
@@ -226,26 +229,47 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
   @Override
   public void simulationPeriodic() {
     if (driveSimulation != null) {
-      // 1. Pass the Desired States (what your code *wants* to do) to the Sim
-      //    (MAXSwerveModule logic typically handles the PID internally, so we simulate the result)
-      driveSimulation.setRobotSpeeds(getChassisSpeeds());
+      SwerveModuleSimulation[] simModules = driveSimulation.getModules();
+      
+      for (int i = 0; i < modules.length; i++) {
+        SwerveModuleState desiredState = modules[i].getDesiredState();
+        SwerveModuleSimulation simModule = simModules[i];
 
-      // 2. Update the simulation physics (step forward in time)
-      driveSimulation.simulationSubTick();
+        // Simple control logic to drive the simulation to the desired state
+        GenericMotorController driveController = simModule.useGenericMotorControllerForDrive();
+        GenericMotorController steerController = simModule.useGenericControllerForSteer();
 
-      // 3. Get the "Ground Truth" pose from the physics engine
+        // Drive Control (Simple P + FF)
+        double currentDriveVelocity = simModule.getCurrentState().speedMetersPerSecond;
+        double driveFF = desiredState.speedMetersPerSecond * 2.5; // Approx FF (adjust as needed)
+        double driveP = (desiredState.speedMetersPerSecond - currentDriveVelocity) * 2.0; // P gain
+        driveController.requestVoltage(Volts.of(driveFF + driveP));
+
+        // Steer Control (Simple P)
+        Rotation2d currentSteerAngle = simModule.getSteerAbsoluteFacing();
+        double steerError = desiredState.angle.minus(currentSteerAngle).getRadians();
+        double steerP = steerError * 8.0; // P gain
+        steerController.requestVoltage(Volts.of(steerP));
+
+        // Update real module with simulated state
+        modules[i].simulationUpdate(simModule.getCurrentState(), 0.02);
+      }
+
+      // Update simulation physics (handled by Arena usually, but if not, we can rely on SimArena)
+      // If we need to force update: 
+      // driveSimulation.simulationSubTick(); 
+      // (Assuming SimArena handles it, we skip explicit tick call here to avoid double stepping)
+
       Pose2d simPose = driveSimulation.getSimulatedDriveTrainPose();
-
-      // 4. Update the Field2d widget
       m_field.setRobotPose(simPose);
 
-      // 5. Update your PoseEstimator with the simulated gyro/encoders
-      //    (This makes your odometry code think the robot is moving)
       m_poseEstimator.resetPosition(
-          simPose.getRotation(),
-          getPositions(), // You might need to mock these positions if they aren't updating from SimState
+          driveSimulation.getGyroSimulation().getGyroReading(),
+          getPositions(),
           simPose
       );
+      
+      pigeon2.getSimState().setRawYaw(driveSimulation.getGyroSimulation().getGyroReading().getDegrees());
     }
   }
   

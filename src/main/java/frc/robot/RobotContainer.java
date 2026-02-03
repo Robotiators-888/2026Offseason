@@ -53,6 +53,10 @@ import frc.robot.utils.Elastic;
 import frc.robot.utils.Alert;
 
 
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import org.ironmaple.simulation.SimulatedArena;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -73,6 +77,8 @@ public class RobotContainer {
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
+        
+        StructArrayPublisher<Pose3d> fuelPublisher;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 =
@@ -110,6 +116,11 @@ public class RobotContainer {
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);
                 SmartDashboard.putData("Active Auto Path", autoField);
+                
+                if (Robot.isSimulation()) {
+                        fuelPublisher = NetworkTableInstance.getDefault()
+                                .getStructArrayTopic("Fuel Poses", Pose3d.struct).publish();
+                }
 
         }
 
@@ -170,6 +181,10 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
+                
+                if (Robot.isSimulation()) {
+                        fuelPublisher.set(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+                }
         }
 
         public void autonomousInit() {
