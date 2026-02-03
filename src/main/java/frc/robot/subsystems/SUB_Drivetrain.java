@@ -273,6 +273,10 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     }
   }
   
+  public SwerveDriveSimulation getDriveSimulation() {
+    return driveSimulation;
+  }
+  
   /**
    * Returns the currently-estimated pose of the robot.
    *

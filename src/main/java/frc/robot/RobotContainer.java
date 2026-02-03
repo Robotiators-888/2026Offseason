@@ -57,6 +57,10 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import org.ironmaple.simulation.SimulatedArena;
 
+import frc.robot.subsystems.SUB_Intake;
+import frc.robot.subsystems.SUB_Shooter;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -78,6 +82,9 @@ public class RobotContainer {
         public int listIndex = 0;
         public int targetId = 7;
         
+        private final SUB_Intake intake;
+        private final SUB_Shooter shooter;
+        
         StructArrayPublisher<Pose3d> fuelPublisher;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -91,6 +98,9 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
+                intake = new SUB_Intake(drivetrain);
+                shooter = new SUB_Shooter(intake, drivetrain);
+
                 drivetrain.setDefaultCommand(new RunCommand( // Unstable
                                 () -> drivetrain.drive(
                                                 MathUtil.applyDeadband(Driver1.getRawAxis(1),
@@ -137,7 +147,8 @@ public class RobotContainer {
 
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
                                                                                                 // Change
-                
+                Driver1.rightTrigger().whileTrue(new StartEndCommand(intake::runIntake, intake::stopIntake, intake));
+                Driver1.a().onTrue(new InstantCommand(shooter::shoot, shooter));
 
         }
 
@@ -180,6 +191,7 @@ public class RobotContainer {
                 
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+                SmartDashboard.putNumber("Fuel Count", intake.getStoredFuelCount());
                 autoField.setRobotPose(drivetrain.getPose());
                 
                 if (Robot.isSimulation()) {
