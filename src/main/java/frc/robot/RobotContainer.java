@@ -45,8 +45,10 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.subsystems.SUB_Drivetrain;
+import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.AutoGenerator;
 import frc.robot.utils.Elastic;
 
@@ -64,6 +66,8 @@ public class RobotContainer {
         private static final AutoGenerator autoGenerator = AutoGenerator.getInstance();
         private final SendableChooser<Command> autoChooser;
         public static SUB_LEDs leds = SUB_LEDs.getInstance();
+        public static SUB_Shooter shooter = SUB_Shooter.getInstance();
+        public static SUB_Intake intake = SUB_Intake.getInstance();
         public static PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -125,7 +129,8 @@ public class RobotContainer {
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
                                                                                                 // Change
                 
-
+                Driver2.rightTrigger().whileTrue(new InstantCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED))).onFalse(new InstantCommand(() -> shooter.set(0)));
+                Driver2.rightBumper().whileTrue(new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED))).onFalse(new InstantCommand(() -> intake.set(0)));
         }
 
         public void robotInit() {
