@@ -23,6 +23,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -36,8 +37,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Drivetrain;
 import frc.robot.Constants.Swerve;
+import frc.robot.Robot;
 import frc.robot.utils.*;
-// import org.littletonrobotics.junction.Logger;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation; // Concrete implementation
+import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.COTS;
+import static edu.wpi.first.units.Units.*;
 
 public class SUB_Drivetrain extends SubsystemBase {
 
@@ -117,6 +124,10 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
   Pose2d pose = new Pose2d();
   private final Timer canHealthTimer = new Timer();
+
+  private AbstractDriveTrainSimulation driveSimulation;
+
+
   // Odometry class for tracking robot pose
 
   public SwerveDrivePoseEstimator m_poseEstimator;
@@ -137,6 +148,26 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     new Pose2d(0, 0, new Rotation2d(0)));
     zeroHeading();
     canHealthTimer.start();
+    if (Robot.isSimulation()) {
+      // Configure the simulation physics
+      // Note: Adjust the dimensions and motor types to match your real robot
+      DriveTrainSimulationConfig config = DriveTrainSimulationConfig.Default()
+          .withGyro(COTS.ofPigeon2()) // You are using Pigeon2
+          .withSwerveModule(COTS.ofMark4n(
+            DCMotor.getKrakenX60Foc(1),
+            DCMotor.getKrakenX44Foc(1),
+            1.2,
+            3
+          ))
+          .withTrackLengthTrackWidth(Inches.of(27.5), Inches.of(27.5)) // CHECK YOUR ROBOT SIZE
+          .withBumperSize(Inches.of(30), Inches.of(30)); 
+
+      // Create the concrete simulation object
+      driveSimulation = new SwerveDriveSimulation(config, new Pose2d(2, 2, new Rotation2d()));
+
+      // Register with the Arena so it interacts with the field (Trench, Hub, etc.)
+      SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
+    }
   }
 
   @Override
@@ -191,6 +222,33 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
   }
 
+
+  @Override
+  public void simulationPeriodic() {
+    if (driveSimulation != null) {
+      // 1. Pass the Desired States (what your code *wants* to do) to the Sim
+      //    (MAXSwerveModule logic typically handles the PID internally, so we simulate the result)
+      driveSimulation.setRobotSpeeds(getChassisSpeeds());
+
+      // 2. Update the simulation physics (step forward in time)
+      driveSimulation.simulationSubTick();
+
+      // 3. Get the "Ground Truth" pose from the physics engine
+      Pose2d simPose = driveSimulation.getSimulatedDriveTrainPose();
+
+      // 4. Update the Field2d widget
+      m_field.setRobotPose(simPose);
+
+      // 5. Update your PoseEstimator with the simulated gyro/encoders
+      //    (This makes your odometry code think the robot is moving)
+      m_poseEstimator.resetPosition(
+          simPose.getRotation(),
+          getPositions(), // You might need to mock these positions if they aren't updating from SimState
+          simPose
+      );
+    }
+  }
+  
   /**
    * Returns the currently-estimated pose of the robot.
    *
