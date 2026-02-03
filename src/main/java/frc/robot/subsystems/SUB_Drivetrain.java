@@ -431,7 +431,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
 
 
   public double getAngle() {
-    return -pigeon2.getYaw().getValueAsDouble(); // TODO: Confirm negative sign and CCW vs CW
+    return pigeon2.getYaw().getValueAsDouble(); // TODO: Confirm negative sign and CCW vs CW
   }
 
   /**

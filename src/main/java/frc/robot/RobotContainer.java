@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
+import frc.robot.commands.CMD_AimAlign;
 import frc.robot.subsystems.SUB_Drivetrain;
 import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
@@ -60,6 +61,8 @@ import org.ironmaple.simulation.SimulatedArena;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_Shooter;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+
+import frc.robot.commands.CMD_AimAlign;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -103,9 +106,9 @@ public class RobotContainer {
 
                 drivetrain.setDefaultCommand(new RunCommand( // Unstable
                                 () -> drivetrain.drive(
-                                                MathUtil.applyDeadband(Driver1.getRawAxis(1),
+                                                -MathUtil.applyDeadband(Driver1.getRawAxis(1),
                                                                 Operator.kDriveDeadband),
-                                                MathUtil.applyDeadband(Driver1.getRawAxis(0),
+                                                -MathUtil.applyDeadband(Driver1.getRawAxis(0),
                                                                 Operator.kDriveDeadband),
                                                 -MathUtil.applyDeadband(Driver1.getRawAxis(4),
                                                                 Operator.kDriveDeadband),
@@ -149,6 +152,11 @@ public class RobotContainer {
                                                                                                 // Change
                 Driver1.rightTrigger().whileTrue(new StartEndCommand(intake::runIntake, intake::stopIntake, intake));
                 Driver1.a().onTrue(new InstantCommand(shooter::shoot, shooter));
+                Driver1.x().toggleOnTrue(new CMD_AimAlign(drivetrain, photonVision,
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
+                                                Operator.kDriveDeadband),
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
+                                                Operator.kDriveDeadband)));
 
         }
 

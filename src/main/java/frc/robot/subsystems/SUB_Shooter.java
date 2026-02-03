@@ -43,8 +43,8 @@ public class SUB_Shooter extends SubsystemBase {
                     new Translation2d(0.5, robotPose.getRotation())
                 );
                 
-                // Launch velocity: 15 m/s forward + robot velocity
-                double shotSpeed = 15.0;
+                // Launch velocity: 2.5 m/s forward + robot velocity
+                double shotSpeed = 2.5;
                 Translation2d shotVel = new Translation2d(shotSpeed, robotPose.getRotation())
                     .plus(new Translation2d(robotSpeeds.vxMetersPerSecond, robotSpeeds.vyMetersPerSecond));
 
@@ -53,7 +53,7 @@ public class SUB_Shooter extends SubsystemBase {
                     launchPos,
                     shotVel,
                     0.5, // Initial height (meters)
-                    4.0, // Initial vertical speed (m/s)
+                    6.0, // Initial vertical speed (m/s)
                     new Rotation3d()
                 );
                 
