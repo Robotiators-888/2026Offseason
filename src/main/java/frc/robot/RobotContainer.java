@@ -174,7 +174,6 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
-                SmartDashboard.putNumber("Time until Next Hub Change", Hub.getTimeUntilNextChange());
         }
 
         public void autonomousInit() {
@@ -212,13 +211,10 @@ public class RobotContainer {
         public void teleopPeriodic() {
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-                if (activeAlliance.isPresent()) {
-                        if (lastActiveAlliance != activeAlliance.get()) {
-                                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
-                                // Maybe do a rumble
-                                lastActiveAlliance = activeAlliance.get();
-                        }
-                        SmartDashboard.putBoolean("Is Alliance Hub Active", Hub.isAllianceHubActive().get());
+                if (lastActiveAlliance != activeAlliance.get()) {
+                        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
+                        // Maybe do a rumble
+                        lastActiveAlliance = activeAlliance.get();
                 }
         }
 
