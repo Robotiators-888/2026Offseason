@@ -67,11 +67,11 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
         private static final AutoGenerator autoGenerator = AutoGenerator.getInstance();
         private final SendableChooser<Command> autoChooser;
-        public static SUB_LEDs leds = SUB_LEDs.getInstance();
-        public static SUB_Shooter shooter = SUB_Shooter.getInstance();
-        public static SUB_Intake intake = SUB_Intake.getInstance();
-        public static SUB_Index index = SUB_Index.getInstance();
-        public static PowerDistribution powerDistribution = new PowerDistribution();
+        public static final SUB_LEDs leds = SUB_LEDs.getInstance();
+        public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
+        public static final SUB_Intake intake = SUB_Intake.getInstance();
+        public static final SUB_Index index = SUB_Index.getInstance();
+        public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
