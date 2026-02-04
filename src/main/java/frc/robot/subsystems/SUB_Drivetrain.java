@@ -299,6 +299,10 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
         pose);
 
     this.pose = pose;
+
+    if (Robot.isSimulation() && driveSimulation != null) {
+      driveSimulation.setSimulationWorldPose(pose);
+    }
   }
 
   /**
@@ -482,6 +486,10 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     m_poseEstimator.resetPosition(getRotation2d(), getPositions(), pose);
 
     this.pose = pose;
+
+    if (Robot.isSimulation() && driveSimulation != null) {
+      driveSimulation.setSimulationWorldPose(pose);
+    }
   }
 
   public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {

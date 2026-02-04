@@ -121,6 +121,10 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("ResetReachedTarget",
                                 new InstantCommand(() -> autoGenerator.setreachedtarget(false)));
+                                
+                NamedCommands.registerCommand("Intake", new InstantCommand(intake::runIntake, intake));
+                NamedCommands.registerCommand("StopIntake", new InstantCommand(intake::stopIntake, intake));
+                NamedCommands.registerCommand("Shoot", new InstantCommand(shooter::shoot, shooter));
 
 
                 // Configure the trigger bindings
