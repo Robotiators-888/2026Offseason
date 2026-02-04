@@ -50,6 +50,7 @@ import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.utils.AutoGenerator;
 import frc.robot.utils.Elastic;
+import frc.robot.utils.Hub;
 import frc.robot.utils.Alert;
 
 
@@ -170,6 +171,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
+                SmartDashboard.putNumber("Time until Next Hub Change", Hub.getTimeUntilNextChange());
         }
 
         public void autonomousInit() {
@@ -201,10 +203,14 @@ public class RobotContainer {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification = new Elastic.Notification(Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
+                Hub.fetchMatchData();
         }
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
+                if (Hub.isAllianceHubActive().isPresent()) {
+                        SmartDashboard.putBoolean("Is Alliance Hub Active", Hub.isAllianceHubActive().get());
+                }
         }
 
         public void disabledPeriodic() {

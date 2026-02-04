@@ -68,4 +68,8 @@ public class Hub {
             return 30+(25*4)+30 - matchTime;
         }
     }
+
+    public static void fetchMatchData () {
+        gameData = DriverStation.getGameSpecificMessage();
+    }
 }
