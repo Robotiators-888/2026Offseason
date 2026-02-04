@@ -167,15 +167,21 @@ public final class Constants {
 
         }
 
-        public static final class Shooter{
+        public static final class Shooter {
                 public static final int kSHOOTER_FLYWHEEL_MOTOR_CANID = 28;
                 public static final double kSHOOTER_FLYWHEEL_MOTOR_SPEED = 0.5;
         }
-        public static final class Intake{
+
+        public static final class Intake {
                 public static final int kINTAKE_MOTOR_CANID = 29;
                 public static final double kINTAKE_MOTOR_SPEED = 0.5;
         }
         
+        public static final class Index {
+                public static final int KINDEX_MOTOR_CANID = 30;
+                public static final double kINDEX_MOTOR_SPEED = 0.5;
+        }
+
         // Motor Constants
         public static final class Motor {
                 public static final double kVortexFreeSpeedRpm = 6784;

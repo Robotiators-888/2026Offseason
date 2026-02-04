@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
-public class SUB_Climber {
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+public class SUB_Climber extends SubsystemBase {
     private static SUB_Climber INSTANCE = null;
     public static SUB_Climber getInstance (){
         if (INSTANCE == null) {
