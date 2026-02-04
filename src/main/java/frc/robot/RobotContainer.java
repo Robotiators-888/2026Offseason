@@ -50,6 +50,8 @@ import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.utils.AutoGenerator;
 import frc.robot.utils.Elastic;
+import frc.robot.utils.Elastic.Notification;
+import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
 import frc.robot.utils.Alert;
 
@@ -74,6 +76,7 @@ public class RobotContainer {
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
+        private Boolean lastActiveAlliance = true;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 =
@@ -208,7 +211,13 @@ public class RobotContainer {
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
-                if (Hub.isAllianceHubActive().isPresent()) {
+                final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
+                if (activeAlliance.isPresent()) {
+                        if (lastActiveAlliance != activeAlliance.get()) {
+                                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
+                                // Maybe do a rumble
+                                lastActiveAlliance = activeAlliance.get();
+                        }
                         SmartDashboard.putBoolean("Is Alliance Hub Active", Hub.isAllianceHubActive().get());
                 }
         }
