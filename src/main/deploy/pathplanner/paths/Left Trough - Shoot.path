@@ -9,23 +9,23 @@
       "prevControl": null,
       "nextControl": {
         "x": 3.705,
-        "y": 7.240
+        "y": 7.24
       },
       "isLocked": false,
       "linkedName": "Left Trough Backward"
     },
     {
       "anchor": {
-        "x": 3.490,
-        "y": 7.250
+        "x": 3.49,
+        "y": 7.25
       },
       "prevControl": {
-        "x": 3.689,
-        "y": 7.401
+        "x": 3.689156199714886,
+        "y": 7.401118523401747
       },
       "nextControl": {
-        "x": 3.290,
-        "y": 7.100
+        "x": 3.29,
+        "y": 7.1
       },
       "isLocked": false,
       "linkedName": null
