@@ -9,7 +9,8 @@ import static edu.wpi.first.units.Units.*;
 public class SUB_Intake extends SubsystemBase {
     private IntakeSimulation intakeSim;
     private final SUB_Drivetrain drivetrain;
-    private final int MAX_CAPACITY = 30;
+    private final int MAX_CAPACITY = 40;
+    private int artificialFuelCount = 0;
 
     public SUB_Intake(SUB_Drivetrain drivetrain) {
         this.drivetrain = drivetrain;
@@ -20,7 +21,7 @@ public class SUB_Intake extends SubsystemBase {
                 drivetrain.getDriveSimulation(),
                 Inches.of(25), 
                 Inches.of(6), 
-                IntakeSide.BACK,
+                IntakeSide.FRONT,
                 MAX_CAPACITY
             );
             intakeSim.register();
@@ -41,12 +42,36 @@ public class SUB_Intake extends SubsystemBase {
     
     public int getStoredFuelCount() {
         if (intakeSim != null) {
-            return intakeSim.getGamePiecesAmount();
+            return intakeSim.getGamePiecesAmount() + artificialFuelCount;
         }
-        return 0;
+        return artificialFuelCount;
     }
     
+    public void addFuel(int amount) {
+        artificialFuelCount += amount;
+        if (artificialFuelCount > MAX_CAPACITY) {
+            artificialFuelCount = MAX_CAPACITY;
+        }
+    }
+    
+    public void setFuel(int amount) {
+        if (intakeSim != null) {
+            // Clear physics simulation count
+            while (intakeSim.getGamePiecesAmount() > 0) {
+                intakeSim.obtainGamePieceFromIntake();
+            }
+        }
+        artificialFuelCount = amount;
+        if (artificialFuelCount > MAX_CAPACITY) {
+            artificialFuelCount = MAX_CAPACITY;
+        }
+    }
+
     public boolean takeBall() {
+        if (artificialFuelCount > 0) {
+            artificialFuelCount--;
+            return true;
+        }
         if (intakeSim != null) {
             return intakeSim.obtainGamePieceFromIntake();
         }

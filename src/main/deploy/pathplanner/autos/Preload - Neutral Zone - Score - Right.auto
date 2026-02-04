@@ -11,15 +11,33 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough Center - Neutral Zone Right"
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Neutral Zone Right - Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
           }
         }
       ]

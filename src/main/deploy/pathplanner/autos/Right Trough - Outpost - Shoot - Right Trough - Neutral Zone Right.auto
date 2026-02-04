@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "HumanFeed"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Outpost - Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
           }
         },
         {
@@ -29,9 +41,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough Center - Neutral Zone Right"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         }
       ]

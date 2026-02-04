@@ -125,6 +125,16 @@ public class RobotContainer {
                 NamedCommands.registerCommand("Intake", new InstantCommand(intake::runIntake, intake));
                 NamedCommands.registerCommand("StopIntake", new InstantCommand(intake::stopIntake, intake));
                 NamedCommands.registerCommand("Shoot", new InstantCommand(shooter::shoot, shooter));
+                NamedCommands.registerCommand("ShootSequence", 
+                        new InstantCommand(shooter::shoot, shooter)
+                        .andThen(new edu.wpi.first.wpilibj2.command.WaitCommand((double)1/8))
+                        .repeatedly()
+                        .until(() -> intake.getStoredFuelCount() == 0)
+                        .andThen(new InstantCommand(intake::stopIntake, intake))
+                );
+                
+                NamedCommands.registerCommand("HumanFeed", new InstantCommand(() -> intake.addFuel(25), intake).andThen(new edu.wpi.first.wpilibj2.command.WaitCommand(2.0)));
+
 
 
                 // Configure the trigger bindings
@@ -155,7 +165,7 @@ public class RobotContainer {
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
                                                                                                 // Change
                 Driver1.rightTrigger().whileTrue(new StartEndCommand(intake::runIntake, intake::stopIntake, intake));
-                Driver1.a().onTrue(new InstantCommand(shooter::shoot, shooter));
+                Driver1.a().whileTrue(new InstantCommand(shooter::shoot, shooter).andThen(new edu.wpi.first.wpilibj2.command.WaitCommand(0.2)).repeatedly());
                 Driver1.x().toggleOnTrue(new CMD_AimAlign(drivetrain, photonVision,
                                 () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
                                                 Operator.kDriveDeadband),
@@ -215,6 +225,27 @@ public class RobotContainer {
                 autoGenerator.setintakecomplete(true);
                 autoGenerator.setreachedtarget(false);
                 Elastic.selectTab("Autonomous");
+                intake.setFuel(8); // Reset robot inventory to 8 preloads
+                if (Robot.isSimulation()) {
+                        SimulatedArena.getInstance().clearGamePieces();
+                        SimulatedArena.getInstance().placeGamePiecesOnField();
+                        // Add Blue Depot balls (4x6 grid)
+                        double startX = 0.5795; // Shifted 2.5 inches closer to wall
+                        double startY = 5.506;
+                        double spacingY = 0.164; // Reduced spacing by 1 inch
+                        double spacingX = 0.1524; // 6 inches
+
+                        for (int row = 0; row < 4; row++) { // X rows
+                            for (int col = 0; col < 6; col++) { // Y cols
+                                double x = startX - (row * spacingX);
+                                double y = startY + (col * spacingY);
+                                SimulatedArena.getInstance().addGamePiece(new org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation(
+                                    SUB_Shooter.FUEL_INFO,
+                                    new Pose2d(x, y, new Rotation2d()) 
+                                ));
+                            }
+                        }
+                }
                 leds.set(LEDs.kParty_Palette_Twinkles);
                 PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
 

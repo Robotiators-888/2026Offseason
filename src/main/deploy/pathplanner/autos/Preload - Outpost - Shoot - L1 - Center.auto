@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "HumanFeed"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Outpost - Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
           }
         },
         {

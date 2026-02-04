@@ -378,7 +378,7 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     var swerveModuleStates =
         Constants.Drivetrain.kDriveKinematics.toSwerveModuleStates(fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered,
-                Rotation2d.fromDegrees(getHeading()))
+                getPose().getRotation())
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates,
         Constants.Drivetrain.kMaxSpeedMetersPerSecond);

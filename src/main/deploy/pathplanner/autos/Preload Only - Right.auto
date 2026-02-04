@@ -9,6 +9,12 @@
           "data": {
             "pathName": "Right Trough - Shoot"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
+          }
         }
       ]
     }

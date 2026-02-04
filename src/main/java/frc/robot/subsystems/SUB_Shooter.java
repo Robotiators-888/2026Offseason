@@ -16,10 +16,10 @@ public class SUB_Shooter extends SubsystemBase {
     private final SUB_Drivetrain drivetrain;
     
     // Define "Fuel" properties
-    private static final GamePieceInfo FUEL_INFO = new GamePieceInfo(
+    public static final GamePieceInfo FUEL_INFO = new GamePieceInfo(
         "Fuel",
-        new Circle(0.12), // Radius in meters
-        Meters.of(0.12),
+        new Circle(0.075), // Radius in meters
+        Meters.of(0.075),
         Kilograms.of(0.25),
         0.1, // Linear damping
         0.1, // Angular damping

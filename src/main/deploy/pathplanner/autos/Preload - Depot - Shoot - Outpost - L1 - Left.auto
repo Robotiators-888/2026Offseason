@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Depot Start - Depot End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {
@@ -23,15 +35,33 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Shoot - Outpost"
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "HumanFeed"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Outpost - Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSequence"
           }
         },
         {
