@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -45,6 +46,7 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.subsystems.SUB_Drivetrain;
+import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
@@ -68,6 +70,7 @@ public class RobotContainer {
         public static SUB_LEDs leds = SUB_LEDs.getInstance();
         public static SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static SUB_Intake intake = SUB_Intake.getInstance();
+        public static SUB_Index index = SUB_Index.getInstance();
         public static PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -129,7 +132,7 @@ public class RobotContainer {
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
                                                                                                 // Change
                 
-                Driver2.rightTrigger().whileTrue(new InstantCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED))).onFalse(new InstantCommand(() -> shooter.set(0)));
+                Driver2.rightTrigger().whileTrue(new RunCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED)).until(() -> shooter.atdesiredRPM()).andThen(new RunCommand(() -> index.set(Constants.Index.kINDEX_MOTOR_SPEED)))).onFalse(new ParallelCommandGroup(new InstantCommand(() -> index.set(0)), new InstantCommand(() -> shooter.set(0))));
                 Driver2.rightBumper().whileTrue(new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED))).onFalse(new InstantCommand(() -> intake.set(0)));
         }
 
