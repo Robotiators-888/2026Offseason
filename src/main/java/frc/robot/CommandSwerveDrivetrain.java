@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
@@ -38,6 +39,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
     private final SwerveRequest.ApplyRobotSpeeds chassisSpeedsRequest = new SwerveRequest.ApplyRobotSpeeds();
 
     private final Telemetry logger = new Telemetry(TunerConstants.kSpeedAt12VoltsMps);
+    private DutyCycleOut dutyCycle = new DutyCycleOut(1); // Idk what to put for the output
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
         .getStructTopic("debugXPoint", Pose2d.struct).publish(); 
@@ -82,11 +84,22 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         super(TalonFX::new, TalonFX::new, CANcoder::new, driveConstants, OdometryUpdateFrequency, modules);
         configurePathPlanner();
         registerTelemetry(logger::telemeterize);
+        enableFOC();
     }
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveConstants, SwerveModuleConstants... modules) {
         super(TalonFX::new, TalonFX::new, CANcoder::new, driveConstants, modules);
         configurePathPlanner();
         registerTelemetry(logger::telemeterize);
+        enableFOC();
+    }
+
+    private void enableFOC () {
+        dutyCycle.EnableFOC = true;
+        var modules = this.getModules();
+        for (var module : modules) {
+            TalonFX driveMotor = module.getDriveMotor();
+            driveMotor.setControl(dutyCycle);
+        }
     }
 
     private void configurePathPlanner() {
