@@ -6,39 +6,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class Alert {
-  private static Alert INSTANCE = null;
-  // Static is likley not needed
+  // ArrayList required akward casting to work so I created Vector
+  // Hashmaps to check if keys are present in O(1) time!
   private static Elastic.Notification notification = new Elastic.Notification(); // Creates one notification object that can be method chained on to increase garbage collection performance
-  Vector<String> error;
-  Vector<String> warning;
-  Vector<String> info;
-  HashMap<String, Integer> errorMap;
-  HashMap<String, Integer> warningMap;
-  HashMap<String, Integer> infoMap;
-  Color alertColor;
+  private static Vector<String> error = new Vector<String>(new String());
+  private static Vector<String> warning = new Vector<String>(new String());
+  private static Vector<String> info = new Vector<String>(new String());
+  private static HashMap<String, Integer> errorMap = new HashMap<String, Integer>();
+  private static HashMap<String, Integer> warningMap = new HashMap<String, Integer>();
+  private static HashMap<String, Integer> infoMap = new HashMap<String, Integer>();
+  private static Color alertColor = new Color(0, 255, 0); // Green
 
-  private Alert() {
-    alertColor = new Color(0, 255, 0); // Green
-    // ArrayList required akward casting to work so I created Vector
-    error = new Vector<String>(new String());
-    warning = new Vector<String>(new String());
-    info = new Vector<String>(new String());
-    // Hashmaps to check if keys are present in O(1) time!
-    errorMap = new HashMap<String, Integer>();
-    warningMap = new HashMap<String, Integer>();
-    infoMap = new HashMap<String, Integer>();
+  public Alert() {
+  }
+
+  public static void setup () {
     updateSmartDashboard();
-    // testcalls();
   }
 
-  public static Alert getInstance () {
-    if (INSTANCE == null) {
-      INSTANCE = new Alert();
-    }
-    return INSTANCE;
-  }
-
-  public void registerError (String alert) {
+  public static void registerError (String alert) {
     // Makes sure there are no duplicates using the hashmap
     if (!errorMap.containsKey(alert)) {
       errorMap.put(alert, 0);
@@ -49,7 +35,7 @@ public class Alert {
     }
   }
 
-  public void registerWarning (String alert) {
+  public static void registerWarning (String alert) {
     // Makes sure there are no duplicates using the hashmap
     if (!warningMap.containsKey(alert)) {
       warningMap.put(alert, 0);
@@ -59,7 +45,7 @@ public class Alert {
     }
   }
 
-  public void registerInfo (String alert) {
+  public static void registerInfo (String alert) {
     // Makes sure there are no duplicates using the hashmap
     if (!infoMap.containsKey(alert)) {
       infoMap.put(alert, 0);
@@ -70,7 +56,7 @@ public class Alert {
   }
 
   // Don't use direct notifications on things that spam them use them for things like telop init, things that happen multiple times, infrequently
-  public void notifyError (String alert) {
+  public static void notifyError (String alert) {
     Elastic.sendNotification(notification
       .withLevel(Elastic.Notification.NotificationLevel.ERROR)
       .withTitle("Error!")
@@ -78,7 +64,7 @@ public class Alert {
     );
   }
 
-  public void notifyWarning (String alert) {
+  public static void notifyWarning (String alert) {
     Elastic.sendNotification(notification
       .withLevel(Elastic.Notification.NotificationLevel.WARNING)
       .withTitle("Warning:")
@@ -86,7 +72,7 @@ public class Alert {
     );
   }
 
-  public void notifyInfo (String alert) {
+  public static void notifyInfo (String alert) {
     Elastic.sendNotification(notification
       .withLevel(Elastic.Notification.NotificationLevel.INFO)
       .withTitle("Info")
@@ -95,7 +81,7 @@ public class Alert {
   }
 
   // Sets the single color elastic object to the highest severity level (severity level meaning either info, error or warning) that the robot has at least one alert for (check engine light)
-  private void registerColor () {
+  private static void registerColor () {
     if (!error.isEmpty()) {
       alertColor = new Color(255, 0, 0); // Red
     }
@@ -108,16 +94,16 @@ public class Alert {
     SmartDashboard.putString("Alerts", alertColor.toHexString());
   }
 
-  public void triggerStop () { // Stops the robot from running if it has errors (This will not be used because errors shouldn't kill the robot)
+  public static void triggerStop () { // Stops the robot from running if it has errors (This will not be used because errors shouldn't kill the robot)
     // Todo: implement this
   }
 
-  private void testcalls () {
+  private static void testcalls () {
     registerWarning("There may be an issue");
     notifyWarning("Photonvision has optional type idk");
   }
 
-  private void updateSmartDashboard () {
+  private static void updateSmartDashboard () {
     SmartDashboard.putStringArray("errors", error.toArray());
     SmartDashboard.putStringArray("warnings", warning.toArray());
     SmartDashboard.putStringArray("info", info.toArray());

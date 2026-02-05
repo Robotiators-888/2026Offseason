@@ -521,38 +521,38 @@ StructArrayPublisher<SwerveModuleState> desiredStatePublisher = NetworkTableInst
     sendFaultsWarnings(motor.getFaults().get_0(), motor.getWarnings().get_0(), canidDrive, "Drive");
     sendFaultsWarnings(motor.getFaults().get_1(), motor.getWarnings().get_1(), canidSteer, "Steer");
     if (pigeon2.getTemperature().getStatus() != StatusCode.OK) {
-      Alert.getInstance().registerError("Pigeon2 ID " + pigeon2.getDeviceID() + " Disconnected");
+      Alert.registerError("Pigeon2 ID " + pigeon2.getDeviceID() + " Disconnected");
     }
     canHealthTimer.restart();
   }
 
   private void sendFaultsWarnings (SparkBase.Faults faults, SparkBase.Warnings warnings, int canid, String motorType) {
     if (faults.can) {
-      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " CAN fault");
+      Alert.registerError(motorType + " Motor ID " + canid + " CAN fault");
     }
     if (faults.temperature) {
-      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " temp fault");
+      Alert.registerError(motorType + " Motor ID " + canid + " temp fault");
     }
     if (faults.sensor) {
-      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " sensor fault");
+      Alert.registerError(motorType + " Motor ID " + canid + " sensor fault");
     }
     if (faults.other) {
-      Alert.getInstance().registerError(motorType + " Motor ID " + canid + " other fault");
+      Alert.registerError(motorType + " Motor ID " + canid + " other fault");
     }
     if (warnings.brownout) {
-      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " Brownout");
+      Alert.registerWarning(motorType + " Motor ID " + canid + " Brownout");
     }
     if (warnings.stall) {
-      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " stall");
+      Alert.registerWarning(motorType + " Motor ID " + canid + " stall");
     }
     if (warnings.overcurrent) {
-      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " overcurrent");
+      Alert.registerWarning(motorType + " Motor ID " + canid + " overcurrent");
     }
     if (warnings.sensor) {
-      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " sensor warning");
+      Alert.registerWarning(motorType + " Motor ID " + canid + " sensor warning");
     }
     if (warnings.other) {
-      Alert.getInstance().registerWarning(motorType + " Motor ID " + canid + " other warning");
+      Alert.registerWarning(motorType + " Motor ID " + canid + " other warning");
     }
   }
 }
