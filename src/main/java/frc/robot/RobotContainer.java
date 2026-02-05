@@ -133,7 +133,7 @@ public class RobotContainer {
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:
                                                                                                 // Change
                 
-                Driver2.rightTrigger().whileTrue(new RunCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED), shooter).andThen(new WaitCommand(0.75)).andThen(new RunCommand(() -> index.set(Constants.Index.kINDEX_MOTOR_SPEED), index))).onFalse(new ParallelCommandGroup(new InstantCommand(() -> index.set(0), index), new InstantCommand(() -> shooter.set(0), shooter)));
+                Driver2.rightTrigger().whileTrue(new RunCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED), shooter).until(() -> shooter.atdesiredRPM()).andThen(new RunCommand(() -> index.set(Constants.Index.kINDEX_MOTOR_SPEED), index))).onFalse(new ParallelCommandGroup(new InstantCommand(() -> index.set(0), index), new InstantCommand(() -> shooter.set(0), shooter)));
                 Driver2.rightBumper().whileTrue(new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED), intake)).onFalse(new InstantCommand(() -> intake.set(0), intake));
         }
 

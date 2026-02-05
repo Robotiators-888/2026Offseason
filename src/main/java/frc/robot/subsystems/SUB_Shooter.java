@@ -29,15 +29,16 @@ public class SUB_Shooter extends SubsystemBase {
         flyWheel2.set(speed);
         desiredSpeed = speed;
     }
-    // public double flywheelRPM() {
-    //     return (flyWheel1.getEncoder().getVelocity()+flyWheel2.getEncoder().getVelocity())/2;
-    // }
-  
-    // public boolean atdesiredRPM() {
-    //     return flywheelRPM()>= desiredSpeed;
-    // }
 
-//     public void periodic() {
-//       SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
-//    }
+    public double flywheelRPM() {
+        return (flyWheel1.getVelocity().getValue().baseUnitMagnitude()+flyWheel2.getVelocity().getValue().baseUnitMagnitude())/2;
+    }
+  
+    public boolean atdesiredRPM() {
+        return flywheelRPM()>= desiredSpeed;
+    }
+
+    public void periodic() {
+      SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
+   }
 }
