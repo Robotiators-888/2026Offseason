@@ -98,7 +98,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         var modules = this.getModules();
         for (var module : modules) {
             TalonFX driveMotor = module.getDriveMotor();
-            driveMotor.setControl(dutyCycle);
+            if (driveMotor.getIsProLicensed().getValue())
+                driveMotor.setControl(dutyCycle);
         }
     }
 
