@@ -24,7 +24,7 @@ public class SUB_Intake extends SubsystemBase {
                 IntakeSide.FRONT,
                 MAX_CAPACITY
             );
-            intakeSim.register();
+            // intakeSim.register(); // Removed to prevent double registration/counting
         }
     }
 
