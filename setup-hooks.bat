@@ -1,0 +1,1 @@
+xcopy .\.hooks .\.git\hooks\ /s /e /Y

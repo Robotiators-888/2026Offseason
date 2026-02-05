@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if clang-format --version &>/dev/null ; then
+    ./clang-format.sh
+    git add $(git rev-parse --show-toplevel)
+    # git add .
+else
+    echo "clang-format not installed, please use your distro's package manager or on windows run: winget install --id=LLVM.ClangFormat -e"
+fi
+
+exit 0
