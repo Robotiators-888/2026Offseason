@@ -1,5 +1,0 @@
-#!/bin/sh
-
-cp -ra $(git rev-parse --show-toplevel)/.hooks/* $(git rev-parse --show-toplevel)/.git/hooks/
-
-exit 0
