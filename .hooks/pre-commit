@@ -1,6 +1,10 @@
 #!/bin/sh
 
 if clang-format --version &>/dev/null ; then
+    if git diff --cached --quiet ; then
+        # echo "No staged changes, skipping clang-format"
+        exit 0
+    fi
     GIT_HOME=$(git rev-parse --show-toplevel)
     chmod +x "$GIT_HOME/clang-format.sh"
     "$GIT_HOME/clang-format.sh"
