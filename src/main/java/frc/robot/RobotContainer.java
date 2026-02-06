@@ -177,6 +177,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
+                SmartDashboard.putNumber(autoName, listIndex);
         }
 
         public void autonomousInit() {
