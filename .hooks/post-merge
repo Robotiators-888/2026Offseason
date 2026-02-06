@@ -1,5 +1,12 @@
 #!/bin/sh
+# Tells the os where to find the executable to run the file with, for this its "sh" which is a shell
+# But it could even be something like /usr/bin/python for a python program
 
+# This recursivley copies files from the .hooks folder to the .git/hooks folder to update hooks upon pull or merge
+# The .hooks/* represents all files in that folder, this is special shell syntax
+# The command in $() just has git give the absolute path of the top level directory
+# -ra makes the copy recursive and keeps execute permissions for the file
 cp -ra $(git rev-parse --show-toplevel)/.hooks/* $(git rev-parse --show-toplevel)/.git/hooks/
 
+# Exits the script
 exit 0
