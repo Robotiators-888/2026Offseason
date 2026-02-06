@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if clang-format --version &>/dev/null ; then
-    if ! git diff --quiet ; then
+        if git diff --cached --quiet ; then
         # echo "No staged changes, skipping clang-format"
         exit 0
     fi
