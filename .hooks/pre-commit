@@ -2,9 +2,9 @@
 
 if clang-format --version &>/dev/null ; then
     GIT_HOME = $(git rev-parse --show-toplevel)
-    chmod +x GIT_HOME/clang-format.sh
-    GIT_HOME/clang-format.sh
-    git add GIT_HOME
+    chmod +x $GIT_HOME/clang-format.sh
+    $GIT_HOME/clang-format.sh
+    git add $GIT_HOME
     # git add .
 else
     echo "clang-format not installed, please use your distro's package manager or on windows run: winget install --id=LLVM.ClangFormat -e"
