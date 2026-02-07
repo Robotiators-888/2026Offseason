@@ -57,10 +57,14 @@ public class SUB_PhotonVision extends SubsystemBase {
     List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
   
     Optional<EstimatedRobotPose> finalPose1 = Optional.empty();
-    for (PhotonPipelineResult result : results1) {
+    // Process results in reverse order to find the latest valid result
+    java.util.ListIterator<PhotonPipelineResult> iterator = results1.listIterator(results1.size());
+    while (iterator.hasPrevious()) {
+      PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
         cam1BestTarget = result.getBestTarget();
         finalPose1 = poseEstimator1.update(result);
+        break; // Found the latest result, stop processing older ones
       }
     }
     return finalPose1;
@@ -69,10 +73,14 @@ public class SUB_PhotonVision extends SubsystemBase {
   public Optional<EstimatedRobotPose> getCam2Pose() {
     List<PhotonPipelineResult> results2 = cam2.getAllUnreadResults();
     Optional<EstimatedRobotPose> finalPose2 = Optional.empty();
-    for (PhotonPipelineResult result : results2) {
+    // Process results in reverse order to find the latest valid result
+    java.util.ListIterator<PhotonPipelineResult> iterator = results2.listIterator(results2.size());
+    while (iterator.hasPrevious()) {
+      PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
         cam2BestTarget = result.getBestTarget();
         finalPose2 = poseEstimator2.update(result);
+        break; // Found the latest result, stop processing older ones
       }
     }
     return finalPose2;
