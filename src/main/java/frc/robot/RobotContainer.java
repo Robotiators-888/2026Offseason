@@ -145,7 +145,7 @@ public class RobotContainer {
                                         Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
                         return AutoBuilder.pathfindThenFollowPath(path, constraints);
                 } catch (Exception e) {
-                        Alert.getInstance().registerError("Failed to retreive path command: " + e.getMessage());
+                        Alert.registerError("Failed to retreive path command: " + e.getMessage());
                         return Commands.none();
                 }
         }
@@ -245,10 +245,10 @@ public class RobotContainer {
                                         }
                                         autoField.getObject("path").setPoses(poses);
                                 } catch (IOException e) {
-                                        Alert.getInstance().registerError("Failed to read path file: " + e.getMessage());
+                                        Alert.registerError("Failed to read path file: " + e.getMessage());
                                         return;
                                 } catch (ParseException e) {
-                                        Alert.getInstance().registerError("Failed to parse path file: " + e.getMessage());
+                                        Alert.registerError("Failed to parse path file: " + e.getMessage());
                                         return;
                                 }
                         }
