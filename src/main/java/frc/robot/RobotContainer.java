@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.json.simple.parser.ParseException;
@@ -156,7 +157,7 @@ public class RobotContainer {
                                         Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
                         return AutoBuilder.pathfindThenFollowPath(path, constraints);
                 } catch (Exception e) {
-                        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+                        Alert.registerError("Failed to retreive path command: " + e.getMessage());
                         return Commands.none();
                 }
         }
@@ -249,10 +250,10 @@ public class RobotContainer {
                                         }
                                         autoField.getObject("path").setPoses(poses);
                                 } catch (IOException e) {
-                                        e.printStackTrace();
+                                        Alert.registerError("Failed to read path file: " + e.getMessage());
                                         return;
                                 } catch (ParseException e) {
-                                        e.printStackTrace();
+                                        Alert.registerError("Failed to parse path file: " + e.getMessage());
                                         return;
                                 }
                         }

@@ -166,6 +166,11 @@ public class SUB_PhotonVision extends SubsystemBase {
 
   @Override
   public void periodic() {
-
+   if (!cam1.isConnected()) {
+      Alert.registerError("PhotonVision Camera 1 Disconnected");
+    }
+    if (!cam2.isConnected()) {
+      Alert.registerError("PhotonVision Camera 2 Disconnected");
+    }
   }
 }
