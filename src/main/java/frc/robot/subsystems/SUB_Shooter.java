@@ -31,27 +31,24 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     @Deprecated
-    public void set(double speed){
+    private void set(double speed){
         flyWheel1.set(speed);
-        // flyWheel2.set(speed);
-        // desiredSpeed = speed;
     }
 
-    public void setRPM (double rpm) {
+    public void setRPM(double rpm) {
         Slot0Configs slotConfig = talonConfig.Slot0;
         slotConfig.kS = 0.25;
         slotConfig.kV = rpm/60.0*0.12;
         slotConfig.kA = rpm/60.0*0.01;
-        slotConfig.kP = 0; //4.8;
+        slotConfig.kP = 0; //TODO: After testing SVA, test PID, default is 4.8
         slotConfig.kI = 0;
-        slotConfig.kD = 0; //rpm/60.0*0.1;
+        slotConfig.kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
 
         MotionMagicConfigs motionConfig = talonConfig.MotionMagic;
         motionConfig.MotionMagicCruiseVelocity = rpm/60.0;
         motionConfig.MotionMagicAcceleration = rpm/60.0/5.0;
         motionConfig.MotionMagicJerk = 1600;
         flyWheel1.getConfigurator().apply(talonConfig);
-        // flyWheel2.getConfigurator().apply(talonConfig);
     }
 
     public double flywheelRPM() {
@@ -64,7 +61,13 @@ public class SUB_Shooter extends SubsystemBase {
         return flyWheel1.getMotionMagicIsRunning().getValue();
     }
 
+    public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
+        // Example implementation for shooting at a specific distance in meters
+        // This would be replaced with actual logic based on distance and shooter characteristics
+        setRPM(1000); // Example RPM value for shooting at 1 meter distance
+    }
+
     public void periodic() {
       SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
-   }
+    }
 }

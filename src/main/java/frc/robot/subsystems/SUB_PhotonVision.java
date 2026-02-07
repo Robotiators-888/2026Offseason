@@ -46,7 +46,7 @@ public class SUB_PhotonVision extends SubsystemBase {
     poseEstimator1 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
         PhotonVision.kRobotToCamera1);
     poseEstimator2 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-         PhotonVision.kRobotToCamera2);
+         PhotonVision.kRobotToCamera2); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
     poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }

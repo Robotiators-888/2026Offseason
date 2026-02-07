@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Index extends SubsystemBase {
-    // Needs to be a neo
+    // Needs to be a neo vortex
     private SparkFlex index;
     private static SUB_Index INSTANCE = null;
     public static SUB_Index getInstance () {

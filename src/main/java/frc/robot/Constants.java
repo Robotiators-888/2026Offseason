@@ -15,6 +15,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -170,7 +172,7 @@ public final class Constants {
         public static final class Shooter {
                 public static final int kSHOOTER_FLYWHEEL1_MOTOR_CANID = 28;
                 public static final int kSHOOTER_FLYWHEEL2_MOTOR_CANID = 29;
-                public static final double kSHOOTER_FLYWHEEL_MOTOR_SPEED = 0.5;
+                public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
         }
 
         public static final class Intake {
@@ -182,6 +184,14 @@ public final class Constants {
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 31;
                 public static final double kINDEX_MOTOR_SPEED = 0.5;
+        }
+
+        public static final class Climber {
+                public static final int kCLIMBER_MOTOR_CANID = 33;
+                public static final int kCLIMBER_ARM_MOTOR_CANID = 34;
+                public static final double kCLIMBER_MOTOR_SPEED = 0.5;
+                public static final double kCLIMBER_ARM_SPEED = 0.5;
+                public static final double kCLIMBER_ARM_TOLERANCE = 5.0; // degrees
         }
 
         // Motor Constants
@@ -228,5 +238,6 @@ public final class Constants {
                 public static final double kColorGreen = 0.77;
                 public static final double kColorRed = 0.61;
                 public static final double kParty_Palette_Twinkles = -0.53;
+                public static final double kAllianceColor = (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)== DriverStation.Alliance.Blue) ? 0.0 : 0.5;
         }
 }

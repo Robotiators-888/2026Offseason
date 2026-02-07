@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -39,13 +41,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
+import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Drivetrain;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
@@ -72,6 +77,7 @@ public class RobotContainer {
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
+        public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -102,6 +108,11 @@ public class RobotContainer {
                                                 true, true),
                                 drivetrain));
 
+                intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
+                shooter.setDefaultCommand(new InstantCommand(() -> shooter.setRPM(0), shooter));
+                index.setDefaultCommand(new InstantCommand(() -> index.set(0), index));
+                leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
+                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimber(), climber));
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
                                 () -> autoGenerator.setreachedtarget(true)));
@@ -109,6 +120,72 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ResetReachedTarget",
                                 new InstantCommand(() -> autoGenerator.setreachedtarget(false)));
 
+                //CLimber
+                NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
+                        intake.retractArm(),
+                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(45, Constants.Climber.kCLIMBER_ARM_SPEED),climber)).until(() -> climber.isClimberArmAtPosition(45, Constants.Climber.kCLIMBER_ARM_TOLERANCE))
+                        ));
+
+                NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
+                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0, Constants.Climber.kCLIMBER_ARM_SPEED),climber)).until(() -> climber.isClimberArmAtPosition(0, Constants.Climber.kCLIMBER_ARM_TOLERANCE))
+                        ));
+                
+                // Intake
+
+                NamedCommands.registerCommand("Intake", Commands.sequence(
+                        intake.isExtended() ? Commands.none() : intake.extendArm(),
+                        new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                ));
+
+                NamedCommands.registerCommand("StopIntake",
+                        new InstantCommand(() -> intake.set(0),intake)
+                );
+
+                // Shooter and Indexer
+                NamedCommands.registerCommand("ManualShoot", Commands.sequence(
+                        new InstantCommand(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),shooter),
+                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                        Commands.run(() -> {
+                                if (shooter.atdesiredRPM()) {
+                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                                } else {
+                                        index.set(0); // Stop immediately if RPM drops
+                                }
+                        }, index)
+                ));
+
+                NamedCommands.registerCommand("ShootDistance", Commands.sequence(
+                        new InstantCommand(() -> shooter.shootMeters(drivetrain.getPose().getTranslation().getDistance(
+                                SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                ).map(pose -> pose.toPose2d().getTranslation()
+                                        .plus(new Translation2d(
+                                        Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
+                                        0
+                                        ))
+                                ).orElse(drivetrain.getPose().getTranslation()) // Safety: returns 0 dist if tag missing
+                                )), shooter),
+                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                        Commands.run(() -> {
+                                if (shooter.atdesiredRPM()) {
+                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                                } else {
+                                        index.set(0); // Stop immediately if RPM drops
+                                }
+                        }, index)
+                ));
+
+                NamedCommands.registerCommand("StopShootingManual", Commands.parallel(
+                        new InstantCommand(() -> index.set(0),index),
+                        new InstantCommand(() -> shooter.setRPM(0),shooter)
+                        
+                ));
+
+                NamedCommands.registerCommand("StopShootingDistance", Commands.parallel(
+                        new InstantCommand(() -> index.set(0),index),
+                        new InstantCommand(() -> shooter.setRPM(0),shooter)
+                        
+                ));
 
                 // Configure the trigger bindings
                 configureBindings();
@@ -130,11 +207,82 @@ public class RobotContainer {
          */
         private void configureBindings() {
 
-                Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:
-                                                                                                // Change
+                Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
+                Driver1.rightTrigger().onTrue(Commands.sequence(
+                        new InstantCommand(() -> shooter.shootMeters(drivetrain.getPose().getTranslation().getDistance(
+                                SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                ).map(pose -> pose.toPose2d().getTranslation()
+                                        .plus(new Translation2d(
+                                        Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
+                                        0
+                                        ))
+                                ).orElse(drivetrain.getPose().getTranslation()) // Safety: returns 0 dist if tag missing
+                                )), shooter),
+                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                        Commands.run(() -> {
+                                if (shooter.atdesiredRPM()) {
+                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                                } else {
+                                        index.set(0); // Stop immediately if RPM drops
+                                }
+                        }, index)
+                )).onFalse(Commands.parallel(
+                        new InstantCommand(() -> index.set(0),index),
+                        new InstantCommand(() -> shooter.setRPM(0.0),shooter)     
+                ));
                 
-                Driver2.rightTrigger().whileTrue(new RunCommand(() -> shooter.set(Constants.Shooter.kSHOOTER_FLYWHEEL_MOTOR_SPEED), shooter).until(() -> shooter.atdesiredRPM()).andThen(new RunCommand(() -> index.set(Constants.Index.kINDEX_MOTOR_SPEED), index))).onFalse(new ParallelCommandGroup(new InstantCommand(() -> index.set(0), index), new InstantCommand(() -> shooter.set(0), shooter)));
-                Driver2.rightBumper().whileTrue(new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED), intake)).onFalse(new InstantCommand(() -> intake.set(0), intake));
+                Driver1.rightBumper().onTrue(Commands.none()); // TODO: Add AutoAim once merged
+
+
+                Driver1.leftTrigger().onTrue(Commands.sequence(
+                        new InstantCommand(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),shooter),
+                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                        Commands.run(() -> {
+                                if (shooter.atdesiredRPM()) {
+                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                                } else {
+                                        index.set(0); // Stop immediately if RPM drops
+                                }
+                        }, index)
+                )).onFalse(Commands.parallel(
+                        new InstantCommand(() -> index.set(0),index),
+                        new InstantCommand(() -> shooter.setRPM(0.0),shooter)     
+                ));
+
+                Driver1.povLeft().toggleOnTrue(
+                        Commands.sequence(
+                                intake.retractArm(),
+                                new WaitUntilCommand(() -> !intake.isExtended()),
+                                new InstantCommand(() -> climber.setClimberArmToPosition(45, Constants.Climber.kCLIMBER_ARM_SPEED),climber)
+                        )
+                        
+                ).toggleOnFalse(
+                        new InstantCommand(() -> climber.setClimberArmToPosition(0, Constants.Climber.kCLIMBER_ARM_SPEED),climber)
+                );
+
+                Driver1.povUp().onTrue(
+                        new InstantCommand(() -> climber.climb(),climber)
+                );
+
+                Driver1.povDown().onTrue(
+                        new InstantCommand(() -> climber.unClimb(),climber)
+                );
+
+                Driver1.a().toggleOnTrue(
+                        Commands.sequence(
+                                (intake.isExtended() ? Commands.none() : intake.extendArm()),
+                                new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                )).toggleOnFalse(
+                        Commands.sequence(
+                                new InstantCommand(() -> intake.set(0),intake)
+                        )
+                );
+
+
+
+
         }
 
         public void robotInit() {
