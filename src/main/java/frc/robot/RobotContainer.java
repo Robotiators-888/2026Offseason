@@ -64,7 +64,6 @@ public class RobotContainer {
         // The robot's subsystems and commands are defined here...
         private static final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
-        private static final Alert alert = Alert.getInstance();
 
         private final SendableChooser<Command> autoChooser;
         public static PowerDistribution powerDistribution = new PowerDistribution();
