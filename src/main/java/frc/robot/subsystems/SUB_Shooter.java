@@ -30,10 +30,10 @@ public class SUB_Shooter extends SubsystemBase {
         flyWheel2.setControl(new Follower(flyWheel1.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    @Deprecated
-    private void set(double speed){
-        flyWheel1.set(speed);
-    }
+    // @Deprecated
+    // private void set(double speed){
+    //     flyWheel1.set(speed);
+    // }
 
     public void setRPM(double rpm) {
         Slot0Configs slotConfig = talonConfig.Slot0;
@@ -58,7 +58,7 @@ public class SUB_Shooter extends SubsystemBase {
     public boolean atdesiredRPM() {
         //return flywheelRPM()>= desiredSpeed;
         // return (flyWheel1.getMotionMagicIsRunning().getValue() && flyWheel2.getMotionMagicIsRunning().getValue());
-        return flyWheel1.getMotionMagicIsRunning().getValue();
+        return flyWheel1.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
     public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
