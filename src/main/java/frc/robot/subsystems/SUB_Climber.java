@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Climber extends SubsystemBase {
-    private SparkMax climber;
+    private SparkMax climberWheels;
     private SparkMax climberArm;
     private RelativeEncoder climberArmEncoder;
 
@@ -23,18 +23,18 @@ public class SUB_Climber extends SubsystemBase {
     }
 
     private SUB_Climber (){
-        climber = new SparkMax(Constants.Climber.kCLIMBER_MOTOR_CANID, SparkMax.MotorType.kBrushless);
+        climberWheels = new SparkMax(Constants.Climber.kCLIMBER_MOTOR_CANID, SparkMax.MotorType.kBrushless);
         climberArm = new SparkMax(Constants.Climber.kCLIMBER_ARM_MOTOR_CANID, SparkMax.MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
         config.alternateEncoder
             .countsPerRevolution(8192)
-            .positionConversionFactor(360.0); // Now position is in Degrees
+            .positionConversionFactor(360.0); // Degrees
         climberArm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         climberArmEncoder = climberArm.getAlternateEncoder();
     }
 
-    public void setClimber(double speed){
-        climber.set(speed);
+    public void setClimberWheels(double speed){
+        climberWheels.set(speed);
     }
 
     public void setClimberArm(double speed){
@@ -71,14 +71,14 @@ public class SUB_Climber extends SubsystemBase {
     }
 
     public void climb() {
-        setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED);
+        setClimberWheels(Constants.Climber.kCLIMBER_MOTOR_SPEED);
     }
 
     public void unClimb() {
-        setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED);
+        setClimberWheels(-Constants.Climber.kCLIMBER_MOTOR_SPEED);
     }
 
-    public void stopClimber() {
-        setClimber(0);
+    public void stopClimb() {
+        setClimberWheels(0);
     }
 }

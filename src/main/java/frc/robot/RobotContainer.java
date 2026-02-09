@@ -112,7 +112,7 @@ public class RobotContainer {
                 shooter.setDefaultCommand(new InstantCommand(() -> shooter.setRPM(0), shooter));
                 index.setDefaultCommand(new InstantCommand(() -> index.set(0), index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
-                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimber(), climber));
+                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
                                 () -> autoGenerator.setreachedtarget(true)));
