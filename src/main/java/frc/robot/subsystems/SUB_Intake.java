@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.LimitSwitchConfig.Type;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLimitSwitch;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
@@ -33,6 +35,18 @@ public class SUB_Intake extends SubsystemBase {
         forwardLimit = arm.getForwardLimitSwitch();
         reverseLimit = arm.getReverseLimitSwitch();
         extended = false;
+        configureMotors();
+    }
+
+    private void configureMotors(){
+        SparkMaxConfig config = new SparkMaxConfig();
+        config.limitSwitch
+            .forwardLimitSwitchEnabled(true)
+            .forwardLimitSwitchType(Type.kNormallyOpen)//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
+            .reverseLimitSwitchEnabled(true)
+            .reverseLimitSwitchType(Type.kNormallyOpen);//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
+        arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        
     }
 
     public boolean isForwardPressed() {

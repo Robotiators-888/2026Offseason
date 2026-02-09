@@ -173,6 +173,12 @@ public final class Constants {
                 public static final int kSHOOTER_FLYWHEEL1_MOTOR_CANID = 28;
                 public static final int kSHOOTER_FLYWHEEL2_MOTOR_CANID = 29;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.25;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+                public static final double kSHOOTER_FLYWHEEL_kA = 0.01;
+                public static final double kSHOOTER_FLYWHEEL_kP = 0; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kI = 0;
+                public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
 
         public static final class Intake {

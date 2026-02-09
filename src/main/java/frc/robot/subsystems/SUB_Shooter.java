@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -38,12 +39,13 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0; 
         shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.0;
-        shooterConfig.Slot0.kS = 0.25;
-        shooterConfig.Slot0.kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
-        shooterConfig.Slot0.kA = 0.01;
-        shooterConfig.Slot0.kP = 0; //TODO: After testing SVA, test PID, default is 4.8
-        shooterConfig.Slot0.kI = 0;
-        shooterConfig.Slot0.kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
+        shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
+        shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+        shooterConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
+        shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
+        shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
+        shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
         flyWheel1.getConfigurator().apply(shooterConfig);
         flyWheel2.getConfigurator().apply(shooterConfig);
         flyWheel2.setControl(new Follower(flyWheel1.getDeviceID(), MotorAlignmentValue.Aligned));
