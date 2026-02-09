@@ -19,6 +19,7 @@ public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
     private TalonFX intake;
     private SparkMax arm;
+    private SparkMax armFollower;
     private SparkLimitSwitch forwardLimit;
     private SparkLimitSwitch reverseLimit;
     private static SUB_Intake INSTANCE = null;
@@ -32,6 +33,7 @@ public class SUB_Intake extends SubsystemBase {
     private SUB_Intake (){
         intake = new TalonFX(Constants.Intake.kINTAKE_MOTOR_CANID);
         arm = new SparkMax(Constants.Intake.kARM_MOTOR_CANID, MotorType.kBrushless);
+        armFollower = new SparkMax(Constants.Intake.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
         forwardLimit = arm.getForwardLimitSwitch();
         reverseLimit = arm.getReverseLimitSwitch();
         extended = false;
@@ -46,7 +48,9 @@ public class SUB_Intake extends SubsystemBase {
             .reverseLimitSwitchEnabled(true)
             .reverseLimitSwitchType(Type.kNormallyOpen);//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
         arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        
+        SparkMaxConfig followerConfig = new SparkMaxConfig();
+        followerConfig.follow(arm, true); 
+        armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
 
     public boolean isForwardPressed() {

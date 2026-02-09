@@ -185,6 +185,7 @@ public final class Constants {
                 public static final int kINTAKE_MOTOR_CANID = 30;
                 public static final int kARM_MOTOR_CANID = 32;
                 public static final double kINTAKE_MOTOR_SPEED = 0.5;
+                public static final int kARM_FOLLOWER_MOTOR_CANID = 35;
         }
         
         public static final class Index {
