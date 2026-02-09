@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLimitSwitch;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,6 +17,8 @@ public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
     private TalonFX intake;
     private SparkMax arm;
+    private SparkLimitSwitch forwardLimit;
+    private SparkLimitSwitch reverseLimit;
     private static SUB_Intake INSTANCE = null;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
@@ -27,7 +30,17 @@ public class SUB_Intake extends SubsystemBase {
     private SUB_Intake (){
         intake = new TalonFX(Constants.Intake.kINTAKE_MOTOR_CANID);
         arm = new SparkMax(Constants.Intake.kARM_MOTOR_CANID, MotorType.kBrushless);
+        forwardLimit = arm.getForwardLimitSwitch();
+        reverseLimit = arm.getReverseLimitSwitch();
         extended = false;
+    }
+
+    public boolean isForwardPressed() {
+        return forwardLimit.isPressed();
+    }
+
+    public boolean isReversePressed() {
+        return reverseLimit.isPressed();
     }
 
     public void set(double speed){
@@ -39,7 +52,13 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
-      SmartDashboard.putNumber("intakeRPM", intakeRPM());
+        if (isReversePressed()) {
+            arm.getEncoder().setPosition(0);
+        }
+        SmartDashboard.putNumber("intakeRPM", intakeRPM());
+        SmartDashboard.putBoolean("Arm Forward Limit", isForwardPressed());
+        SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
+        SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
     }
 
     public void setArm (double speed) {
@@ -47,21 +66,20 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public Command retractArm() {
-        extended = false;
-        return Commands.sequence(
-            new InstantCommand(() -> setArm(-0.5)),
-            new WaitCommand(1.0),
-            new InstantCommand(() -> setArm(0))
-        );
+        
+        return Commands.run(() -> setArm(-0.5), this)
+            .until(this::isReversePressed) // Stop command when switch is hit
+            .finallyDo(() -> {
+                setArm(0);
+                // HOMING: Reset encoder to 0 once we hit the back limit
+                arm.getEncoder().setPosition(0);
+            });
     }
 
     public Command extendArm() {
-        extended = true;
-        return Commands.sequence(
-            new InstantCommand(() -> setArm(0.5)),
-            new WaitCommand(1.0),
-            new InstantCommand(() -> setArm(0))
-        );
+        return Commands.run(() -> setArm(0.5), this)
+            .until(this::isForwardPressed) // Stop command when switch is hit
+            .finallyDo(() -> setArm(0));
     }
 
     public boolean isExtended() {
