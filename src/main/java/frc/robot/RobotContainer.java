@@ -133,8 +133,12 @@ public class RobotContainer {
                 // Intake
 
                 NamedCommands.registerCommand("Intake", Commands.sequence(
-                        intake.isExtended() ? Commands.none() : intake.extendArm(),
-                        new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                        Commands.either(
+                                Commands.none(),              // If true (already extended)
+                                intake.extendArm(),           // If false (retracted)
+                                intake::isExtended            // The check to run repeatedly
+                        ),
+                        new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
                 ));
 
                 NamedCommands.registerCommand("StopIntake",
@@ -220,7 +224,6 @@ public class RobotContainer {
                                 ).orElse(drivetrain.getPose().getTranslation()) // Safety: returns 0 dist if tag missing
                                 )), shooter),
                         new WaitUntilCommand(() -> shooter.atdesiredRPM()),
-                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
                         Commands.run(() -> {
                                 if (shooter.atdesiredRPM()) {
                                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
@@ -272,9 +275,14 @@ public class RobotContainer {
 
                 Driver1.a().toggleOnTrue(
                         Commands.sequence(
-                                (intake.isExtended() ? Commands.none() : intake.extendArm()),
-                                new InstantCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
-                )).toggleOnFalse(
+                                Commands.either(
+                                        Commands.none(),              // If true (already extended)
+                                        intake.extendArm(),           // If false (retracted)
+                                        intake::isExtended            // The check to run repeatedly
+                                ),
+                                new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                        )
+                ).toggleOnFalse(
                         Commands.sequence(
                                 new InstantCommand(() -> intake.set(0),intake)
                         )

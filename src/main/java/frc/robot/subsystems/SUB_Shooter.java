@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -15,8 +16,9 @@ public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
     private TalonFX flyWheel1;
     private TalonFX flyWheel2;
-    // private double desiredSpeed = 0;
-    TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+    private final VelocityVoltage m_request = new VelocityVoltage(0);
+    private double desiredSpeed = 0;
+    private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -27,28 +29,34 @@ public class SUB_Shooter extends SubsystemBase {
     private SUB_Shooter(){
         flyWheel1 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL1_MOTOR_CANID); // Might need a CANBus
         flyWheel2 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL2_MOTOR_CANID);
+        configFlywheel();
+    }
+
+    private void configFlywheel() {
+        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 40; 
+        shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0; 
+        shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.0;
+        shooterConfig.Slot0.kS = 0.25;
+        shooterConfig.Slot0.kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+        shooterConfig.Slot0.kA = 0.01;
+        shooterConfig.Slot0.kP = 0; //TODO: After testing SVA, test PID, default is 4.8
+        shooterConfig.Slot0.kI = 0;
+        shooterConfig.Slot0.kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
+        flyWheel1.getConfigurator().apply(shooterConfig);
+        flyWheel2.getConfigurator().apply(shooterConfig);
         flyWheel2.setControl(new Follower(flyWheel1.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    // @Deprecated
-    // private void set(double speed){
-    //     flyWheel1.set(speed);
-    // }
+    @Deprecated
+    public void set(double speed){
+        flyWheel1.set(speed);
+    }
 
     public void setRPM(double rpm) {
-        Slot0Configs slotConfig = talonConfig.Slot0;
-        slotConfig.kS = 0.25;
-        slotConfig.kV = rpm/60.0*0.12;
-        slotConfig.kA = rpm/60.0*0.01;
-        slotConfig.kP = 0; //TODO: After testing SVA, test PID, default is 4.8
-        slotConfig.kI = 0;
-        slotConfig.kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
-
-        MotionMagicConfigs motionConfig = talonConfig.MotionMagic;
-        motionConfig.MotionMagicCruiseVelocity = rpm/60.0;
-        motionConfig.MotionMagicAcceleration = rpm/60.0/5.0;
-        motionConfig.MotionMagicJerk = 1600;
-        flyWheel1.getConfigurator().apply(talonConfig);
+        this.desiredSpeed = rpm;
+        flyWheel1.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
     public double flywheelRPM() {
@@ -56,9 +64,8 @@ public class SUB_Shooter extends SubsystemBase {
     }
   
     public boolean atdesiredRPM() {
-        //return flywheelRPM()>= desiredSpeed;
-        // return (flyWheel1.getMotionMagicIsRunning().getValue() && flyWheel2.getMotionMagicIsRunning().getValue());
-        return flyWheel1.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
+        return Math.abs(flywheelRPM() - desiredSpeed) < 100; // Allow a tolerance of 100 RPM
+        // This logic makes absolutely now sense?: return flyWheel1.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
     public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
