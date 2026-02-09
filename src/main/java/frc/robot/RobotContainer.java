@@ -211,7 +211,9 @@ public class RobotContainer {
         public void teleopPeriodic() {
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-                if (lastActiveAlliance != activeAlliance.get()) {
+                SmartDashboard.putBoolean("Last Active Alliance", lastActiveAlliance);
+                
+                if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                         Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
                         // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
