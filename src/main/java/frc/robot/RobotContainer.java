@@ -125,8 +125,9 @@ public class RobotContainer {
 
                 //CLimber
                 NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
-                        intake.retractArm(),
-                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)).until(() -> climber.isClimberArmAtPosition(45))
+                                intake.retractArm(),
+                                new WaitUntilCommand(() -> intake::isReversePressed),
+                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
                         ));
 
                 NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
@@ -139,7 +140,7 @@ public class RobotContainer {
                         Commands.either(
                                 Commands.none(),              // If true (already extended)
                                 intake.extendArm(),           // If false (retracted)
-                                intake::isExtended            // The check to run repeatedly
+                                intake::isForwardPressed
                         ),
                         new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
                 ));
@@ -243,7 +244,7 @@ public class RobotContainer {
                 Driver1.povLeft().toggleOnTrue(
                         Commands.sequence(
                                 intake.retractArm(),
-                                new WaitUntilCommand(() -> !intake.isExtended()),
+                                new WaitUntilCommand(() -> intake::isReversePressed),
                                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
                         )     
                 ).toggleOnFalse(
@@ -263,7 +264,7 @@ public class RobotContainer {
                                 Commands.either(
                                         Commands.none(),              // If true (already extended)
                                         intake.extendArm(),           // If false (retracted)
-                                        intake::isExtended            // The check to run repeatedly
+                                        intake::isForwardPressed
                                 ),
                                 new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
                         )
