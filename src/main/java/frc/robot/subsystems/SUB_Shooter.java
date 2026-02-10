@@ -43,6 +43,7 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0; 
         shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.0;
+        shooterConfig.Feedback.SensorToMechanismRatio = 0.5; // Gear Ratio of 1:2 between kraken and the flywheel
         shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
