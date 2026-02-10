@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -18,7 +18,7 @@ public class SUB_Index extends SubsystemBase {
         return INSTANCE;
     }
     private SUB_Index () {
-        index = new SparkFlex(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
+        index = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
     }
     public void set(double speed){
         index.set(speed);
