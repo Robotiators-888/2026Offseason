@@ -9,7 +9,7 @@ import frc.robot.Constants;
 
 public class SUB_Index extends SubsystemBase {
     // Needs to be a neo vortex
-    private SparkFlex index;
+    private SparkMax index;
     private static SUB_Index INSTANCE = null;
     public static SUB_Index getInstance () {
         if (INSTANCE == null) {
