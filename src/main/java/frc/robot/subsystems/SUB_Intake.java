@@ -36,7 +36,6 @@ public class SUB_Intake extends SubsystemBase {
         armFollower = new SparkMax(Constants.Intake.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
         forwardLimit = arm.getForwardLimitSwitch();
         reverseLimit = arm.getReverseLimitSwitch();
-        extended = false;
         configureMotors();
     }
 
@@ -84,7 +83,6 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public Command retractArm() {
-        
         return Commands.run(() -> setArm(-0.5), this)
             .until(this::isReversePressed) // Stop command when switch is hit
             .finallyDo(() -> {
