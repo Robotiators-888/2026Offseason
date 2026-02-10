@@ -123,7 +123,7 @@ public final class Constants {
                 public static final int kBACK_LEFT_DRIVE_MOTOR_CANID = 26;
                 public static final int kBACK_LEFT_STEER_MOTOR_CANID = 27;
 
-                public static final int kPigeon_CANID = 10;
+                public static final int kPigeon_CANID = 5;
 
                 public static final Rotation2d shooterSide = new Rotation2d(0);
                 public static final Rotation2d intakeSide = new Rotation2d(180);
@@ -170,9 +170,11 @@ public final class Constants {
         }
 
         public static final class Shooter {
-                public static final int kSHOOTER_FLYWHEEL1_MOTOR_CANID = 28;
-                public static final int kSHOOTER_FLYWHEEL2_MOTOR_CANID = 29;
+                public static final int kSHOOTER_FLYWHEEL1_MOTOR_CANID = 43;
+                public static final int kSHOOTER_FLYWHEEL2_MOTOR_CANID = 44;
+                public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+                public static final double kMETERING_SPEED = 0.5;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.25;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.01;
@@ -182,23 +184,23 @@ public final class Constants {
         }
 
         public static final class Intake {
-                public static final int kINTAKE_MOTOR_CANID = 30;
-                public static final int kARM_MOTOR_CANID = 32;
+                public static final int kINTAKE_MOTOR_CANID = 30; // Roller
+                public static final int kARM_MOTOR_CANID = 31; 
+                public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
                 public static final double kINTAKE_MOTOR_SPEED = 0.5;
-                public static final int kARM_FOLLOWER_MOTOR_CANID = 35;
         }
         
         public static final class Index {
-                public static final int KINDEX_MOTOR_CANID = 31;
+                public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final double kINDEX_MOTOR_SPEED = 0.5;
         }
 
         public static final class Climber {
-                public static final int kCLIMBER_MOTOR_CANID = 33;
-                public static final int kCLIMBER_ARM_MOTOR_CANID = 34;
+                public static final int kCLIMBER_MOTOR_CANID = 51; 
+                public static final int kCLIMBER_PIVOT_CANID = 50; 
                 public static final double kCLIMBER_MOTOR_SPEED = 0.5;
-                public static final double kCLIMBER_ARM_SPEED = 0.5;
-                public static final double kCLIMBER_ARM_TOLERANCE = 5.0; // degrees
+                public static final double kCLIMBER_PIVOT_SPEED = 0.5;
+                public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
         }
 
         // Motor Constants

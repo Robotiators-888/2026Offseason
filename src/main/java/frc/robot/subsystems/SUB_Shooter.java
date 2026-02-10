@@ -8,6 +8,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -17,6 +19,7 @@ public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
     private TalonFX flyWheel1;
     private TalonFX flyWheel2;
+    private SparkMax meteringWheel;
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
@@ -28,8 +31,9 @@ public class SUB_Shooter extends SubsystemBase {
           return INSTANCE;
     }
     private SUB_Shooter(){
-        flyWheel1 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL1_MOTOR_CANID); // Might need a CANBus
+        flyWheel1 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL1_MOTOR_CANID); 
         flyWheel2 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL2_MOTOR_CANID);
+        meteringWheel = new SparkMax(Constants.Shooter.kMETERING_WHEEL_CANID, MotorType.kBrushless);
         configFlywheel();
     }
 
@@ -61,11 +65,15 @@ public class SUB_Shooter extends SubsystemBase {
         flyWheel1.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
+    public void setMeteringSpeed(double speed) {
+        meteringWheel.set(speed);
+    }
+
     public double flywheelRPM() {
         return (flyWheel1.getVelocity().getValue().baseUnitMagnitude()+flyWheel2.getVelocity().getValue().baseUnitMagnitude())/2;
     }
   
-    public boolean atdesiredRPM() {
+    public boolean atDesiredRPM() {
         return Math.abs(flywheelRPM() - desiredSpeed) < 100; // Allow a tolerance of 100 RPM
         // This logic makes absolutely now sense?: return flyWheel1.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }

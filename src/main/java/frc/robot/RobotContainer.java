@@ -109,7 +109,10 @@ public class RobotContainer {
                                 drivetrain));
 
                 intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
-                shooter.setDefaultCommand(new InstantCommand(() -> shooter.setRPM(0), shooter));
+                shooter.setDefaultCommand(new InstantCommand(() -> {
+                        shooter.setRPM(0);
+                        shooter.setMeteringSpeed(0);
+                }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> index.set(0), index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
                 climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
@@ -123,11 +126,11 @@ public class RobotContainer {
                 //CLimber
                 NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
                         intake.retractArm(),
-                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(45, Constants.Climber.kCLIMBER_ARM_SPEED),climber)).until(() -> climber.isClimberArmAtPosition(45, Constants.Climber.kCLIMBER_ARM_TOLERANCE))
+                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)).until(() -> climber.isClimberArmAtPosition(45))
                         ));
 
                 NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
-                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0, Constants.Climber.kCLIMBER_ARM_SPEED),climber)).until(() -> climber.isClimberArmAtPosition(0, Constants.Climber.kCLIMBER_ARM_TOLERANCE))
+                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)).until(() -> climber.isClimberArmAtPosition(0))
                         ));
                 
                 // Intake
@@ -147,48 +150,38 @@ public class RobotContainer {
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ManualShoot", Commands.sequence(
-                        new InstantCommand(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),shooter),
-                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
-                        Commands.run(() -> {
-                                if (shooter.atdesiredRPM()) {
-                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                                } else {
-                                        index.set(0); // Stop immediately if RPM drops
-                                }
-                        }, index)
+                Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
+                Commands.run(() -> {
+                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
+                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                }, shooter, index)
                 ));
 
                 NamedCommands.registerCommand("ShootDistance", Commands.sequence(
-                        new InstantCommand(() -> shooter.shootMeters(drivetrain.getPose().getTranslation().getDistance(
-                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                ).map(pose -> pose.toPose2d().getTranslation()
-                                        .plus(new Translation2d(
-                                        Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
-                                        0
-                                        ))
-                                ).orElse(drivetrain.getPose().getTranslation()) // Safety: returns 0 dist if tag missing
-                                )), shooter),
-                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
-                        Commands.run(() -> {
-                                if (shooter.atdesiredRPM()) {
-                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                                } else {
-                                        index.set(0); // Stop immediately if RPM drops
-                                }
-                        }, index)
+                Commands.run(() -> shooter.shootMeters(
+                        drivetrain.getPose().getTranslation().getDistance(
+                        SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                        ).map(pose -> pose.toPose2d().getTranslation()
+                                .plus(new Translation2d(
+                                Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
+                                0
+                                ))
+                        ).orElse(drivetrain.getPose().getTranslation())
+                        )), shooter)
+                        .until(shooter::atDesiredRPM),
+
+                Commands.run(() -> {
+                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                }, shooter, index)
                 ));
 
-                NamedCommands.registerCommand("StopShootingManual", Commands.parallel(
-                        new InstantCommand(() -> index.set(0),index),
-                        new InstantCommand(() -> shooter.setRPM(0),shooter)
-                        
-                ));
-
-                NamedCommands.registerCommand("StopShootingDistance", Commands.parallel(
-                        new InstantCommand(() -> index.set(0),index),
-                        new InstantCommand(() -> shooter.setRPM(0),shooter)
-                        
+                NamedCommands.registerCommand("StopShooting", Commands.parallel(
+                        new InstantCommand(() -> index.set(0), index),
+                        new InstantCommand(() -> shooter.setRPM(0), shooter),
+                        new InstantCommand(() -> shooter.setMeteringSpeed(0), shooter)
                 ));
 
                 // Configure the trigger bindings
@@ -212,57 +205,49 @@ public class RobotContainer {
         private void configureBindings() {
 
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
-                Driver1.rightTrigger().onTrue(Commands.sequence(
-                        new InstantCommand(() -> shooter.shootMeters(drivetrain.getPose().getTranslation().getDistance(
+                Driver1.rightTrigger().whileTrue(Commands.sequence(
+                        Commands.run(() -> shooter.shootMeters(
+                        drivetrain.getPose().getTranslation().getDistance(
                                 SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
                                 ).map(pose -> pose.toPose2d().getTranslation()
-                                        .plus(new Translation2d(
+                                .plus(new Translation2d(
                                         Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
                                         0
-                                        ))
-                                ).orElse(drivetrain.getPose().getTranslation()) // Safety: returns 0 dist if tag missing
-                                )), shooter),
-                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
+                                ))
+                                ).orElse(drivetrain.getPose().getTranslation())
+                        )), shooter)
+                        .until(shooter::atDesiredRPM),
+                        
                         Commands.run(() -> {
-                                if (shooter.atdesiredRPM()) {
-                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                                } else {
-                                        index.set(0); // Stop immediately if RPM drops
-                                }
-                        }, index)
-                )).onFalse(Commands.parallel(
-                        new InstantCommand(() -> index.set(0),index),
-                        new InstantCommand(() -> shooter.setRPM(0.0),shooter)     
+                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        }, shooter, index)
+                )); 
+
+                Driver1.leftTrigger().whileTrue(Commands.sequence(
+                        Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter)
+                        .until(shooter::atDesiredRPM),
+                        
+                        Commands.run(() -> {
+                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
+                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        }, shooter, index)
                 ));
                 
                 Driver1.rightBumper().onTrue(Commands.none()); // TODO: Add AutoAim once merged
 
 
-                Driver1.leftTrigger().onTrue(Commands.sequence(
-                        new InstantCommand(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),shooter),
-                        new WaitUntilCommand(() -> shooter.atdesiredRPM()),
-                        Commands.run(() -> {
-                                if (shooter.atdesiredRPM()) {
-                                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                                } else {
-                                        index.set(0); // Stop immediately if RPM drops
-                                }
-                        }, index)
-                )).onFalse(Commands.parallel(
-                        new InstantCommand(() -> index.set(0),index),
-                        new InstantCommand(() -> shooter.setRPM(0.0),shooter)     
-                ));
 
                 Driver1.povLeft().toggleOnTrue(
                         Commands.sequence(
                                 intake.retractArm(),
                                 new WaitUntilCommand(() -> !intake.isExtended()),
-                                new InstantCommand(() -> climber.setClimberArmToPosition(45, Constants.Climber.kCLIMBER_ARM_SPEED),climber)
-                        )
-                        
+                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
+                        )     
                 ).toggleOnFalse(
-                        new InstantCommand(() -> climber.setClimberArmToPosition(0, Constants.Climber.kCLIMBER_ARM_SPEED),climber)
+                        new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)
                 );
 
                 Driver1.povUp().onTrue(

@@ -24,7 +24,7 @@ public class SUB_Climber extends SubsystemBase {
 
     private SUB_Climber (){
         climberWheels = new SparkMax(Constants.Climber.kCLIMBER_MOTOR_CANID, SparkMax.MotorType.kBrushless);
-        climberArm = new SparkMax(Constants.Climber.kCLIMBER_ARM_MOTOR_CANID, SparkMax.MotorType.kBrushless);
+        climberArm = new SparkMax(Constants.Climber.kCLIMBER_PIVOT_CANID, SparkMax.MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
         config.alternateEncoder
             .countsPerRevolution(8192)
@@ -56,15 +56,15 @@ public class SUB_Climber extends SubsystemBase {
         climberArmEncoder.setPosition(0);
     }
 
-    public boolean isClimberArmAtPosition(double targetPosition, double tolerance) {
-        return Math.abs(getClimberArmPosition() - targetPosition) <= tolerance;
+    public boolean isClimberArmAtPosition(double targetPosition) {
+        return Math.abs(getClimberArmPosition() - targetPosition) <= Constants.Climber.kCLIMBER_PIVOT_TOLERANCE;
     }
 
-    public void setClimberArmToPosition(double targetPosition, double speed) {
+    public void setClimberArmToPosition(double targetPosition) {
         if (getClimberArmPosition() < targetPosition) {
-            setClimberArm(speed); // Move up
+            setClimberArm(Constants.Climber.kCLIMBER_PIVOT_SPEED); // Move up
         } else if (getClimberArmPosition() > targetPosition) {
-            setClimberArm(-speed); // Move down
+            setClimberArm(-Constants.Climber.kCLIMBER_PIVOT_SPEED); // Move down
         } else {
             setClimberArm(0); // Stop
         }
