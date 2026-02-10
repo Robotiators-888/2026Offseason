@@ -24,7 +24,7 @@ public class SUB_Index extends SubsystemBase {
         index.set(speed);
     }
     public double intakeRPM(){
-        return index.getEncoder().getVelocity();
+        return index.getEncoder().getVelocity()/3; // Gear Ratio
     }
     public void periodic() {
       SmartDashboard.putNumber("indexRPM", intakeRPM());
