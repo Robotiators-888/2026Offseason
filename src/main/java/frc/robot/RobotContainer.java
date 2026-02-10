@@ -126,7 +126,7 @@ public class RobotContainer {
                 //CLimber
                 NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
                                 intake.retractArm(),
-                                new WaitUntilCommand(() -> intake::isReversePressed),
+                                new WaitUntilCommand(intake::isReversePressed),
                                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
                         ));
 
@@ -244,7 +244,7 @@ public class RobotContainer {
                 Driver1.povLeft().toggleOnTrue(
                         Commands.sequence(
                                 intake.retractArm(),
-                                new WaitUntilCommand(() -> intake::isReversePressed),
+                                new WaitUntilCommand(intake::isReversePressed),
                                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
                         )     
                 ).toggleOnFalse(
