@@ -1,5 +1,8 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Volts;
+
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -13,7 +16,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 
 public class SUB_Shooter extends SubsystemBase {
@@ -24,6 +29,7 @@ public class SUB_Shooter extends SubsystemBase {
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+    private final SysIdRoutine sysIdRoutine;
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -34,6 +40,19 @@ public class SUB_Shooter extends SubsystemBase {
     private SUB_Shooter(){
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
+        sysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null, // Use default ramp rate (1V/s)
+                null, // Use default step voltage (7V)
+                null, // Use default timeout (10s)
+                (state) -> SignalLogger.writeString("state", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> topFlywheel.setControl(voltageRequest.withOutput(volts.in(Volts))), 
+                null, // No log consumer needed (Phoenix 6 logs internally)
+                this
+            )
+        );
         configFlywheel();
     }
 
@@ -87,5 +106,13 @@ public class SUB_Shooter extends SubsystemBase {
 
     public void periodic() {
       SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
     }
 }

@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
@@ -208,7 +209,11 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
-
+                Driver2.y().whileTrue(shooter.sysIdDynamic(SysIdRoutine.Direction.kForward));
+                Driver2.a().whileTrue(shooter.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+                Driver2.x().whileTrue(shooter.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+                Driver2.b().whileTrue(shooter.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2)));
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
                 Driver1.rightTrigger().whileTrue(Commands.sequence(
                         Commands.run(() -> shooter.shootMeters(
