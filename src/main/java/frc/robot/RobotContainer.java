@@ -110,10 +110,12 @@ public class RobotContainer {
 
                 intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
                 shooter.setDefaultCommand(new InstantCommand(() -> {
-                        shooter.setRPM(0);
-                        shooter.setMeteringSpeed(0);
+                        shooter.stop();
                 }, shooter));
-                index.setDefaultCommand(new InstantCommand(() -> index.set(0), index));
+                index.setDefaultCommand(new InstantCommand(() -> {
+                        index.set(0);
+                        index.setMeteringSpeed(0);
+                }, index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
                 climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
@@ -154,7 +156,7 @@ public class RobotContainer {
                 Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
                 Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                 }, shooter, index)
                 ));
@@ -174,15 +176,17 @@ public class RobotContainer {
                         .until(shooter::atDesiredRPM),
 
                 Commands.run(() -> {
-                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                 }, shooter, index)
                 ));
 
                 NamedCommands.registerCommand("StopShooting", Commands.parallel(
-                        new InstantCommand(() -> index.set(0), index),
-                        new InstantCommand(() -> shooter.setRPM(0), shooter),
-                        new InstantCommand(() -> shooter.setMeteringSpeed(0), shooter)
+                        new InstantCommand(() -> {
+                                index.set(0);
+                                index.setMeteringSpeed(0);
+                        }, index),
+                        new InstantCommand(() -> shooter.stop(), shooter)
                 ));
 
                 // Configure the trigger bindings
@@ -221,9 +225,9 @@ public class RobotContainer {
                         .until(shooter::atDesiredRPM),
                         
                         Commands.run(() -> {
-                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        }, shooter, index)
+                        }, shooter,index)
                 )); 
 
                 Driver1.leftTrigger().whileTrue(Commands.sequence(
@@ -232,7 +236,7 @@ public class RobotContainer {
                         
                         Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        shooter.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                         }, shooter, index)
                 ));

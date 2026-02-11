@@ -170,10 +170,10 @@ public final class Constants {
         }
 
         public static final class Shooter {
-                public static final int kSHOOTER_FLYWHEEL1_MOTOR_CANID = 43;
-                public static final int kSHOOTER_FLYWHEEL2_MOTOR_CANID = 44;
+                public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 43;
+                public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 44;
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+                public static final double kSHOOTER_FLYWHEEL_RPM = 50;
                 public static final double kMETERING_SPEED = 0.5;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.25;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...

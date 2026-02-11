@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -17,9 +18,9 @@ import frc.robot.Constants;
 
 public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
-    private TalonFX flyWheel1;
-    private TalonFX flyWheel2;
-    private SparkMax meteringWheel;
+    private TalonFX topFlywheel;
+    private TalonFX bottomFlywheel;
+    private final VoltageOut voltageRequest = new VoltageOut(0);
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
@@ -31,9 +32,8 @@ public class SUB_Shooter extends SubsystemBase {
           return INSTANCE;
     }
     private SUB_Shooter(){
-        flyWheel1 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL1_MOTOR_CANID); 
-        flyWheel2 = new TalonFX(Constants.Shooter.kSHOOTER_FLYWHEEL2_MOTOR_CANID);
-        meteringWheel = new SparkMax(Constants.Shooter.kMETERING_WHEEL_CANID, MotorType.kBrushless);
+        topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
+        bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
         configFlywheel();
     }
 
@@ -41,9 +41,8 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 40; 
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.0; 
-        shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 0.0;
-        shooterConfig.Feedback.SensorToMechanismRatio = 0.5; // Gear Ratio of 1:2 between kraken and the flywheel
+        shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 3.0; 
+        shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 3.0;
         shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
@@ -51,38 +50,39 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
         shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
         shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
-        flyWheel1.getConfigurator().apply(shooterConfig);
-        flyWheel2.getConfigurator().apply(shooterConfig);
-        flyWheel2.setControl(new Follower(flyWheel1.getDeviceID(), MotorAlignmentValue.Aligned));
+        topFlywheel.getConfigurator().apply(shooterConfig);
+        bottomFlywheel.getConfigurator().apply(shooterConfig);
+        bottomFlywheel.setControl(new Follower(topFlywheel.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
     @Deprecated
     public void set(double speed){
-        flyWheel1.set(speed);
+        topFlywheel.set(speed);
     }
 
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
-        flyWheel1.setControl(m_request.withVelocity(rpm / 60.0));
-    }
-
-    public void setMeteringSpeed(double speed) {
-        meteringWheel.set(speed);
+        topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
     public double flywheelRPM() {
-        return (flyWheel1.getVelocity().getValue().baseUnitMagnitude()+flyWheel2.getVelocity().getValue().baseUnitMagnitude())/2;
+        return (topFlywheel.getVelocity().getValue().baseUnitMagnitude()+bottomFlywheel.getVelocity().getValue().baseUnitMagnitude())/2;
     }
   
     public boolean atDesiredRPM() {
         return Math.abs(flywheelRPM() - desiredSpeed) < 100; // Allow a tolerance of 100 RPM
-        // This logic makes absolutely now sense?: return flyWheel1.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
+        // This logic makes absolutely now sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
     public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
         // Example implementation for shooting at a specific distance in meters
         // This would be replaced with actual logic based on distance and shooter characteristics
         setRPM(1000); // Example RPM value for shooting at 1 meter distance
+    }
+
+    public void stop() {
+        this.desiredSpeed = 0;
+        topFlywheel.setControl(voltageRequest.withOutput(0));
     }
 
     public void periodic() {
