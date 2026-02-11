@@ -96,7 +96,7 @@ public class SUB_Shooter extends SubsystemBase {
     public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
         // Example implementation for shooting at a specific distance in meters
         // This would be replaced with actual logic based on distance and shooter characteristics
-        setRPM(1000); // Example RPM value for shooting at 1 meter distance
+        setRPM(10); // Example RPM value for shooting at 1 meter distance
     }
 
     public void stop() {
