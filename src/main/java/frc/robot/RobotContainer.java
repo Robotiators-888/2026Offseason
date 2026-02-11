@@ -209,10 +209,7 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
-                Driver2.y().whileTrue(shooter.sysIdDynamic(SysIdRoutine.Direction.kForward));
-                Driver2.a().whileTrue(shooter.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-                Driver2.x().whileTrue(shooter.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-                Driver2.b().whileTrue(shooter.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2)));
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
                 Driver1.rightTrigger().whileTrue(Commands.sequence(
