@@ -82,6 +82,10 @@ public class SUB_Shooter extends SubsystemBase {
         topFlywheel.setControl(voltageRequest.withOutput(0));
     }
 
+    public void setVolts(double volts) {
+        topFlywheel.setControl(voltageRequest.withOutput(volts));
+    }
+
     public void periodic() {
       SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
     }

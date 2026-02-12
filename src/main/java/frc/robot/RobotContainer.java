@@ -210,7 +210,10 @@ public class RobotContainer {
          */
         private void configureBindings() {
 
-                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2)));
+                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
+
+                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug
+
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
                 Driver1.rightTrigger().whileTrue(Commands.sequence(
                         Commands.run(() -> shooter.shootMeters(
