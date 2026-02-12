@@ -16,7 +16,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -175,9 +174,9 @@ public final class Constants {
                 public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 50;
                 public static final double kMETERING_SPEED = 0.5;
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.25;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.12; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
-                public static final double kSHOOTER_FLYWHEEL_kA = 0.01;
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+                public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kP = 0; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1

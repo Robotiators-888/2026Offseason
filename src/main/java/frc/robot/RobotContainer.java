@@ -86,6 +86,7 @@ public class RobotContainer {
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
+        public double targetRPM = 1000;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 =
@@ -110,7 +111,7 @@ public class RobotContainer {
                                 drivetrain));
 
                 intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
-                shooter.setDefaultCommand(new InstantCommand(() -> {
+                shooter.setDefaultCommand(new RunCommand(() -> {
                         shooter.stop();
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
@@ -213,6 +214,11 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug
+                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2))); // Shooter debug
+                // Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(1000)));
+                Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM)));
+                Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 100));
+                Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 100));
 
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
                 Driver1.rightTrigger().whileTrue(Commands.sequence(
@@ -329,6 +335,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
+                SmartDashboard.putNumber("Top Motor Current Draw", shooter.getCurrentDrawTop());
         }
 
         public void autonomousInit() {
