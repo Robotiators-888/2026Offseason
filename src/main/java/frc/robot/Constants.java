@@ -20,6 +20,11 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants {
 
+        // Positive is clockwise
+        // For rotation, positive is always clockwise
+        // Front motors are positive is forward
+        // Back motors are negative is forward
+
         public static class Operator {
                 public static final int kDriver1ControllerPort = 0;
                 public static final int kDriver2ControllerPort = 1;
@@ -44,21 +49,24 @@ public final class Constants {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kINTAKE_MOTOR_SPEED = 0.5;
+                public static final double kINTAKE_MOTOR_SPEED = 0.1;
         }
         
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
-                public static final double kINDEX_MOTOR_SPEED = 0.5;
+                public static final double kINDEX_MOTOR_SPEED = 0.1;
         }
 
         public static final class Climber {
                 public static final int kCLIMBER_MOTOR_CANID = 51; 
-                public static final int kCLIMBER_PIVOT_CANID = 50; 
+                // public static final int kCLIMBER_PIVOT_CANID = 50; 
                 public static final double kCLIMBER_MOTOR_SPEED = 0.1;
-                public static final double kCLIMBER_PIVOT_SPEED = 0.5;
-                public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
                 public static final double kCLIMBER_SETPOINT = 9; // Inches, need to convert to rotations
+                // Gear ratio: 36:1
+                // 4.75 in per rotation
+                // Clockwise positive motor
+                // public static final double kCLIMBER_PIVOT_SPEED = 0.1;
+                // public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
         }
 
         public static final class Field {

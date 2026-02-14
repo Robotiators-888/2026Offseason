@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.revrobotics.spark.SparkLimitSwitch;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -56,6 +57,7 @@ public class SUB_Intake extends SubsystemBase {
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         talonConfig.CurrentLimits.SupplyCurrentLimit = 35;
+        talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         intake.getConfigurator().apply(talonConfig);
     }
 
