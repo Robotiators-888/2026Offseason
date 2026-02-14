@@ -74,11 +74,11 @@ public class SUB_Climber extends SubsystemBase {
     // }
 
     public void climb() {
-        setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED);
+        setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED); // Yeah its backwards for some reason
     }
 
     public void unClimb() {
-        setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED);
+        setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED);
     }
 
     public void stopClimb() {

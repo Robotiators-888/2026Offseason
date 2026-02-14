@@ -132,15 +132,21 @@ public class RobotContainer {
                                 new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
                 //CLimber
-                // NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
-                //                 intake.retractArm(),
-                //                 new WaitUntilCommand(intake::isReversePressed),
-                //                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
-                //         ));
+                NamedCommands.registerCommand("ClimbExtend",
+                        new SequentialCommandGroup (
+                                new InstantCommand(() -> climber.climb(), climber),
+                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(true)),
+                                new InstantCommand(() -> climber.stopClimb())
+                        )
+                );
 
-                // NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
-                //         new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)).until(() -> climber.isClimberArmAtPosition(0))
-                //         ));
+                NamedCommands.registerCommand("ClimbRetract",
+                        new SequentialCommandGroup (
+                                new InstantCommand(() -> climber.climb(), climber),
+                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(false)),
+                                new InstantCommand(() -> climber.stopClimb())
+                        )
+                );
                 
                 // Intake
 
@@ -214,7 +220,8 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
-
+                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1)));
+                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1)));
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug
@@ -278,19 +285,19 @@ public class RobotContainer {
                 //         new InstantCommand(() -> climber.unClimb(),climber)
                 // );
 
-                Driver1.povUp().onTrue(
-                        new SequentialCommandGroup (
-                                new InstantCommand(() -> climber.climb(), climber),
-                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(true))
-                        )
-                );
+                // Driver1.povUp().onTrue(
+                //         new SequentialCommandGroup (
+                //                 new InstantCommand(() -> climber.climb(), climber),
+                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(true))
+                //         )
+                // );
 
-                Driver1.povUp().onTrue(
-                        new SequentialCommandGroup (
-                                new InstantCommand(() -> climber.unClimb(), climber),
-                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(false))
-                        )
-                );
+                // Driver1.povDown().onTrue(
+                //         new SequentialCommandGroup (
+                //                 new InstantCommand(() -> climber.unClimb(), climber),
+                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(false))
+                //         )
+                // );
 
                 Driver1.a().toggleOnTrue(
                         Commands.sequence(

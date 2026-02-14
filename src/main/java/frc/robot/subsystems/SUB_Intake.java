@@ -54,6 +54,7 @@ public class SUB_Intake extends SubsystemBase {
         followerConfig.smartCurrentLimit(35);
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+        talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         talonConfig.CurrentLimits.SupplyCurrentLimit = 35;
         intake.getConfigurator().apply(talonConfig);
     }

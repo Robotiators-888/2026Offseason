@@ -55,7 +55,7 @@ public final class Constants {
         public static final class Climber {
                 public static final int kCLIMBER_MOTOR_CANID = 51; 
                 public static final int kCLIMBER_PIVOT_CANID = 50; 
-                public static final double kCLIMBER_MOTOR_SPEED = 0.5;
+                public static final double kCLIMBER_MOTOR_SPEED = 0.1;
                 public static final double kCLIMBER_PIVOT_SPEED = 0.5;
                 public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
                 public static final double kCLIMBER_SETPOINT = 9; // Inches, need to convert to rotations
