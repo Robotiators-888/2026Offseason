@@ -93,5 +93,6 @@ public class SUB_Shooter extends SubsystemBase {
     public void periodic() {
       SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
       SmartDashboard.putNumber("Desired RPM", desiredSpeed);
+      SmartDashboard.putNumber("Top Motor Amperage", getCurrentDrawTop());
     }
 }

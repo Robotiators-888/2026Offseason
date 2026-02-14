@@ -344,7 +344,6 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
-                SmartDashboard.putNumber("Top Motor Current Draw", shooter.getCurrentDrawTop());
         }
 
         public void autonomousInit() {
