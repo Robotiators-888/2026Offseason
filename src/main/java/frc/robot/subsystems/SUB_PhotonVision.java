@@ -38,7 +38,7 @@ public class SUB_PhotonVision extends SubsystemBase {
   }
 
   private SUB_PhotonVision() {
-    at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeAndyMark); // TODO: Change for diff events
+    at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark); // TODO: Change for diff events
 
     cam1.setPipelineIndex(0);
     cam2.setPipelineIndex(0);
@@ -55,38 +55,32 @@ public class SUB_PhotonVision extends SubsystemBase {
     List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
   
     Optional<EstimatedRobotPose> finalPose1 = Optional.empty();
-    PhotonPipelineResult latestResultWithTargets = null;
-
-    for (PhotonPipelineResult result : results1) {
+    // Process results in reverse order to find the latest valid result
+    java.util.ListIterator<PhotonPipelineResult> iterator = results1.listIterator(results1.size());
+    while (iterator.hasPrevious()) {
+      PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
-        latestResultWithTargets = result;
+        cam1BestTarget = result.getBestTarget();
+        finalPose1 = poseEstimator1.update(result);
+        break; // Found the latest result, stop processing older ones
       }
     }
-
-    if (latestResultWithTargets != null) {
-      cam1BestTarget = latestResultWithTargets.getBestTarget();
-      finalPose1 = poseEstimator1.update(latestResultWithTargets);
-    }
-
     return finalPose1;
   }
 
   public Optional<EstimatedRobotPose> getCam2Pose() {
     List<PhotonPipelineResult> results2 = cam2.getAllUnreadResults();
     Optional<EstimatedRobotPose> finalPose2 = Optional.empty();
-    PhotonPipelineResult latestResultWithTargets = null;
-
-    for (PhotonPipelineResult result : results2) {
+    // Process results in reverse order to find the latest valid result
+    java.util.ListIterator<PhotonPipelineResult> iterator = results2.listIterator(results2.size());
+    while (iterator.hasPrevious()) {
+      PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
-        latestResultWithTargets = result;
+        cam2BestTarget = result.getBestTarget();
+        finalPose2 = poseEstimator2.update(result);
+        break; // Found the latest result, stop processing older ones
       }
     }
-
-    if (latestResultWithTargets != null) {
-      cam2BestTarget = latestResultWithTargets.getBestTarget();
-      finalPose2 = poseEstimator2.update(latestResultWithTargets);
-    }
-
     return finalPose2;
   }
 
