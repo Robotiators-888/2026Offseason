@@ -8,14 +8,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -41,15 +38,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.Field;
+import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 
 import frc.robot.subsystems.SUB_Climber;
@@ -69,7 +64,6 @@ import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
-import frc.robot.utils.Alert;
 
 
 /**
@@ -119,6 +113,16 @@ public class RobotContainer {
                         .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12VoltsMps)
                         .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
 
+                intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
+                shooter.setDefaultCommand(new RunCommand(() -> {
+                        shooter.stop();
+                }, shooter));
+                index.setDefaultCommand(new InstantCommand(() -> {
+                        index.set(0);
+                        index.setMeteringSpeed(0);
+                }, index));
+                leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
+                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
                 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
@@ -128,15 +132,15 @@ public class RobotContainer {
                                 new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
                 //CLimber
-                NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
-                                intake.retractArm(),
-                                new WaitUntilCommand(intake::isReversePressed),
-                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
-                        ));
+                // NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
+                //                 intake.retractArm(),
+                //                 new WaitUntilCommand(intake::isReversePressed),
+                //                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
+                //         ));
 
-                NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
-                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)).until(() -> climber.isClimberArmAtPosition(0))
-                        ));
+                // NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
+                //         new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)).until(() -> climber.isClimberArmAtPosition(0))
+                //         ));
                 
                 // Intake
 
@@ -256,22 +260,36 @@ public class RobotContainer {
 
 
 
-                Driver1.povLeft().toggleOnTrue(
-                        Commands.sequence(
-                                intake.retractArm(),
-                                new WaitUntilCommand(intake::isReversePressed),
-                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
-                        )     
-                ).toggleOnFalse(
-                        new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)
+                // Driver1.povLeft().toggleOnTrue(
+                //         Commands.sequence(
+                //                 intake.retractArm(),
+                //                 new WaitUntilCommand(intake::isReversePressed),
+                //                 new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
+                //         )     
+                // ).toggleOnFalse(
+                //         new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)
+                // );
+
+                // Driver1.povUp().onTrue(
+                //         new InstantCommand(() -> climber.climb(),climber)
+                // );
+
+                // Driver1.povDown().onTrue(
+                //         new InstantCommand(() -> climber.unClimb(),climber)
+                // );
+
+                Driver1.povUp().onTrue(
+                        new SequentialCommandGroup (
+                                new InstantCommand(() -> climber.climb(), climber),
+                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(true))
+                        )
                 );
 
                 Driver1.povUp().onTrue(
-                        new InstantCommand(() -> climber.climb(),climber)
-                );
-
-                Driver1.povDown().onTrue(
-                        new InstantCommand(() -> climber.unClimb(),climber)
+                        new SequentialCommandGroup (
+                                new InstantCommand(() -> climber.unClimb(), climber),
+                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(false))
+                        )
                 );
 
                 Driver1.a().toggleOnTrue(

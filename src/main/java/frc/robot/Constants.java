@@ -58,6 +58,7 @@ public final class Constants {
                 public static final double kCLIMBER_MOTOR_SPEED = 0.5;
                 public static final double kCLIMBER_PIVOT_SPEED = 0.5;
                 public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
+                public static final double kCLIMBER_SETPOINT = 9; // Inches, need to convert to rotations
         }
 
         public static final class Field {
