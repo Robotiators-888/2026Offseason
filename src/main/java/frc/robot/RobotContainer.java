@@ -52,6 +52,10 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.utils.Alert;
 import frc.robot.utils.Elastic;
+import frc.robot.utils.Elastic.Notification;
+import frc.robot.utils.Elastic.Notification.NotificationLevel;
+import frc.robot.utils.Hub;
+import frc.robot.utils.Alert;
 
 
 /**
@@ -73,6 +77,7 @@ public class RobotContainer {
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
+        private Boolean lastActiveAlliance = true;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 =
@@ -205,10 +210,21 @@ public class RobotContainer {
 
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
+                Elastic.Notification notification = new Elastic.Notification(Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
+                Elastic.sendNotification(notification);
+                Hub.fetchMatchData();
         }
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
+                final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
+                SmartDashboard.putBoolean("Last Active Alliance", lastActiveAlliance);
+                
+                if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
+                        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
+                        // Maybe do a rumble
+                        lastActiveAlliance = activeAlliance.get();
+                }
         }
 
         public void disabledPeriodic() {
