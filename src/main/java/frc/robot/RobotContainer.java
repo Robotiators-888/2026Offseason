@@ -443,7 +443,7 @@ public class RobotContainer {
                                 double xStddev = Math.pow(distance, 2) / (8.0088 * 0.5);
                                 double yStddev = xStddev;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
+                                drivetrain.publisher3.set(photonPose);
                                 drivetrain.m_poseEstimator.addVisionMeasurement(photonPose.toPose2d(),
                                                 photonPoseOptional.get().timestampSeconds,
                                                 VecBuilder.fill(xStddev, yStddev, rotStddev));
@@ -470,7 +470,7 @@ public class RobotContainer {
                                 double xStddev = Math.pow(distance, 2) / 8.0088;
                                 double yStddev = xStddev;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher4.set(photonPose.toPose2d());
+                                drivetrain.publisher4.set(photonPose);
                                 drivetrain.m_poseEstimator.addVisionMeasurement(photonPose.toPose2d(),
                                                 photonPoseOptional.get().timestampSeconds,
                                                 VecBuilder.fill(xStddev, yStddev, rotStddev));
@@ -499,7 +499,7 @@ public class RobotContainer {
                                 double xStddev = Math.pow(distance, 1.75) * (3 * (Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond,2)+Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond,2)))/ 4.92) / 3.6;
                                 double yStddev = xStddev;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher3.set(photonPose.toPose2d());
+                                drivetrain.publisher3.set(photonPose);
                                 drivetrain.m_poseEstimator.addVisionMeasurement(photonPose.toPose2d(),
                                                 photonPoseOptional.get().timestampSeconds,
                                                 VecBuilder.fill(xStddev, yStddev, rotStddev));
@@ -526,7 +526,7 @@ public class RobotContainer {
                                 double xStddev = Math.pow(distance, 1.75) * (3 * (Math.sqrt(Math.pow(drivetrain.getChassisSpeeds().vxMetersPerSecond,2)+Math.pow(drivetrain.getChassisSpeeds().vyMetersPerSecond,2)))/ 4.92) / 3.6;
                                 double yStddev = xStddev;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                drivetrain.publisher4.set(photonPose.toPose2d());
+                                drivetrain.publisher4.set(photonPose);
                                 drivetrain.m_poseEstimator.addVisionMeasurement(photonPose.toPose2d(),
                                                 photonPoseOptional.get().timestampSeconds,
                                                 VecBuilder.fill(xStddev, yStddev, rotStddev));

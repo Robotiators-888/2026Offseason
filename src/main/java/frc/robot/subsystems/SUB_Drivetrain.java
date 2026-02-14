@@ -14,6 +14,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -47,12 +48,12 @@ public class SUB_Drivetrain extends SubsystemBase {
   .getStructTopic("debugYPoint", Pose2d.struct).publish(); 
 
 
-  public StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
-  .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
+  public StructPublisher<Pose3d> publisher3 = NetworkTableInstance.getDefault()
+  .getStructTopic("PhotonCam1Pose",Pose3d.struct).publish(); 
 
 
-  public StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
-  .getStructTopic("PhotonCam2Pose", Pose2d.struct).publish(); 
+  public StructPublisher<Pose3d> publisher4 = NetworkTableInstance.getDefault()
+  .getStructTopic("PhotonCam2Pose",Pose3d.struct).publish(); 
 
   public StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
   .getStructTopic("SelectedPose", Pose2d.struct).publish(); 
