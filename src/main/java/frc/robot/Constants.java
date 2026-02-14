@@ -26,8 +26,6 @@ public final class Constants {
                 public static final double kDriveDeadband = 0.05;
         }
 
-        public static final class Drivetrain {}
-
         public static final class Shooter {
                 public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 43;
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 44;
