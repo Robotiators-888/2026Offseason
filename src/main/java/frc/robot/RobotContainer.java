@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -39,17 +41,29 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
 
+import frc.robot.subsystems.SUB_Climber;
 import frc.robot.generated.TunerConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Intake;
+import frc.robot.subsystems.SUB_LEDs;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 
 
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
@@ -70,7 +84,12 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
 
         private final SendableChooser<Command> autoChooser;
-        public static PowerDistribution powerDistribution = new PowerDistribution();
+        public static final SUB_LEDs leds = SUB_LEDs.getInstance();
+        public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
+        public static final SUB_Intake intake = SUB_Intake.getInstance();
+        public static final SUB_Index index = SUB_Index.getInstance();
+        public static final SUB_Climber climber = SUB_Climber.getInstance();
+        public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
@@ -78,6 +97,7 @@ public class RobotContainer {
         public int listIndex = 0;
         public int targetId = 7;
         private Boolean lastActiveAlliance = true;
+        public double targetRPM = 1000;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 =
@@ -107,7 +127,70 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ResetReachedTarget",
                                 new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
+                //CLimber
+                NamedCommands.registerCommand("ClimbExtend", Commands.sequence(
+                                intake.retractArm(),
+                                new WaitUntilCommand(intake::isReversePressed),
+                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
+                        ));
+
+                NamedCommands.registerCommand("ClimbRetract", Commands.sequence(
+                        new RepeatCommand( new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)).until(() -> climber.isClimberArmAtPosition(0))
+                        ));
                 
+                // Intake
+
+                NamedCommands.registerCommand("Intake", Commands.sequence(
+                        Commands.either(
+                                Commands.none(),              // If true (already extended)
+                                intake.extendArm(),           // If false (retracted)
+                                intake::isForwardPressed
+                        ),
+                        new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                ));
+
+                NamedCommands.registerCommand("StopIntake",
+                        new InstantCommand(() -> intake.set(0),intake)
+                );
+
+                // Shooter and Indexer
+                NamedCommands.registerCommand("ManualShoot", Commands.sequence(
+                Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
+                Commands.run(() -> {
+                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                }, shooter, index)
+                ));
+
+                NamedCommands.registerCommand("ShootDistance", Commands.sequence(
+                Commands.run(() -> shooter.shootMeters(
+                        drivetrain.getPose().getTranslation().getDistance(
+                        SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                        ).map(pose -> pose.toPose2d().getTranslation()
+                                .plus(new Translation2d(
+                                Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
+                                0
+                                ))
+                        ).orElse(drivetrain.getPose().getTranslation())
+                        )), shooter)
+                        .until(shooter::atDesiredRPM),
+
+                Commands.run(() -> {
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                }, shooter, index)
+                ));
+
+                NamedCommands.registerCommand("StopShooting", Commands.parallel(
+                        new InstantCommand(() -> {
+                                index.set(0);
+                                index.setMeteringSpeed(0);
+                        }, index),
+                        new InstantCommand(() -> shooter.stop(), shooter)
+                ));
+
                 // Configure the trigger bindings
                 configureBindings();
 
@@ -128,9 +211,86 @@ public class RobotContainer {
          */
         private void configureBindings() {
 
-                Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading())); // TODO:
-                                                                                                // Change
-               
+                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
+
+                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug
+                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2))); // Shooter debug
+                // Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(1000)));
+                Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM)));
+                Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 100));
+                Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 100));
+
+                Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
+                Driver1.rightTrigger().whileTrue(Commands.sequence(
+                        Commands.run(() -> shooter.shootMeters(
+                        drivetrain.getPose().getTranslation().getDistance(
+                                SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                ).map(pose -> pose.toPose2d().getTranslation()
+                                .plus(new Translation2d(
+                                        Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 
+                                        0
+                                ))
+                                ).orElse(drivetrain.getPose().getTranslation())
+                        )), shooter)
+                        .until(shooter::atDesiredRPM),
+                        
+                        Commands.run(() -> {
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        }, shooter,index)
+                )); 
+
+                Driver1.leftTrigger().whileTrue(Commands.sequence(
+                        Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter)
+                        .until(shooter::atDesiredRPM),
+                        
+                        Commands.run(() -> {
+                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
+                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        }, shooter, index)
+                ));
+                
+                Driver1.rightBumper().onTrue(Commands.none()); // TODO: Add AutoAim once merged
+
+
+
+                Driver1.povLeft().toggleOnTrue(
+                        Commands.sequence(
+                                intake.retractArm(),
+                                new WaitUntilCommand(intake::isReversePressed),
+                                new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
+                        )     
+                ).toggleOnFalse(
+                        new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)
+                );
+
+                Driver1.povUp().onTrue(
+                        new InstantCommand(() -> climber.climb(),climber)
+                );
+
+                Driver1.povDown().onTrue(
+                        new InstantCommand(() -> climber.unClimb(),climber)
+                );
+
+                Driver1.a().toggleOnTrue(
+                        Commands.sequence(
+                                Commands.either(
+                                        Commands.none(),              // If true (already extended)
+                                        intake.extendArm(),           // If false (retracted)
+                                        intake::isForwardPressed
+                                ),
+                                new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                        )
+                ).toggleOnFalse(
+                        Commands.sequence(
+                                new InstantCommand(() -> intake.set(0),intake)
+                        )
+                );
+
+
+
 
 
 
@@ -183,6 +343,8 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
+                SmartDashboard.putNumber(autoName, listIndex);
+                SmartDashboard.putNumber("Top Motor Current Draw", shooter.getCurrentDrawTop());
         }
 
         public void autonomousInit() {
@@ -230,7 +392,7 @@ public class RobotContainer {
         public void disabledPeriodic() {
                 newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
-                if (autoName != newAutoName || alliance != lastAlliance) {
+                if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
                         autoName = newAutoName;
                         lastAlliance = alliance;
                         if (AutoBuilder.getAllAutoNames().contains(autoName)) {
