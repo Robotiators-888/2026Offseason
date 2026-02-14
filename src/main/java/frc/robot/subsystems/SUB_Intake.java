@@ -49,6 +49,7 @@ public class SUB_Intake extends SubsystemBase {
         config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees, Thrifty bot cycloial gearbox 23:1
         config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
         config.smartCurrentLimit(35);
+        config.inverted(true);
         arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         SparkMaxConfig followerConfig = new SparkMaxConfig();
         followerConfig.follow(arm, true);

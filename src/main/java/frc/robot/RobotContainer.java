@@ -220,8 +220,8 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
-                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1)));
-                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1)));
+                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1)));
+                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1)));
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug

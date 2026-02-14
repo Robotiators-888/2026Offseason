@@ -28,6 +28,7 @@ public class SUB_Climber extends SubsystemBase {
             .countsPerRevolution(42)
             .positionConversionFactor(360.0); // Degrees
         config.smartCurrentLimit(35);
+        config.inverted(true);
         climbEncoder = climberMotor.getEncoder();
         climberMotor.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
@@ -74,11 +75,11 @@ public class SUB_Climber extends SubsystemBase {
     // }
 
     public void climb() {
-        setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED); // Yeah its backwards for some reason
+        setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED); // Yeah its backwards for some reason
     }
 
     public void unClimb() {
-        setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED);
+        setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED);
     }
 
     public void stopClimb() {
