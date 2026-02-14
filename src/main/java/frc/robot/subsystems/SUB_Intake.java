@@ -1,11 +1,12 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.spark.SparkLimitSwitch;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.LimitSwitchConfig.Type;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkLimitSwitch;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -28,7 +29,7 @@ public class SUB_Intake extends SubsystemBase {
         return INSTANCE;
     }
 
-    private SUB_Intake (){
+    private SUB_Intake () {
         intake = new TalonFX(Constants.Intake.kINTAKE_MOTOR_CANID);
         arm = new SparkMax(Constants.Intake.kARM_MOTOR_CANID, MotorType.kBrushless);
         armFollower = new SparkMax(Constants.Intake.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
@@ -46,10 +47,15 @@ public class SUB_Intake extends SubsystemBase {
             .reverseLimitSwitchType(Type.kNormallyOpen);//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
         config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees, Thrifty bot cycloial gearbox 23:1
         config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
+        config.smartCurrentLimit(35);
         arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         SparkMaxConfig followerConfig = new SparkMaxConfig();
-        followerConfig.follow(arm, true); 
+        followerConfig.follow(arm, true);
+        followerConfig.smartCurrentLimit(35);
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 35;
+        intake.getConfigurator().apply(talonConfig);
     }
 
     public boolean isForwardPressed() {

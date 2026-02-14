@@ -10,8 +10,6 @@ import frc.robot.Constants;
 public class SUB_Climber extends SubsystemBase {
     private SparkMax climberMotor;
     private RelativeEncoder climbEncoder;
-    // private SparkMax climberArm;
-    // private RelativeEncoder climberArmEncoder;
 
     private static SUB_Climber INSTANCE = null;
     public static SUB_Climber getInstance (){
@@ -26,12 +24,12 @@ public class SUB_Climber extends SubsystemBase {
         climberMotor = new SparkMax(Constants.Climber.kCLIMBER_MOTOR_CANID, SparkMax.MotorType.kBrushless);
         // climberArm = new SparkMax(Constants.Climber.kCLIMBER_PIVOT_CANID, SparkMax.MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
-        config.alternateEncoder
-            .countsPerRevolution(8192)
+        config.encoder
+            .countsPerRevolution(42)
             .positionConversionFactor(360.0); // Degrees
+        config.smartCurrentLimit(35);
         climbEncoder = climberMotor.getEncoder();
-        // climberArm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        // climberArmEncoder = climberArm.getAlternateEncoder();
+        climberMotor.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
 
     public void setClimber(double speed){

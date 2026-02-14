@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,6 +22,10 @@ public class SUB_Index extends SubsystemBase {
     private SUB_Index () {
         index = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
         meteringWheel = new SparkMax(Constants.Shooter.kMETERING_WHEEL_CANID, MotorType.kBrushless);
+        SparkMaxConfig config = new SparkMaxConfig();
+        config.smartCurrentLimit(35);
+        index.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        meteringWheel.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
     public void set(double speed){
         index.set(speed);
