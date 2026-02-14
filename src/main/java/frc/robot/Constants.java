@@ -61,7 +61,9 @@ public final class Constants {
                 public static final int kCLIMBER_MOTOR_CANID = 51; 
                 // public static final int kCLIMBER_PIVOT_CANID = 50; 
                 public static final double kCLIMBER_MOTOR_SPEED = 0.1;
-                public static final double kCLIMBER_SETPOINT = 9; // Inches, need to convert to rotations
+                public static final double kCLIMBER_SETPOINT = (9.0/4.75) * 36;
+                // 9 / 4.75 * 36
+                // 9 inches target
                 // Gear ratio: 36:1
                 // 4.75 in per rotation
                 // Clockwise positive motor
