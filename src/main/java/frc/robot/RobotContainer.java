@@ -22,6 +22,7 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -46,7 +47,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
-
+import frc.robot.commands.CMD_AimBot;
 import frc.robot.subsystems.SUB_Climber;
 import frc.robot.generated.TunerConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -263,7 +264,11 @@ public class RobotContainer {
                         }, shooter, index)
                 ));
                 
-                Driver1.rightBumper().onTrue(Commands.none()); // TODO: Add AutoAim once merged
+                Driver1.x().toggleOnTrue(new CMD_AimBot(drivetrain, photonVision,
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
+                                                Operator.kDriveDeadband),
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
+                                                Operator.kDriveDeadband)));
 
 
 

@@ -43,6 +43,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
         .getStructTopic("debugXPoint", Pose2d.struct).publish(); 
+        public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
+        .getStructTopic("debugYPoint", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
         .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
