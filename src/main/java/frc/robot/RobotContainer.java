@@ -143,7 +143,7 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("ClimbRetract",
                         new SequentialCommandGroup (
-                                new InstantCommand(() -> climber.climb(), climber),
+                                new InstantCommand(() -> climber.unClimb(), climber),
                                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(false)),
                                 new InstantCommand(() -> climber.stopClimb())
                         )

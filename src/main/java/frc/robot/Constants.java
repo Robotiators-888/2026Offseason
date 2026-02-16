@@ -32,9 +32,8 @@ public final class Constants {
         }
 
         public static final class Shooter {
-                public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 43;
-                public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 44;
-                public static final int kMETERING_WHEEL_CANID = 42;
+                public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 42;
+                public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 500;
                 public static final double kMETERING_SPEED = 0.1;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
@@ -53,7 +52,8 @@ public final class Constants {
         }
         
         public static final class Index {
-                public static final int KINDEX_MOTOR_CANID = 41; 
+                public static final int KINDEX_MOTOR_CANID = 40; 
+                public static final int kMETERING_WHEEL_CANID = 41;
                 public static final double kINDEX_MOTOR_SPEED = 0.1;
         }
 

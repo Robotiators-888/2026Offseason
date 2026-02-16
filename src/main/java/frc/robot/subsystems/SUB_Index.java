@@ -21,7 +21,7 @@ public class SUB_Index extends SubsystemBase {
     }
     private SUB_Index () {
         index = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
-        meteringWheel = new SparkMax(Constants.Shooter.kMETERING_WHEEL_CANID, MotorType.kBrushless);
+        meteringWheel = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
         config.smartCurrentLimit(35);
         config.inverted(true);
