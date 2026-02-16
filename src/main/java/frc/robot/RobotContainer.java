@@ -221,14 +221,14 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
-                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1)));
-                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1)));
-                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2))); //Shooter debug
+                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1),climber));
+                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1),climber));
+                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); //Shooter debug
 
-                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1))); // Shooter debug
-                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2))); // Shooter debug
+                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); // Shooter debug
+                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2),shooter)); // Shooter debug
                 // Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(1000)));
-                Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM)));
+                Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM),shooter));
                 Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 100));
                 Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 100));
 
