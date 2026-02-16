@@ -28,6 +28,7 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationYSupplier;
 
   private final PIDController robotAngleController = new PIDController(1.5, 0, 0.05);
+  public static boolean isThetaErrorCorrect = false;
 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
@@ -73,8 +74,14 @@ public class CMD_AimBot extends RunCommand {
         MathUtil.angleModulus(targetRotation.getRadians()));
 
     drivetrain.drive(translationXSupplier.getAsDouble(), translationYSupplier.getAsDouble(), omegaSpeed, true, true);
-    SmartDashboard.putNumber("Theta Error", Math.abs(currentPose.getRotation().getRadians() - targetPose.getRotation().getRadians()));
-    
+    double thetaError = Math.abs(currentPose.getRotation().getRadians() - targetPose.getRotation().getRadians());
+    SmartDashboard.putNumber("Theta Error", thetaError);
+    if (thetaError >= -5 && thetaError <= 5) {
+      isThetaErrorCorrect = true;
+    }
+    else {
+      isThetaErrorCorrect = false;
+    }
   }
 
   @Override

@@ -424,6 +424,18 @@ public class RobotContainer {
                         Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
                         Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);                       
                 }
+                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect) {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
+                }
+                else if (CMD_AimBot.isThetaErrorCorrect) {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, .5);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, .5);
+                }
+                else {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 0);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 0);
+                }
         }
 
         public void disabledPeriodic() {
