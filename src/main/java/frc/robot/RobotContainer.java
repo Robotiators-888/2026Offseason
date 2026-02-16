@@ -32,6 +32,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -410,11 +411,22 @@ public class RobotContainer {
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
                 SmartDashboard.putBoolean("Last Active Alliance", lastActiveAlliance);
-                
                 if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                         Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change", "The active hub has changed!"));
                         // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
+                }
+                if (Hub.isAllianceHubActive().isPresent() && Hub.isAllianceHubActive().get() && (Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75) || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75) || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
+                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                }
+                if (Hub.isAllianceHubActive().isPresent() && !Hub.isAllianceHubActive().get() && (Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75) || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75) || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
+                }
+                else {
+                        Driver1.getHID().setRumble(RumbleType.kBothRumble, 0);
+                        Driver2.getHID().setRumble(RumbleType.kBothRumble, 0);                       
                 }
         }
 
