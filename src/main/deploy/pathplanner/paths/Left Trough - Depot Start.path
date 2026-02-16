@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.7400361236938013,
-        "y": 7.4297378920285935
+        "x": 2.9188994146192204,
+        "y": 7.412379500510636
       },
       "isLocked": false,
       "linkedName": "Left Trough Backward"
@@ -17,18 +17,39 @@
     {
       "anchor": {
         "x": 0.4256756756756762,
+        "y": 7.293254504504505
+      },
+      "prevControl": {
+        "x": 0.409730972287424,
+        "y": 7.753122038516783
+      },
+      "nextControl": {
+        "x": 0.43483132530120483,
+        "y": 7.029192771084338
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.4256756756756762,
         "y": 6.864268018018018
       },
       "prevControl": {
-        "x": 0.6446527858526625,
-        "y": 6.984887358169322
+        "x": 0.3960100077926858,
+        "y": 7.11250167437641
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Depot Start"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
