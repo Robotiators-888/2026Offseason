@@ -416,17 +416,13 @@ public class RobotContainer {
                         // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
                 }
-                if (Hub.isAllianceHubActive().isPresent() && Hub.isAllianceHubActive().get() && (Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75) || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75) || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
+                if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75) || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75) || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
                         Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
                         Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
                 }
-                if (Hub.isAllianceHubActive().isPresent() && !Hub.isAllianceHubActive().get() && (Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75) || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75) || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
-                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
-                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
-                }
                 else {
-                        Driver1.getHID().setRumble(RumbleType.kBothRumble, 0);
-                        Driver2.getHID().setRumble(RumbleType.kBothRumble, 0);                       
+                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
+                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);                       
                 }
         }
 
