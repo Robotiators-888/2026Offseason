@@ -12,6 +12,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.util.Units;
 
 public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
@@ -21,6 +23,7 @@ public class SUB_Shooter extends SubsystemBase {
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+    private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -31,6 +34,9 @@ public class SUB_Shooter extends SubsystemBase {
     private SUB_Shooter(){
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
+        distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
+        distanceToRPM.put(Units.inchesToMeters(95), 1430.0);
+        distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
         configFlywheel();
     }
 
@@ -71,10 +77,12 @@ public class SUB_Shooter extends SubsystemBase {
         // This logic makes absolutely now sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
-    public void shootMeters(double meters) { //TODO: Make a Trapezoidal Motion Profile for shooting at different distances, and test it to find the right values for kS, kV, and kA
-        // Example implementation for shooting at a specific distance in meters
-        // This would be replaced with actual logic based on distance and shooter characteristics
-        setRPM(100); // Example RPM value for shooting at 1 meter distance
+    public void shootMeters(double meters) {
+        // query the map for the RPM associated with this distance
+        double targetRPM = distanceToRPM.get(meters);
+        
+        // Pass it to your existing setRPM method
+        setRPM(targetRPM);
     }
 
     public void stop() {
