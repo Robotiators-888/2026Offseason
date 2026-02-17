@@ -32,7 +32,7 @@ public final class Constants {
         }
 
         public static final class Shooter {
-                public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 42;
+                public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 44;
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 500;
                 public static final double kMETERING_SPEED = 0.1;
@@ -52,14 +52,13 @@ public final class Constants {
         }
         
         public static final class Index {
-                public static final int KINDEX_MOTOR_CANID = 40; 
-                public static final int kMETERING_WHEEL_CANID = 41;
+                public static final int KINDEX_MOTOR_CANID = 41; 
+                public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kINDEX_MOTOR_SPEED = 0.1;
         }
 
         public static final class Climber {
-                public static final int kCLIMBER_MOTOR_CANID = 51; 
-                // public static final int kCLIMBER_PIVOT_CANID = 50; 
+                public static final int kCLIMBER_MOTOR_CANID = 50; 
                 public static final double kCLIMBER_MOTOR_SPEED = 0.1;
                 public static final double kCLIMBER_SETPOINT = (9.0/4.75) * 36;
                 // 9 / 4.75 * 36

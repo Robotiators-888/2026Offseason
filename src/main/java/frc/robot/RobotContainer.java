@@ -156,7 +156,7 @@ public class RobotContainer {
                         Commands.either(
                                 Commands.none(),              // If true (already extended)
                                 intake.extendArm(),           // If false (retracted)
-                                intake::isForwardPressed
+                                intake::isReversePressed
                         ),
                         new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
                 ));
