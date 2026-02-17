@@ -31,6 +31,13 @@ import frc.robot.generated.TunerConstants;
  * so it can be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> implements Subsystem {
+    private static CommandSwerveDrivetrain INSTANCE = null;
+    public static CommandSwerveDrivetrain getInstance () {
+        if (INSTANCE == null) {
+            INSTANCE = TunerConstants.createDrivetrain();
+        }
+        return INSTANCE;
+    }
 
     private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);

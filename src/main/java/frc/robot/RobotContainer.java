@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -22,7 +24,6 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -49,16 +50,11 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
-import frc.robot.subsystems.SUB_Climber;
 import frc.robot.generated.TunerConstants;
-import com.ctre.phoenix6.swerve.SwerveRequest;
+import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
-
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-
-
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
@@ -76,7 +72,7 @@ import frc.robot.utils.Hub;
  */
 public class RobotContainer {
         // The robot's subsystems and commands are defined here...
-        private static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+        private static final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
 
         private final SendableChooser<Command> autoChooser;
@@ -102,18 +98,18 @@ public class RobotContainer {
         private final CommandXboxController Driver2 =
                         new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        // private final SwerveRequest.FieldCentric drive = TunerConstants.driveRequest;
-        //     .withDeadband(Operator.kDriveDeadband)
-        //     .withRotationalDeadband(Operator.kDriveDeadband)
-        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
+            .withDeadband(Operator.kDriveDeadband)
+            .withRotationalDeadband(Operator.kDriveDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                // drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12VoltsMps)
-                //         .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
-                //         .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
+                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts)
+                        .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
+                        .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
