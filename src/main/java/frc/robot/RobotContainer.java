@@ -222,16 +222,20 @@ public class RobotContainer {
          * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight joysticks}.
          */
         private void configureBindings() {
+                //Test Climber
                 Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(0.1),climber));
                 Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-0.1),climber));
-                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); //Shooter debug
-
-                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); // Shooter debug
-                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2),shooter)); // Shooter debug
-                // Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(1000)));
+                // Test Shooter
+                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); 
+                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); 
+                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2),shooter));
                 Driver2.a().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM),shooter));
                 Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 100));
                 Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 100));
+                // Test Intake
+                Driver1.povUp().whileTrue(new RunCommand(()->intake.setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
+                Driver1.povDown().whileTrue(new RunCommand(()->intake.setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
+
 
                 Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
                 Driver1.rightTrigger().whileTrue(Commands.sequence(
