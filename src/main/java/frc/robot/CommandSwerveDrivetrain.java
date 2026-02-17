@@ -38,7 +38,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     private final SwerveRequest.ApplyRobotSpeeds chassisSpeedsRequest = new SwerveRequest.ApplyRobotSpeeds();
 
-    private final Telemetry logger = new Telemetry(TunerConstants.kSpeedAt12VoltsMps);
+    private final Telemetry logger = new Telemetry(TunerConstants.kSpeedAt12Volts);
     private DutyCycleOut dutyCycle = new DutyCycleOut(1); // Idk what to put for the output
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()

@@ -23,12 +23,12 @@ public class SUB_Climber extends SubsystemBase {
     private SUB_Climber () {
         climberMotor = new SparkMax(Constants.Climber.kCLIMBER_MOTOR_CANID, SparkMax.MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
-        config.encoder
-            .countsPerRevolution(42)
-            .positionConversionFactor(1); // Revolutions
+        // config.encoder
+        //     .countsPerRevolution(42)
+        //     .positionConversionFactor(1); // Revolutions
         config.smartCurrentLimit(35);
         config.inverted(true);
-        climberMotor.getEncoder().setPosition(0);
+        // climberMotor.getEncoder().setPosition(0);
         climberMotor.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
 
     }

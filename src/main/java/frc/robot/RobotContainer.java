@@ -76,7 +76,7 @@ import frc.robot.utils.Hub;
  */
 public class RobotContainer {
         // The robot's subsystems and commands are defined here...
-        private static final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
+        private static final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
 
         private final SendableChooser<Command> autoChooser;
@@ -102,18 +102,18 @@ public class RobotContainer {
         private final CommandXboxController Driver2 =
                         new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(Operator.kDriveDeadband)
-            .withRotationalDeadband(Operator.kDriveDeadband)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        // private final SwerveRequest.FieldCentric drive = TunerConstants.driveRequest;
+        //     .withDeadband(Operator.kDriveDeadband)
+        //     .withRotationalDeadband(Operator.kDriveDeadband)
+        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12VoltsMps)
-                        .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12VoltsMps)
-                        .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
+                // drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12VoltsMps)
+                //         .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
+                //         .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
 
                 intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
                 shooter.setDefaultCommand(new RunCommand(() -> {
@@ -223,8 +223,8 @@ public class RobotContainer {
          */
         private void configureBindings() {
                 //Test Climber
-                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
-                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
+                // Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
+                // Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
                 // Test Shooter
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); 
@@ -242,7 +242,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                 },index));
                 Driver2.povLeft().whileTrue(new RunCommand(()->{
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                 },index));
                 Driver2.povRight().whileTrue(new RunCommand(()->{
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);

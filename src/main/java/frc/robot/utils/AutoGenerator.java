@@ -18,7 +18,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 
 public class AutoGenerator extends SubsystemBase {
-    private static final CommandSwerveDrivetrain drivetrain = TunerConstants.DriveTrain;
+    // private static final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.;
     private static AutoGenerator INSTANCE = null;
     public static boolean reachedAutoTarget;
     public static boolean intakecomplete = true;
@@ -31,29 +31,29 @@ public class AutoGenerator extends SubsystemBase {
             e.printStackTrace();
             return;
         }
-        AutoBuilder.configure(drivetrain::getPose, // Robot pose supplier
-                drivetrain::resetPose, // Method to reset odometry (will be called if your auto has
-                                       // a starting pose)
-                drivetrain::getCurrentRobotChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                (speeds, feedforwards) -> drivetrain.driveRobotRelative(speeds), // Method that will
-                                                                                 // drive the robot
-                                                                                 // given ROBOT
-                                                                                 // RELATIVE
-                                                                                 // ChassisSpeeds.
-                                                                                 // Also optionally
-                                                                                 // outputs
-                                                                                 // individual
-                                                                                 // module
-                                                                                 // feedforwards
-                new PPHolonomicDriveController( // PPHolonomicController is the built in path
-                                                // following controller for holonomic drive trains
-                        new PIDConstants(3, 0.0, 0.0), // Translation PID constants
-                        new PIDConstants(2, 0.0, 0.0) // Rotation PID constants
-                ), config, // The robot configuration
-                () -> {
-                    return DriverStation.getAlliance().equals(Optional.of(Alliance.Red));
-                }, drivetrain // Reference to this subsystem to set requirements
-        );
+        // AutoBuilder.configure(drivetrain::getPose, // Robot pose supplier
+        //         drivetrain::resetPose, // Method to reset odometry (will be called if your auto has
+        //                                // a starting pose)
+        //         drivetrain::getCurrentRobotChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+        //         (speeds, feedforwards) -> drivetrain.driveRobotRelative(speeds), // Method that will
+        //                                                                          // drive the robot
+        //                                                                          // given ROBOT
+        //                                                                          // RELATIVE
+        //                                                                          // ChassisSpeeds.
+        //                                                                          // Also optionally
+        //                                                                          // outputs
+        //                                                                          // individual
+        //                                                                          // module
+        //                                                                          // feedforwards
+        //         new PPHolonomicDriveController( // PPHolonomicController is the built in path
+        //                                         // following controller for holonomic drive trains
+        //                 new PIDConstants(3, 0.0, 0.0), // Translation PID constants
+        //                 new PIDConstants(2, 0.0, 0.0) // Rotation PID constants
+        //         ), config, // The robot configuration
+        //         () -> {
+        //             return DriverStation.getAlliance().equals(Optional.of(Alliance.Red));
+        //         }, drivetrain // Reference to this subsystem to set requirements
+        // );
 
         registerAllCommands();
     }
