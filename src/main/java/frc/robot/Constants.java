@@ -56,12 +56,15 @@ public final class Constants {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kINDEX_MOTOR_SPEED = 0.1;
+                public static final double kINDEX_METERING_MOTOR_SPEED = 0.1;
         }
 
         public static final class Climber {
                 public static final int kCLIMBER_MOTOR_CANID = 50; 
                 public static final double kCLIMBER_MOTOR_SPEED = 0.1;
                 public static final double kCLIMBER_SETPOINT = (9.0/4.75) * 36;
+                public static final double kCLIMBER_CONVERSION = (1.0/4.75) * 36;
+                public static final double kCLIMBER_TOLERANCE = 0.25; //Inches
                 // 9 / 4.75 * 36
                 // 9 inches target
                 // Gear ratio: 36:1
