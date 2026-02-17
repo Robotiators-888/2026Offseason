@@ -115,7 +115,10 @@ public class RobotContainer {
                 //         .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
                 //         .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
 
-                intake.setDefaultCommand(new InstantCommand(() -> intake.set(0), intake));
+                intake.setDefaultCommand(new InstantCommand(() -> {
+                        intake.set(0);
+                        intake.setArm(0);
+                }, intake));
                 shooter.setDefaultCommand(new RunCommand(() -> {
                         shooter.stop();
                 }, shooter));
@@ -242,7 +245,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                 },index));
                 Driver2.povLeft().whileTrue(new RunCommand(()->{
-                        index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                 },index));
                 Driver2.povRight().whileTrue(new RunCommand(()->{
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);

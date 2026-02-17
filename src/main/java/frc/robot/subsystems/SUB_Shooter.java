@@ -46,7 +46,7 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 2; 
         shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 2;
-        shooterConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
         shooterConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
