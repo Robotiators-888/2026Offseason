@@ -86,6 +86,7 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putBoolean("Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
+        SmartDashboard.putNumber("Arm Arm Output Amps", arm.getOutputCurrent());
     }
 
     public void setArm (double speed) {
@@ -93,7 +94,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public Command retractArm() {
-        return Commands.run(() -> setArm(-0.5), this)
+        return Commands.run(() -> setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
             .until(this::isReversePressed) // Stop command when switch is hit
             .finallyDo(() -> {
                 setArm(0);
@@ -103,7 +104,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public Command extendArm() {
-        return Commands.run(() -> setArm(0.5), this)
+        return Commands.run(() -> setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
             .until(this::isForwardPressed) // Stop command when switch is hit
             .finallyDo(() -> setArm(0));
     }

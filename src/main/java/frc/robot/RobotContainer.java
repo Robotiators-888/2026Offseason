@@ -257,8 +257,7 @@ public class RobotContainer {
                                 () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
                                                 Operator.kDriveDeadband),
                                 () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
-                                                Operator.kDriveDeadband)));
-                
+                                                Operator.kDriveDeadband)));                
 
 
                 // Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
