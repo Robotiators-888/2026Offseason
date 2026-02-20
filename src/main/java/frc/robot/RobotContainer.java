@@ -52,7 +52,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.generated.TunerConstants;
-// import frc.robot.subsystems.SUB_Climber;
+import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
@@ -81,7 +81,7 @@ public class RobotContainer {
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
-        // public static final SUB_Climber climber = SUB_Climber.getInstance();
+        public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -128,7 +128,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(0);
                 }, index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
-                // climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
+                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
                 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
@@ -228,8 +228,8 @@ public class RobotContainer {
          */
         private void configureBindings() {
                 //Test Climber
-                // Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
-                // Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
+                Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
+                Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
                 // Test Shooter
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); 
