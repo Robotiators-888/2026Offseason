@@ -73,7 +73,8 @@ public class SUB_Shooter extends SubsystemBase {
     }
   
     public boolean atDesiredRPM() {
-        return Math.abs(flywheelRPM() - desiredSpeed) < 50; // Allow a tolerance of 50 RPM
+        // return true;
+        return Math.abs(flywheelRPM() - desiredSpeed) < 75; // Allow a tolerance of 50 RPM
         // This logic makes absolutely now sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 

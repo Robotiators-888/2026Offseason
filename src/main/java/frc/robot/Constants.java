@@ -35,11 +35,10 @@ public final class Constants {
                 public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 44;
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 500;
-                public static final double kMETERING_SPEED = 0.1;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 0; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kP = 2; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
@@ -55,8 +54,8 @@ public final class Constants {
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kINDEX_MOTOR_SPEED = 0.25;
-                public static final double kINDEX_METERING_MOTOR_SPEED = -0.3;
+                public static final double kINDEX_MOTOR_SPEED = 0.8;
+                public static final double kINDEX_METERING_MOTOR_SPEED = -0.7;
         }
 
         public static final class Climber {

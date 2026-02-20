@@ -79,7 +79,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
-        if (isReversePressed()) {
+        if (isForwardPressed()) {
             arm.getEncoder().setPosition(0);
         }
         SmartDashboard.putNumber("intakeRPM", intakeRPM());

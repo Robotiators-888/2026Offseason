@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Shoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "ShootDistance"
+            "pathName": "Vertical Distance Test"
           }
         }
       ]

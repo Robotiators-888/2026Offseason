@@ -24,6 +24,7 @@ import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -51,7 +52,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.SUB_Climber;
+// import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
@@ -80,7 +81,7 @@ public class RobotContainer {
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
-        public static final SUB_Climber climber = SUB_Climber.getInstance();
+        // public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -98,7 +99,11 @@ public class RobotContainer {
         private final CommandXboxController Driver2 =
                         new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
+        // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
+        //     .withDeadband(Operator.kDriveDeadband)
+        //     .withRotationalDeadband(Operator.kDriveDeadband)
+        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric() 
             .withDeadband(Operator.kDriveDeadband)
             .withRotationalDeadband(Operator.kDriveDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -123,7 +128,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(0);
                 }, index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
-                climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
+                // climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
                 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
@@ -133,21 +138,22 @@ public class RobotContainer {
                                 new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
                 //CLimber
-                NamedCommands.registerCommand("ClimbExtend",
-                        new SequentialCommandGroup (
-                                new InstantCommand(() -> climber.climb(), climber),
-                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(true)),
-                                new InstantCommand(() -> climber.stopClimb())
-                        )
-                );
+                // NamedCommands.registerCommand("ClimbExtend",
+                //         new SequentialCommandGroup (
+                //                 new RunCommand(()->intake.retractArm(),intake),
+                //                 new InstantCommand(() -> climber.climb(), climber),
+                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(true)),
+                //                 new InstantCommand(() -> climber.stopClimb(),climber)
+                //         )
+                // );
 
-                NamedCommands.registerCommand("ClimbRetract",
-                        new SequentialCommandGroup (
-                                new InstantCommand(() -> climber.unClimb(), climber),
-                                new WaitUntilCommand(() -> climber.hasReachedSetPoint(false)),
-                                new InstantCommand(() -> climber.stopClimb())
-                        )
-                );
+                // NamedCommands.registerCommand("ClimbRetract",
+                //         new SequentialCommandGroup (
+                //                 new InstantCommand(() -> climber.unClimb(), climber),
+                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(false)),
+                //                 new InstantCommand(() -> climber.stopClimb())
+                //         )
+                // );
                 
                 // Intake
 
@@ -155,7 +161,7 @@ public class RobotContainer {
                         Commands.either(
                                 Commands.none(),              // If true (already extended)
                                 intake.extendArm(),           // If false (retracted)
-                                intake::isReversePressed
+                                intake::isForwardPressed
                         ),
                         new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
                 ));
@@ -169,7 +175,7 @@ public class RobotContainer {
                 Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
                 Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
+                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                 }, shooter, index)
                 ));
@@ -189,7 +195,7 @@ public class RobotContainer {
                         .until(shooter::atDesiredRPM),
 
                 Commands.run(() -> {
-                        index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                 }, shooter, index)
                 ));
@@ -227,14 +233,15 @@ public class RobotContainer {
                 // Test Shooter
                 Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); 
                 Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); 
-                Driver2.b().whileTrue(new RunCommand(()->shooter.setVolts(2),shooter));
+                Driver2.b().whileTrue(new RunCommand(()->shooter.shootMeters(2),shooter));
                 Driver2.x().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM),shooter));
-                Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 100));
-                Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 100));
+                Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 25));
+                Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 25));
                 // Test Intake
                 Driver2.y().whileTrue(new RunCommand(()->intake.setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
                 Driver2.a().whileTrue(new RunCommand(()->intake.setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
                 Driver2.rightBumper().whileTrue(new RunCommand(()->intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake));
+                Driver2.leftStick().whileTrue(new RunCommand(()->intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED)));
                 // Test Index
                 Driver2.leftBumper().whileTrue(new RunCommand(()->{
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
@@ -246,6 +253,11 @@ public class RobotContainer {
                 Driver2.povRight().whileTrue(new RunCommand(()->{
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                 },index));
+                Driver1.x().toggleOnTrue(new CMD_AimBot(drivetrain, photonVision,
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
+                                                Operator.kDriveDeadband),
+                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
+                                                Operator.kDriveDeadband)));
                 
 
 
