@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.generated.TunerConstants;
+import frc.robot.utils.Alert;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem
@@ -107,8 +108,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
         var modules = this.getModules();
         for (var module : modules) {
             TalonFX driveMotor = module.getDriveMotor();
-            if (driveMotor.getIsProLicensed().getValue())
+            if (driveMotor.getIsProLicensed().getValue()) {
                 driveMotor.setControl(dutyCycle);
+            }
+            else {
+                Alert.notifyWarning("Drive motor not liscensed");
+            }
         }
     }
 
