@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.LimitSwitchConfig.Type;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,6 +18,7 @@ import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
+    private PIDController controller = new PIDController(0.05, 0, 0);
     private TalonFX intake;
     private SparkMax arm;
     private SparkMax armFollower;
@@ -110,5 +112,15 @@ public class SUB_Intake extends SubsystemBase {
 
     public boolean isExtended() {
         return extended;
+    }
+
+    public void intakeArmDown() {
+        // This is a one liner for the sake of memory efficiency
+        setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)); 
+    }
+
+    public void intakeArmUp() {
+        // This is also a one liner for the sake of memory efficiency
+        setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
     }
 }
