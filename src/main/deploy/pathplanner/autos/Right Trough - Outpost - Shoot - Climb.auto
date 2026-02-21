@@ -11,9 +11,40 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Outpost - Shoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         },
         {
@@ -23,9 +54,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "ClimbExtend"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Climb Start - Climb End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbRetract"
           }
         }
       ]

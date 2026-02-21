@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Center Trough - Outpost"
@@ -17,15 +23,52 @@
           }
         },
         {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Shoot - Climb Start"
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "ClimbExtend"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Climb Start - Climb End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbRetract"
           }
         }
       ]

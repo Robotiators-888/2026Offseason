@@ -5,9 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Center Trough - Depot Start"
+            "name": "DeployIntake"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Center Trough - Depot Start"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,9 +36,40 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Depot End - Shoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         },
         {
@@ -29,9 +79,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "ClimbExtend"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Climb Start - Climb End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbRetract"
           }
         }
       ]

@@ -5,9 +5,40 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Center Trough - Shoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         }
       ]
