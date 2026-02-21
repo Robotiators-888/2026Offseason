@@ -51,6 +51,7 @@ public final class Constants {
                 public static final double kINTAKE_ARM_MOTOR_SPEED = 0.05;
                 public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -290;
                 public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
+                public static final double kIntake_ARM_FAULT_AMPS = 55;
         }
         
         public static final class Index {
