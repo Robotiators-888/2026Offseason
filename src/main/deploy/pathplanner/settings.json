@@ -2,8 +2,20 @@
   "robotWidth": 0.7747,
   "robotLength": 0.7747,
   "holonomicMode": true,
-  "pathFolders": [],
-  "autoFolders": [],
+  "pathFolders": [
+    "Center Trough Path",
+    "Depot",
+    "Left Trough Path",
+    "Neuteral zone",
+    "Climb",
+    "Outpost",
+    "Right Trough Path"
+  ],
+  "autoFolders": [
+    "Left Trough",
+    "PreLoad",
+    "Right Trough"
+  ],
   "defaultMaxVel": 4.0,
   "defaultMaxAccel": 2.5,
   "defaultMaxAngVel": 180.0,
