@@ -1,9 +1,6 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
-
-import java.util.function.BooleanSupplier;
-
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -27,7 +24,6 @@ public class SUB_Shooter extends SubsystemBase {
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
-    private BooleanSupplier canShoot;
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -36,7 +32,6 @@ public class SUB_Shooter extends SubsystemBase {
           return INSTANCE;
     }
     private SUB_Shooter(){
-        canShoot = () -> true;
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
         distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
@@ -65,22 +60,12 @@ public class SUB_Shooter extends SubsystemBase {
 
     @Deprecated
     public void set(double speed){
-        if (canShoot.getAsBoolean()) { 
-            topFlywheel.set(speed);
-        }
-        else {
-            stop();
-        }
+        topFlywheel.set(speed);
     }
 
     public void setRPM(double rpm) {
-        if (canShoot.getAsBoolean()) { 
-            this.desiredSpeed = rpm;
-            topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
-        }
-        else {
-            stop();
-        }
+        this.desiredSpeed = rpm;
+        topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
     public double flywheelRPM() {
@@ -107,21 +92,11 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public void setVolts(double volts) {
-        if (canShoot.getAsBoolean()) {
-            topFlywheel.setControl(voltageRequest.withOutput(volts));
-        }
-        else {
-            stop();
-        }
+        topFlywheel.setControl(voltageRequest.withOutput(volts));
     }
 
     public double getCurrentDrawTop () {
         return topFlywheel.getStatorCurrent().getValueAsDouble();
-    }
-
-    public void stopIfFalse (BooleanSupplier supplier) {
-        canShoot = supplier;
-        stop();
     }
 
     public void periodic() {
