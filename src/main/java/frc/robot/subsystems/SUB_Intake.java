@@ -27,6 +27,7 @@ public class SUB_Intake extends SubsystemBase {
     private boolean isSpeedPositive = true;
     private boolean positiveVoltageReached = false;
     private boolean negativeVoltageReached = false;
+    private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
@@ -95,16 +96,25 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
         // This all might be reversed
         if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && isSpeedPositive) {
-            positiveVoltageReached = true;
-            negativeVoltageReached = false;
-            arm.set(0);
+            if (periodicCountFault >= 12) {
+                positiveVoltageReached = true;
+                negativeVoltageReached = false;
+                arm.set(0);
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+            }
+            periodicCountFault++;
         }
         else if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && !isSpeedPositive) {
-            positiveVoltageReached = false;
-            negativeVoltageReached = true;
-            arm.set(0);
+            if (periodicCountFault >= 12) {
+                positiveVoltageReached = false;
+                negativeVoltageReached = true;
+                arm.set(0);
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
+            }
+            periodicCountFault++;
         }
         else {
+            periodicCountFault = 0;
             positiveVoltageReached = false;
             negativeVoltageReached = false;
         }
