@@ -17,7 +17,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -50,16 +49,16 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, 
     private final Telemetry logger = new Telemetry(TunerConstants.kSpeedAt12Volts);
     private DutyCycleOut dutyCycle = new DutyCycleOut(1); // Idk what to put for the output
 
-    public final StructPublisher<Pose3d> publisher1 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugXPoint", Pose3d.struct).publish(); 
-        public final StructPublisher<Pose3d> publisher2 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugYPoint", Pose3d.struct).publish(); 
-    public final StructPublisher<Pose3d> publisher3 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam1Pose", Pose3d.struct).publish(); 
-    public final StructPublisher<Pose3d> publisher4 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam2Pose", Pose3d.struct).publish(); 
-    public final StructPublisher<Pose3d> selectPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SelectedPose", Pose3d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
+        .getStructTopic("debugXPoint", Pose2d.struct).publish(); 
+        public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
+        .getStructTopic("debugYPoint", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
+        .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
+        .getStructTopic("PhotonCam2Pose", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SelectedPose", Pose2d.struct).publish(); 
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private final Rotation2d BlueAlliancePerspectiveRotation = Rotation2d.fromDegrees(0);

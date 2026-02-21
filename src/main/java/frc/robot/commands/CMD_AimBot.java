@@ -12,7 +12,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -24,7 +23,7 @@ import frc.robot.subsystems.SUB_PhotonVision;
 public class CMD_AimBot extends RunCommand {
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
-  private Pose3d targetPose = new Pose3d();
+  private Pose2d targetPose = new Pose2d();
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
 
@@ -54,8 +53,8 @@ public class CMD_AimBot extends RunCommand {
     Pose2d tPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
       : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
-    Rotation3d targetRotation = new Rotation3d(tPose.getX()-currentPose.getX(),tPose.getY()-currentPose.getY(), 0);
-    targetPose = new Pose3d(tPose.getX()+((DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) ?  Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5)), tPose.getY(), 0.0,
+    Rotation2d targetRotation = new Rotation2d(tPose.getX()-currentPose.getX(),tPose.getY()-currentPose.getY());
+    targetPose = new Pose2d(tPose.getX()+((DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) ?  Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5)), tPose.getY(),
         targetRotation);
     robotAngleController.reset();
     drivetrain.publisher2.set(targetPose);
@@ -75,7 +74,7 @@ public class CMD_AimBot extends RunCommand {
         MathUtil.angleModulus(targetRotation.getRadians()));
 
     drivetrain.drive(translationXSupplier.getAsDouble(), translationYSupplier.getAsDouble(), omegaSpeed, true, true);
-    double thetaError = Math.abs(currentPose.getRotation().getRadians() - new Rotation2d(targetPose.getRotation().getX(), targetPose.getRotation().getY()).getRadians());
+    double thetaError = Math.abs(currentPose.getRotation().getRadians() - targetPose.getRotation().getRadians());
     SmartDashboard.putNumber("Theta Error", thetaError);
     if (thetaError >= -5 && thetaError <= 5) {
       isThetaErrorCorrect = true;
