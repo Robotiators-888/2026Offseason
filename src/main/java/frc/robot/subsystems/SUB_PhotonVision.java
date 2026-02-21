@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -16,6 +17,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.PhotonVision;
 import frc.robot.utils.Alert;
@@ -30,6 +32,7 @@ public class SUB_PhotonVision extends SubsystemBase {
   private final PhotonPoseEstimator poseEstimator1;
   private final PhotonPoseEstimator poseEstimator2;
   public AprilTagFieldLayout at_field;
+  private Timer photonTimer;
 
   public static SUB_PhotonVision getInstance() {
     if (INSTANCE == null) {
@@ -50,6 +53,7 @@ public class SUB_PhotonVision extends SubsystemBase {
          PhotonVision.kRobotToCamera2); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
     poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    photonTimer = new Timer();
   }
 
   public Optional<EstimatedRobotPose> getCam1Pose() {
@@ -109,13 +113,31 @@ public class SUB_PhotonVision extends SubsystemBase {
     return target.getFiducialId();
   }
 
+  public boolean getPhotonTimerHasElapsed (double time) {
+    return photonTimer.hasElapsed(time);
+  } 
+
   @Override
   public void periodic() {
-   if (!cam1.isConnected()) {
+    if (!cam1.isConnected()) {
+      if (!photonTimer.isRunning()) {
+        photonTimer.start();
+      }
       Alert.registerError("PhotonVision Camera 1 Disconnected");
     }
+    else {
+      photonTimer.stop();
+      photonTimer.reset();
+    }
     if (!cam2.isConnected()) {
+      if (!photonTimer.isRunning()) {
+        photonTimer.start();
+      }
       Alert.registerError("PhotonVision Camera 2 Disconnected");
+    }
+    else {
+      photonTimer.stop();
+      photonTimer.reset();
     }
   }
 }
