@@ -524,7 +524,7 @@ public class RobotContainer {
         }
 
         private static void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
-                        StructPublisher<Pose2d> publisher) {
+                        StructPublisher<Pose3d> publisher) {
                 if (poseOptional.isPresent()) {
                         EstimatedRobotPose estimatedPose = poseOptional.get();
                         Pose3d photonPose = estimatedPose.estimatedPose;
@@ -547,7 +547,7 @@ public class RobotContainer {
                                                 photonPose.toPose2d(),
                                                 estimatedPose.timestampSeconds,
                                                 VecBuilder.fill(xyStddev, xyStddev, rotStddev));
-                                publisher.set(photonPose.toPose2d());
+                                publisher.set(photonPose);
                         }
                 }
         }
