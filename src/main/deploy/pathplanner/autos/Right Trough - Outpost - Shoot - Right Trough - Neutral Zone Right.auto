@@ -5,9 +5,21 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough - Outpost"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
           }
         },
         {
@@ -17,21 +29,72 @@
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Shoot - Right Trough"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Right Trough - Right Trough Center"
+            "name": "StopShooting"
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Right Trough Center - Neutral Zone Right"
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Shoot - Right Trough"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough - Right Trough Center"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough Center - Neutral Zone Right"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         }
       ]

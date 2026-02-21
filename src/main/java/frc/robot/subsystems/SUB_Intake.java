@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.LimitSwitchConfig.Type;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,11 +18,16 @@ import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
+    private PIDController controller = new PIDController(0.05, 0, 0);
     private TalonFX intake;
     private SparkMax arm;
     private SparkMax armFollower;
     private SparkLimitSwitch forwardLimit;
     private SparkLimitSwitch reverseLimit;
+    private boolean isSpeedPositive = true;
+    private boolean positiveVoltageReached = false;
+    private boolean negativeVoltageReached = false;
+    private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
@@ -63,11 +69,13 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public boolean isForwardPressed() {
-        return forwardLimit.isPressed();
+        // Double check this
+        return forwardLimit.isPressed() || negativeVoltageReached;
     }
 
     public boolean isReversePressed() {
-        return reverseLimit.isPressed();
+        // Double check this
+        return reverseLimit.isPressed() || positiveVoltageReached;
     }
 
     public void set(double speed){
@@ -87,10 +95,36 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
         SmartDashboard.putNumber("Arm Arm Output Amps", arm.getOutputCurrent());
+        // This all might be reversed
+        if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && isSpeedPositive) {
+            if (periodicCountFault >= 12) {
+                positiveVoltageReached = true;
+                negativeVoltageReached = false;
+                arm.set(0);
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+            }
+            periodicCountFault++;
+        }
+        else if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && !isSpeedPositive) {
+            if (periodicCountFault >= 12) {
+                positiveVoltageReached = false;
+                negativeVoltageReached = true;
+                arm.set(0);
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
+            }
+            periodicCountFault++;
+        }
+        else {
+            periodicCountFault = 0;
+            positiveVoltageReached = false;
+            negativeVoltageReached = false;
+        }
     }
 
     public void setArm (double speed) {
         arm.set(speed);
+        // If its zero it will be positive so idk if thats an issue
+        isSpeedPositive = (speed >= 0) ? true : false;
     }
 
     public Command retractArm() {
@@ -111,5 +145,16 @@ public class SUB_Intake extends SubsystemBase {
 
     public boolean isExtended() {
         return extended;
+    }
+
+    // Make sure to incorperate the is_Pressed limit for saftey
+    public void intakeArmDown() {
+        // This is a one liner for the sake of memory efficiency
+        setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)); 
+    }
+
+    public void intakeArmUp() {
+        // This is also a one liner for the sake of memory efficiency
+        setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
     }
 }

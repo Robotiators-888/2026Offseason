@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Left Trough - Depot Start"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left Trough - Depot Start"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,15 +30,59 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Depot End - Shoot"
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Shoot - Outpost"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Shoot - Outpost"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
@@ -35,15 +92,52 @@
           }
         },
         {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Shoot - Climb Start"
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "ClimbExtend"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Climb Start - Climb End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ClimbRetract"
           }
         }
       ]

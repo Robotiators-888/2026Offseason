@@ -5,9 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Left Trough - Depot Start"
+            "name": "DeployIntake"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left Trough - Depot Start"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {
@@ -17,27 +36,84 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Depot End - Shoot"
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Shoot - Left Trough"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootDistance"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Left Trough - Left Trough Center"
+            "name": "StopShooting"
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Left Trough Center - Neutral Zone Left"
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Shoot - Left Trough"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Trough - Left Trough Center"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Trough Center - Neutral Zone Left"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         }
       ]

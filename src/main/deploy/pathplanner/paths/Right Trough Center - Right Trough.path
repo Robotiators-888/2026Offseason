@@ -3,32 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9049949652613565,
-        "y": 4.006361396791157
+        "x": 5.710763087843833,
+        "y": 0.6588997338065656
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.153368488160968,
-        "y": 3.977890479657419
+        "x": 4.710763087843833,
+        "y": 0.6588997338065657
       },
       "isLocked": false,
-      "linkedName": "Shoot"
-    },
-    {
-      "anchor": {
-        "x": 3.478016666666667,
-        "y": 0.8680583333333334
-      },
-      "prevControl": {
-        "x": 3.15272871502363,
-        "y": 1.4827409301860484
-      },
-      "nextControl": {
-        "x": 3.5949514624035324,
-        "y": 0.6470916988701694
-      },
-      "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Trough Center"
     },
     {
       "anchor": {
@@ -36,20 +20,15 @@
         "y": 0.66
       },
       "prevControl": {
-        "x": 3.601677611459101,
-        "y": 1.0946013609345993
+        "x": 4.704358108108108,
+        "y": 0.6599999999999999
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Right Trough Forward"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1,
-      "rotationDegrees": 0.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -66,10 +45,10 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Right Trough Path",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

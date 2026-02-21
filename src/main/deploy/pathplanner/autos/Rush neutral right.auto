@@ -7,55 +7,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Outpost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
+            "pathName": "Right Trough - Right Trough Center"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost - Shoot"
+            "pathName": "Right Trough Center - Neutral Zone Right"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot - Depot Start"
+            "pathName": "Neutral Zone Right - Right Trough Center "
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Depot Start - Depot End"
+            "pathName": "Right Trough Center - Right Trough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Depot End - Shoot"
+            "pathName": "Shoot nuetral right"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Shoot - Climb Start"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Climb Start - Climb End"
+            "name": "ShootDistance"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "PreLoad",
+  "folder": null,
   "choreoAuto": false
 }
