@@ -457,6 +457,7 @@ public class RobotContainer {
                         // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
                 }
+                SmartDashboard.putNumber("Time until next alliance change", Hub.getTimeUntilNextChange());
                 if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
                                 || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
                                 || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {

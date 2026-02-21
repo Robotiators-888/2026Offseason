@@ -43,29 +43,30 @@ public class Hub {
 
     public static double getTimeUntilNextChange () {
         double matchTime = DriverStation.getMatchTime();
-        // Auto and trasition shift
-        if (matchTime <= 30) {
-            return 30 - matchTime;
+        // Auto and transition shift
+        if (matchTime >= 30+(25*4)) {
+            // Idk if this is right
+            return 25 - (30+(25*4)+30 - matchTime);
         }
         // Shift 1
-        else if (matchTime <= 30+(25*1)) {
-            return 30+(25*1) - matchTime;
+        else if (matchTime >= 30+(25*3)) {
+            return 25 - (30+(25*4) - matchTime);
         }
         // Shift 2
-        else if (matchTime <= 30+(25*2)) {
-            return 30+(25*2) - matchTime;
+        else if (matchTime >= 30+(25*2)) {
+            return 25 - (30+(25*3) - matchTime);
         }
         // Shift 3
-        else if (matchTime <= 30+(25*3)) {
-            return 30+(25*3) - matchTime;
+        else if (matchTime >= 30+(25*1)) {
+            return 25 - (30+(25*2) - matchTime);
         }
         // Shift 4
-        else if (matchTime <= 30+(25*4)) {
-            return 30+(25*4) - matchTime;
+        else if (matchTime >= 30) {
+            return 25 - (30+(25*1) - matchTime);
         }
         // Endgame
         else {
-            return 30+(25*4)+30 - matchTime;
+            return 25 - (30 - matchTime);
         }
     }
 
