@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.704358108108108,
-        "y": 0.6600000000000001
+        "x": 3.254180722891566,
+        "y": 0.24308433734939738
       },
       "isLocked": false,
       "linkedName": "Right Trough Forward"
     },
     {
       "anchor": {
-        "x": 5.710763087843833,
-        "y": 0.6588997338065656
+        "x": 2.904493975903614,
+        "y": 0.9970963855421688
       },
       "prevControl": {
-        "x": 4.710763087843833,
-        "y": 0.6588997338065657
+        "x": 2.565734939759036,
+        "y": 0.13380722891566266
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trough Center"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 67.0
   },
   "reversed": false,
   "folder": null,

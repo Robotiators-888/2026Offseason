@@ -51,14 +51,14 @@ public final class Constants {
                 public static final double kINTAKE_ARM_MOTOR_SPEED = 0.1;
                 public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -209;
                 public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
-                public static final double kIntake_ARM_FAULT_AMPS = 35;
+                public static final double kIntake_ARM_FAULT_AMPS = 30;
         }
         
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kINDEX_MOTOR_SPEED = 0.8;
-                public static final double kINDEX_METERING_MOTOR_SPEED = -0.7;
+                public static final double kINDEX_METERING_MOTOR_SPEED = -0.30;
         }
 
         public static final class Climber {
