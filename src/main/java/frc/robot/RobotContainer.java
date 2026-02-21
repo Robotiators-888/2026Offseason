@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -93,6 +94,7 @@ public class RobotContainer {
         public int targetId = 7;
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
+        private Timer photonTimer;
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -112,6 +114,7 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
+                photonTimer = new Timer();
                 drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive
                                 .withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts)
                                 .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
@@ -436,7 +439,7 @@ public class RobotContainer {
                                 Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
-                shooter.stopWhileFalse(() -> !photonVision.getPhotonTimerHasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
+                shooter.stopWhileFalse(() -> !photonTimer.hasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
         }
 
         public void teleopPeriodic() {
@@ -519,14 +522,16 @@ public class RobotContainer {
                 photonPoseUpdate();
         }
 
-        public static void photonPoseUpdate() {
+        public void photonPoseUpdate() {
                 processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
                 processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
         }
 
-        private static void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
+        private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
                         StructPublisher<Pose2d> publisher) {
                 if (poseOptional.isPresent()) {
+                        photonTimer.stop();
+                        photonTimer.reset();
                         EstimatedRobotPose estimatedPose = poseOptional.get();
                         Pose3d photonPose = estimatedPose.estimatedPose;
 
@@ -549,6 +554,11 @@ public class RobotContainer {
                                                 estimatedPose.timestampSeconds,
                                                 VecBuilder.fill(xyStddev, xyStddev, rotStddev));
                                 publisher.set(photonPose.toPose2d());
+                        }
+                }
+                else {
+                        if (!photonTimer.isRunning()) {
+                                photonTimer.start();
                         }
                 }
         }
