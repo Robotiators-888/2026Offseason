@@ -119,6 +119,8 @@ public class SUB_Intake extends SubsystemBase {
             positiveVoltageReached = false;
             negativeVoltageReached = false;
         }
+        SmartDashboard.putBoolean("Positive voltage reached", positiveVoltageReached);
+        SmartDashboard.putBoolean("Negative voltage reached", negativeVoltageReached);
     }
 
     public void setArm (double speed) {

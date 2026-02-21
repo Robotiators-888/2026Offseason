@@ -271,7 +271,16 @@ public class RobotContainer {
                                 () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
                                                 Operator.kDriveDeadband),
                                 () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
-                                                Operator.kDriveDeadband)));                
+                                                Operator.kDriveDeadband)));
+                Driver1.a().whileTrue(new RunCommand(
+                        ()->{
+                                index.set(-Constants.Index.kINDEX_MOTOR_SPEED);
+                                index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                                shooter.set(-0.2);
+                                intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
+                        }, 
+                        index, shooter, intake
+                ));
 
 
                 // Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
@@ -404,6 +413,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
+                SmartDashboard.putNumber("Set RPM",targetRPM);
         }
 
         public void autonomousInit() {

@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -33,7 +35,10 @@ public class SUB_Index extends SubsystemBase {
         index.set(speed);
     }
     public double intakeRPM(){
-        return index.getEncoder().getVelocity()/3; // Gear Ratio
+        return index.getEncoder().getVelocity(); // Gear Ratio
+    }
+    public double intakeMeteringRPM(){
+        return meteringWheel.getEncoder().getVelocity()/3; // Gear Ratio of Metering 
     }
 
     public void setMeteringSpeed(double speed) {
@@ -42,5 +47,6 @@ public class SUB_Index extends SubsystemBase {
 
     public void periodic() {
       SmartDashboard.putNumber("indexRPM", intakeRPM());
+      SmartDashboard.putNumber("meteringRPM", intakeMeteringRPM());
     }
 }
