@@ -25,6 +25,12 @@
         {
           "type": "path",
           "data": {
+            "pathName": "Right Trough Center - Right Trough"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "Shoot nuetral right"
           }
         },
