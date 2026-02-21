@@ -41,6 +41,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Unshoot Trough Right"
@@ -80,6 +86,12 @@
           "type": "named",
           "data": {
             "name": "ShootDistance"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         }
       ]
