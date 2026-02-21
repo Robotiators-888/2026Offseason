@@ -119,9 +119,8 @@ public class SUB_Shooter extends SubsystemBase {
         return topFlywheel.getStatorCurrent().getValueAsDouble();
     }
 
-    public void stopIfFalse (BooleanSupplier supplier) {
+    public void stopWhileFalse (BooleanSupplier supplier) {
         canShoot = supplier;
-        stop();
     }
 
     public void periodic() {

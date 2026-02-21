@@ -436,7 +436,7 @@ public class RobotContainer {
                                 Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
-                shooter.stopIfFalse(() -> !photonVision.getPhotonTimerHasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
+                shooter.stopWhileFalse(() -> !photonVision.getPhotonTimerHasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
         }
 
         public void teleopPeriodic() {
