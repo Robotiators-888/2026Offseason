@@ -46,7 +46,7 @@ public class Hub {
         // Auto and transition shift
         if (matchTime >= 30+(25*4)) {
             // Idk if this is right
-            return 25 - (30+(25*4)+30 - matchTime);
+            return 30 - (30+(25*4)+30 - matchTime);
         }
         // Shift 1
         else if (matchTime >= 30+(25*3)) {
@@ -66,7 +66,7 @@ public class Hub {
         }
         // Endgame
         else {
-            return 25 - (30 - matchTime);
+            return 30 - (30 - matchTime);
         }
     }
 
