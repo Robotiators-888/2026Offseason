@@ -16,6 +16,7 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -562,8 +563,8 @@ public class RobotContainer {
                                 SmartDashboard.putNumber("PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                                 drivetrain.addVisionMeasurement(
                                                 photonPose.toPose2d(),
-                                                estimatedPose.timestampSeconds,
-                                                VecBuilder.fill(0, 0, 0)); // TODO: tune the standard deviations THis is a test to see if vision is being read.
+                                                Utils.fpgaToCurrentTime(estimatedPose.timestampSeconds),
+                                                VecBuilder.fill(xyStddev,xyStddev,rotStddev));
                                 publisher.set(photonPose.toPose2d());
                         }
                 }
