@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.ejml.simple.SimpleMatrix;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -29,13 +32,17 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -552,11 +559,11 @@ public class RobotContainer {
 
                                 double xyStddev = Math.pow(minDist, 2) / 16.0;
                                 double rotStddev = Units.degreesToRadians(120.0);
-
+                                SmartDashboard.putNumber("PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                                 drivetrain.addVisionMeasurement(
                                                 photonPose.toPose2d(),
                                                 estimatedPose.timestampSeconds,
-                                                VecBuilder.fill(xyStddev, xyStddev, rotStddev));
+                                                VecBuilder.fill(0, 0, 0)); // TODO: tune the standard deviations THis is a test to see if vision is being read.
                                 publisher.set(photonPose.toPose2d());
                         }
                 }
