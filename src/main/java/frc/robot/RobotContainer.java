@@ -227,7 +227,6 @@ public class RobotContainer {
 
                 // Configure the trigger bindings
                 configureBindings();
-
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);
                 SmartDashboard.putData("Active Auto Path", autoField);

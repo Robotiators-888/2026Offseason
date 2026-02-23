@@ -18,15 +18,14 @@ import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
-    private PIDController controller = new PIDController(0.05, 0, 0);
+    private PIDController controller = new PIDController(0.001, 0, 0);
     private TalonFX intake;
     private SparkMax arm;
     private SparkMax armFollower;
     private SparkLimitSwitch forwardLimit;
     private SparkLimitSwitch reverseLimit;
-    private boolean isSpeedPositive = true;
-    private boolean positiveVoltageReached = false;
-    private boolean negativeVoltageReached = false;
+    private boolean stickUp = false;
+    private boolean stickDown = false;
     private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
     public static SUB_Intake getInstance (){
@@ -69,13 +68,11 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public boolean isForwardPressed() {
-        // Double check this
-        return forwardLimit.isPressed() || negativeVoltageReached;
+        return forwardLimit.isPressed()||stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
     }
 
     public boolean isReversePressed() {
-        // Double check this
-        return reverseLimit.isPressed() || positiveVoltageReached;
+        return reverseLimit.isPressed()||stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
     }
 
     public void set(double speed){
@@ -95,38 +92,45 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
         SmartDashboard.putNumber("Arm Arm Output Amps", arm.getOutputCurrent());
-        // This all might be reversed
-        if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && isSpeedPositive) {
-            if (periodicCountFault >= 12) {
-                positiveVoltageReached = true;
-                negativeVoltageReached = false;
-                arm.set(0);
-                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
-            }
-            periodicCountFault++;
+        SmartDashboard.putBoolean("Stick Up", stickUp);
+        SmartDashboard.putBoolean("Stick Down", stickDown);
+        if (periodicCountFault > 0) {
+            periodicCountFault--;
         }
-        else if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && !isSpeedPositive) {
-            if (periodicCountFault >= 12) {
-                positiveVoltageReached = false;
-                negativeVoltageReached = true;
-                arm.set(0);
-                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
-            }
-            periodicCountFault++;
-        }
-        else {
-            periodicCountFault = 0;
-            positiveVoltageReached = false;
-            negativeVoltageReached = false;
-        }
-        SmartDashboard.putBoolean("Positive voltage reached", positiveVoltageReached);
-        SmartDashboard.putBoolean("Negative voltage reached", negativeVoltageReached);
     }
 
-    public void setArm (double speed) {
+    public void setArm(double speed) {
+        if (arm.getOutputCurrent() > Constants.Intake.kIntake_ARM_FAULT_AMPS) {
+            periodicCountFault+=2;
+        }
+        if (periodicCountFault > 12) {
+            if (speed > 0) {
+                stickUp = true;
+                stickDown = false;
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+            } else if (speed < 0) {
+                stickUp = false;
+                stickDown = true;
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
+            }
+            speed = 0;
+        }
+        if (stickUp) {
+            if (speed < 0) {
+                stickUp = false;
+            } else {
+                speed = 0;
+            }
+        }
+        if (stickDown) {
+            if (speed > 0) {
+                stickDown = false;
+            } else {
+                speed = 0;
+            }
+        }
         arm.set(speed);
-        // If its zero it will be positive so idk if thats an issue
-        isSpeedPositive = (speed >= 0) ? true : false;
+        
     }
 
     public Command retractArm() {
