@@ -39,7 +39,7 @@ public class SUB_Index extends SubsystemBase {
         double kP = 0.0001; // Very low to start
         double kI = 0.0;
         double kD = 0.0; 
-        double kFF = 0.0005; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676/3 = 1892. 1 / 1892 ≈ 0.0005
+        double kFF = 0.0005; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676/3 = 1892. 1 / 1892 = 0.0005
         meteringConfig.closedLoop.pid(kP, kI, kD);
         meteringConfig.closedLoop.velocityFF(kFF);
         meteringWheel.configure(meteringConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
