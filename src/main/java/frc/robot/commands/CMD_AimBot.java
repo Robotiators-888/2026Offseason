@@ -27,6 +27,7 @@ public class CMD_AimBot extends RunCommand {
   private Pose2d targetPose = new Pose2d();
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
+  private static boolean running;
 
   private final PIDController robotAngleController = new PIDController(1.5, 0, 0.05);
   public static boolean isThetaErrorCorrect = false;
@@ -60,7 +61,7 @@ public class CMD_AimBot extends RunCommand {
         targetRotation);
     robotAngleController.reset();
     drivetrain.publisher2.set(targetPose);
-
+    running = true;
   }
 
   @Override
@@ -90,11 +91,16 @@ public class CMD_AimBot extends RunCommand {
 
   @Override
   public void end(boolean interrupted) {
+    running = false;
     // No specific actions on end
   }
 
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  public static boolean isRunning () {
+    return running;
   }
 }

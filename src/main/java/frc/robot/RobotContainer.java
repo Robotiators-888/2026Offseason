@@ -398,7 +398,7 @@ public class RobotContainer {
                         Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
                         Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);
                 }
-                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect) {
+                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect && CMD_AimBot.isRunning()) {
                         Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
                         Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
                 } else {
