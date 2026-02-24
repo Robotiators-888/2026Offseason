@@ -120,10 +120,15 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive
-                                .withVelocityX(-MathUtils.applyDeadband(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts,0.05)
-                                .withVelocityY(-MathUtil.applyDeadband(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts,0.05)
-                                .withRotationalRate(-MathUtil.applyDeadband(Driver1.getRightX()) * Math.PI * 2,0.05)));
+                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> {
+                        // If Left Bumper is held, drive at 30% speed. Otherwise, 100% speed.
+                        double speed = Driver1.getHID().getLeftBumper() ? 0.3 : 1.0;
+                        
+                        return drive
+                                .withVelocityX(-MathUtils.applyDeadband(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts,Operator.kDriveDeadband) * speed
+                                .withVelocityY(-MathUtils.applyDeadband(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts,Operator.kDriveDeadband) * speed
+                                .withRotationalRate(-MathUtils.applyDeadband(Driver1.getRightX()) * Math.PI * 2,Operator.kDriveDeadband) * speed;
+                }));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
@@ -227,7 +232,6 @@ public class RobotContainer {
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
 
-                // Configure the trigger bindings
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -250,135 +254,61 @@ public class RobotContainer {
          * joysticks}.
          */
         private void configureBindings() {
-                //Test Climber
-                // Driver2.axisLessThan(1,-0.25).whileTrue(new RunCommand(()->climber.setClimber(Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
-                // Driver2.axisGreaterThan(1,0.25).whileTrue(new RunCommand(()->climber.setClimber(-Constants.Climber.kCLIMBER_MOTOR_SPEED),climber));
-                // Test Shooter
-                Driver2.leftTrigger().whileTrue(new RunCommand(()->shooter.set(0.2),shooter)); 
-                Driver2.rightTrigger().whileTrue(new RunCommand(()->shooter.setVolts(1),shooter)); 
-                Driver2.b().whileTrue(new RunCommand(()->shooter.shootMeters(2),shooter));
-                Driver2.x().whileTrue(new RunCommand(()->shooter.setRPM(targetRPM),shooter));
-                Driver2.povUp().onTrue(new InstantCommand(() -> targetRPM += 25));
-                Driver2.povDown().onTrue(new InstantCommand(() -> targetRPM -= 25));
-                // Test Intake
-                Driver2.y().whileTrue(new RunCommand(()->intake.setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
-                Driver2.a().whileTrue(new RunCommand(()->intake.setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED),intake));
-                Driver2.rightBumper().whileTrue(new RunCommand(()->intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake));
-                Driver2.leftStick().whileTrue(new RunCommand(()->intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED)));
-                // Test Index
+                // =========================================================
+                // DRIVER 1
+                // =========================================================
+                Driver1.rightBumper().whileTrue(new RunCommand(() -> {
+                        intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED);
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                }, intake, index));
+                Driver1.rightTrigger().whileTrue(
+                        new CMD_AimBot(drivetrain, photonVision,
+                                () -> -MathUtil.applyDeadband(Driver1.getLeftY(), Operator.kDriveDeadband),
+                                () -> -MathUtil.applyDeadband(Driver1.getLeftX(), Operator.kDriveDeadband))
+                        .alongWith(
+                                new RunCommand(() -> {
+                                        double distance = drivetrain.getPose().getTranslation().getDistance(
+                                                SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                                ).map(pose -> pose.toPose2d().getTranslation().plus(
+                                                        new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+                                                )).orElse(drivetrain.getPose().getTranslation())
+                                        );
+                                        shooter.shootMeters(distance);
+                                        if (CMD_AimBot.isThetaErrorCorrect && shooter.atDesiredRPM()) {
+                                                index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                                                index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                                        } else {
+                                                index.set(0);
+                                                index.setMeteringSpeed(0);
+                                        }
+                                }, shooter, index)
+                        )
+                );
+                // =========================================================
+                // DRIVER 2
+                // =========================================================
+                Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
+                Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
+                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                }, index));
+                Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
+                Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                }, index));
-                Driver2.povLeft().whileTrue(new RunCommand(() -> {
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                }, index));
-                Driver2.povRight().whileTrue(new RunCommand(() -> {
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                },index));
-                Driver1.x().toggleOnTrue(new CMD_AimBot(drivetrain, photonVision,
-                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
-                                                Operator.kDriveDeadband),
-                                () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
-                                                Operator.kDriveDeadband)));
-                Driver1.a().whileTrue(new RunCommand(
-                        ()->{
-                                index.set(-Constants.Index.kINDEX_MOTOR_SPEED);
-                                index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                                shooter.set(-0.2);
-                                intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
-                        }, 
-                        index, shooter, intake
-                ));
-
-
-                // Driver1.leftStick().onTrue(new InstantCommand(() -> drivetrain.zeroHeading(), drivetrain)); // TODO:change                
-                // Driver1.rightTrigger().whileTrue(Commands.sequence(
-                // Commands.run(() -> shooter.shootMeters(
-                // drivetrain.getPose().getTranslation().getDistance(
-                // SUB_PhotonVision.getInstance().at_field.getTagPose(
-                // DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                // ).map(pose -> pose.toPose2d().getTranslation()
-                // .plus(new Translation2d(
-                // Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) ==
-                // Alliance.Red ? -23.5 : 23.5),
-                // 0
-                // ))
-                // ).orElse(drivetrain.getPose().getTranslation())
-                // )), shooter)
-                // .until(shooter::atDesiredRPM),
-
-                // Commands.run(() -> {
-                // index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
-                // index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                // }, shooter,index)
-                // ));
-
-                // Driver1.leftTrigger().whileTrue(Commands.sequence(
-                // Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),
-                // shooter)
-                // .until(shooter::atDesiredRPM),
-
-                // Commands.run(() -> {
-                // shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                // index.setMeteringSpeed(Constants.Shooter.kMETERING_SPEED);
-                // index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                // }, shooter, index)
-                // ));
-
-                // Driver1.x().toggleOnTrue(new CMD_AimBot(drivetrain, photonVision,
-                // () -> -MathUtil.applyDeadband(Driver1.getRawAxis(1),
-                // Operator.kDriveDeadband),
-                // () -> -MathUtil.applyDeadband(Driver1.getRawAxis(0),
-                // Operator.kDriveDeadband)));
-
-                // // Driver1.povLeft().toggleOnTrue(
-                // // Commands.sequence(
-                // // intake.retractArm(),
-                // // new WaitUntilCommand(intake::isReversePressed),
-                // // new InstantCommand(() -> climber.setClimberArmToPosition(45),climber)
-                // // )
-                // // ).toggleOnFalse(
-                // // new InstantCommand(() -> climber.setClimberArmToPosition(0),climber)
-                // // );
-
-                // // Driver1.povUp().onTrue(
-                // // new InstantCommand(() -> climber.climb(),climber)
-                // // );
-
-                // // Driver1.povDown().onTrue(
-                // // new InstantCommand(() -> climber.unClimb(),climber)
-                // // );
-
-                // // Driver1.povUp().onTrue(
-                // // new SequentialCommandGroup (
-                // // new InstantCommand(() -> climber.climb(), climber),
-                // // new WaitUntilCommand(() -> climber.hasReachedSetPoint(true))
-                // // )
-                // // );
-
-                // // Driver1.povDown().onTrue(
-                // // new SequentialCommandGroup (
-                // // new InstantCommand(() -> climber.unClimb(), climber),
-                // // new WaitUntilCommand(() -> climber.hasReachedSetPoint(false))
-                // // )
-                // // );
-
-                // Driver1.a().toggleOnTrue(
-                // Commands.sequence(
-                // Commands.either(
-                // Commands.none(), // If true (already extended)
-                // intake.extendArm(), // If false (retracted)
-                // intake::isForwardPressed
-                // ),
-                // new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
-                // )
-                // ).toggleOnFalse(
-                // Commands.sequence(
-                // new InstantCommand(() -> intake.set(0),intake)
-                // )
-                // );
-
+                        intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
+                        index.set(-Constants.Index.kINDEX_MOTOR_SPEED);
+                        index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        shooter.setVolts(-2.5);
+                }, intake, index, shooter));
+                Driver2.povDown().onTrue(intake.extendArm());
+                Driver2.povUp().onTrue(intake.retractArm());
+                Driver2.rightBumper().whileTrue(new RunCommand(() -> {
+                        intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
+                        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband); * Constants.Climber.kCLIMBER_MOTOR_SPEED);
+                }, intake, climber));
+                
         }
 
         public void robotInit() {
