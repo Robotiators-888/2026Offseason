@@ -121,9 +121,9 @@ public class RobotContainer {
          */
         public RobotContainer() {
                 drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive
-                                .withVelocityX(-deadbandCompensate(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts)
-                                .withVelocityY(-deadbandCompensate(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts)
-                                .withRotationalRate(-deadbandCompensate(Driver1.getRightX()) * Math.PI * 2)));
+                                .withVelocityX(-MathUtils.applyDeadband(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts,0.05)
+                                .withVelocityY(-MathUtil.applyDeadband(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts,0.05)
+                                .withRotationalRate(-MathUtil.applyDeadband(Driver1.getRightX()) * Math.PI * 2,0.05)));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
@@ -379,14 +379,6 @@ public class RobotContainer {
                 // )
                 // );
 
-        }
-
-        public double deadbandCompensate(double axis) {
-                if (Math.abs(axis) < .1) {
-                        return 0.0;
-                } else {
-                        return Math.copySign((Math.abs(axis) - .1) * (1 / 0.9), axis);
-                }
         }
 
         public void robotInit() {
