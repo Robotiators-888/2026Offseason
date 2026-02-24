@@ -125,9 +125,9 @@ public class RobotContainer {
                         double speed = Driver1.getHID().getLeftBumper() ? 0.3 : 1.0;
                         
                         return drive
-                                .withVelocityX(-MathUtil.applyDeadband(Driver1.getLeftY()) * TunerConstants.kSpeedAt12Volts,Operator.kDriveDeadband * speed)
-                                .withVelocityY(-MathUtil.applyDeadband(Driver1.getLeftX()) * TunerConstants.kSpeedAt12Volts,Operator.kDriveDeadband * speed)
-                                .withRotationalRate(-MathUtil.applyDeadband(Driver1.getRightX()) * Math.PI * 2,Operator.kDriveDeadband * speed);
+                                .withVelocityX(-MathUtil.applyDeadband(Driver1.getLeftY(),Operator.kDriveDeadband ) * TunerConstants.kSpeedAt12Volts  * speed)
+                                .withVelocityY(-MathUtil.applyDeadband(Driver1.getLeftX(),Operator.kDriveDeadband ) * TunerConstants.kSpeedAt12Volts * speed)
+                                .withRotationalRate(-MathUtil.applyDeadband(Driver1.getRightX(),Operator.kDriveDeadband ) * Math.PI * 2  * speed);
                 }));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
