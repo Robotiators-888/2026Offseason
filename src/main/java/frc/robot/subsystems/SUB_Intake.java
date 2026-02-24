@@ -163,4 +163,12 @@ public class SUB_Intake extends SubsystemBase {
         // This is also a one liner for the sake of memory efficiency
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
     }
+
+    public boolean isArmDownReached() {
+            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)== 0;
+    }
+
+    public boolean isArmUpReached() {
+            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)== 0;
+    }
 }
