@@ -306,7 +306,7 @@ public class RobotContainer {
                 Driver2.povUp().onTrue(intake.retractArm());
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
-                        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband); * Constants.Climber.kCLIMBER_MOTOR_SPEED);
+                        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake, climber));
                 
         }
