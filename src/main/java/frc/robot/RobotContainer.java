@@ -107,14 +107,14 @@ public class RobotContainer {
 
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
-        //     .withDeadband(Operator.kDriveDeadband)
-        //     .withRotationalDeadband(Operator.kDriveDeadband)
-        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric() 
+        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
             .withDeadband(Operator.kDriveDeadband)
             .withRotationalDeadband(Operator.kDriveDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        // private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric() 
+        //     .withDeadband(Operator.kDriveDeadband)
+        //     .withRotationalDeadband(Operator.kDriveDeadband)
+        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -259,9 +259,8 @@ public class RobotContainer {
                 // =========================================================
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED);
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                }, intake, index));
+                        // index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                }, intake));
                 Driver1.rightTrigger().whileTrue(
                         new CMD_AimBot(drivetrain, photonVision,
                                 () -> -MathUtil.applyDeadband(Driver1.getLeftY(), Operator.kDriveDeadband),
@@ -292,7 +291,8 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        // index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        index.setMeteringRPM(1600);
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));

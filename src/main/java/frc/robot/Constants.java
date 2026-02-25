@@ -47,7 +47,7 @@ public final class Constants {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kINTAKE_MOTOR_SPEED = 0.6;
+                public static final double kINTAKE_MOTOR_SPEED = 0.5;
                 public static final double kINTAKE_ARM_MOTOR_SPEED = 0.1;
                 public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -209;
                 public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
@@ -58,7 +58,7 @@ public final class Constants {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kINDEX_MOTOR_SPEED = 0.45;
-                public static final double kINDEX_METERING_MOTOR_SPEED = -1.0;
+                public static final double kINDEX_METERING_MOTOR_SPEED = 0.9;
         }
 
         public static final class Climber {

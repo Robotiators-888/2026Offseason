@@ -29,7 +29,7 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
 
-  private final PIDController robotAngleController = new PIDController(1.5, 0, 0.05);
+  private final PIDController robotAngleController = new PIDController(2.5, 0, 0);
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
