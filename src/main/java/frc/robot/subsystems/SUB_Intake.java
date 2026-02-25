@@ -67,6 +67,7 @@ public class SUB_Intake extends SubsystemBase {
         intake.getConfigurator().apply(talonConfig);
     }
 
+    
     public boolean isForwardPressed() {
         return forwardLimit.isPressed()||stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
     }
@@ -84,6 +85,12 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
+        if (forwardLimit.isPressed()) {
+            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+        }
+        if (reverseLimit.isPressed()) {
+            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
+        }
         SmartDashboard.putNumber("intakeRPM", intakeRPM());
         SmartDashboard.putBoolean("Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
