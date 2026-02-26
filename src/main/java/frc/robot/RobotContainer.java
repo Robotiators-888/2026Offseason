@@ -382,7 +382,8 @@ public class RobotContainer {
                                 Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
-                shooter.stopWhileFalse(() -> !photonTimer.hasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
+                shooter.stopWhileFalse(() -> !photonTimer.hasElapsed(Constants.PhotonVision.kPhotonTrustTimeout) && Hub.isAllianceHubActive().isPresent() && Hub.isAllianceHubActive().get());
+                                // shooter.stopWhileFalse(() -> !photonTimer.hasElapsed(Constants.PhotonVision.kPhotonTrustTimeout) && ((Hub.isAllianceHubActive().isPresent()) ? Hub.isAllianceHubActive().get() : true));
                 shooter.setAutonomous(false);
         }
 

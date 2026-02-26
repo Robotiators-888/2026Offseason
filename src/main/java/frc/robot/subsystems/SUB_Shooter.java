@@ -89,6 +89,7 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public void shootMeters(double meters) {
+        // canshoot should be true in auto anyways but you can never be too safe
         if ((!isAutonomous && canShoot.getAsBoolean()) || isAutonomous) {
             // query the map for the RPM associated with this distance
             double targetRPM = distanceToRPM.get(meters);
