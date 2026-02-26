@@ -12,6 +12,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -68,22 +70,12 @@ public class SUB_Shooter extends SubsystemBase {
 
     @Deprecated
     public void set(double speed){
-        if (canShoot.getAsBoolean()) {
             topFlywheel.set(speed);
-        }
-        else {
-            stop();
-        }
     }
 
     public void setRPM(double rpm) {
-        if (canShoot.getAsBoolean()) {
             this.desiredSpeed = rpm;
-            topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
-        }
-        else {
-            stop();
-        }
+            topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));        
     }
 
     public double flywheelRPM() {
@@ -97,11 +89,16 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public void shootMeters(double meters) {
-        // query the map for the RPM associated with this distance
-        double targetRPM = distanceToRPM.get(meters);
+        if ((!DriverStation.isAutonomous() && canShoot.getAsBoolean()) || DriverStation.isAutonomous()) {
+            // query the map for the RPM associated with this distance
+            double targetRPM = distanceToRPM.get(meters);
         
-        // Pass it to your existing setRPM method
-        setRPM(targetRPM);
+            // Pass it to your existing setRPM method
+            setRPM(targetRPM);
+        }
+        else {
+            stop();
+        }
     }
 
     public void stop() {
