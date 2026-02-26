@@ -171,10 +171,10 @@ public class RobotContainer {
                 
                 // Intake
 
-                NamedCommands.registerCommand("Intake", Commands.sequence(
+                NamedCommands.registerCommand("Intake", Commands.sequence( // Could be a Commands.parallel
                         Commands.either(
                                 Commands.none(),              // If true (already extended)
-                                intake.extendArm(),           // If false (retracted)
+                                Commands.run(() -> intake.intakeArmDown()).until(() -> intake.isArmDownReached() || intake.isReversePressed()),           // If false (retracted)
                                 intake::isForwardPressed
                         ),
                         new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
@@ -183,8 +183,10 @@ public class RobotContainer {
                 NamedCommands.registerCommand("StopIntake",
                                 new InstantCommand(() -> intake.set(0), intake));
 
+                // Depricated do not use
                 NamedCommands.registerCommand("DeployIntake", intake.extendArm());
 
+                // Favor "Intake" over this
                 NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> intake.intakeArmDown(), intake).until(() -> intake.isArmDownReached() || intake.isForwardPressed()));
 
                 // Shooter and Indexer
