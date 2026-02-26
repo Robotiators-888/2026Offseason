@@ -108,7 +108,6 @@ public class SUB_PhotonVision extends SubsystemBase {
   public int getId(PhotonTrackedTarget target) {
     return target.getFiducialId();
   }
-  }
 
   @Override
   public void periodic() {

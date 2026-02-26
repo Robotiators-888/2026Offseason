@@ -103,6 +103,7 @@ public final class Constants {
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5), // X is forward and the camera is in front of the center of the robot, Y positive is left and the camera is on the right of the robot, Z is up from the ground and it is above the ground
                                 Units.inchesToMeters(7.8), cameraRotation2);
 
+                public static final double kPhotonTrustTimeout = 5;
 
                 // public static final String kCam3Name = "AprilTagHighCam";
                 // public static final Rotation3d cameraRotation3 = new Rotation3d(0,
