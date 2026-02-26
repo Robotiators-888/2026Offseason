@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.subsystems.SUB_PhotonVision;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class CMD_AimBot extends RunCommand {
   private final SUB_PhotonVision photonVision;
@@ -26,9 +27,11 @@ public class CMD_AimBot extends RunCommand {
   private Pose2d targetPose = new Pose2d();
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
+  private static boolean running;
 
-  private final PIDController robotAngleController = new PIDController(1.5, 0, 0.05);
+  private final PIDController robotAngleController = new PIDController(2.5, 0, 0);
   public static boolean isThetaErrorCorrect = false;
+  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
@@ -58,7 +61,7 @@ public class CMD_AimBot extends RunCommand {
         targetRotation);
     robotAngleController.reset();
     drivetrain.publisher2.set(targetPose);
-
+    running = true;
   }
 
   @Override
@@ -71,26 +74,33 @@ public class CMD_AimBot extends RunCommand {
     Rotation2d targetRotation = new Rotation2d(targetPose.getX()-currentPose.getX(),targetPose.getY()-currentPose.getY());
     double omegaSpeed = robotAngleController.calculate(
         MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-        MathUtil.angleModulus(targetRotation.getRadians()));
+        MathUtil.angleModulus(targetRotation.getRadians())
+    );
 
-    drivetrain.drive(translationXSupplier.getAsDouble(), translationYSupplier.getAsDouble(), omegaSpeed, true, true);
-    double thetaError = Math.abs(currentPose.getRotation().getRadians() - targetPose.getRotation().getRadians());
-    SmartDashboard.putNumber("Theta Error", thetaError);
-    if (thetaError >= -5 && thetaError <= 5) {
-      isThetaErrorCorrect = true;
-    }
-    else {
-      isThetaErrorCorrect = false;
+    double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
+    SmartDashboard.putNumber("Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5);
+    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
+    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
+    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
+        drivetrain.setControl(brakeRequest);
+    } else {
+        drivetrain.drive(xInput, yInput, omegaSpeed, true, true);
     }
   }
 
   @Override
   public void end(boolean interrupted) {
+    running = false;
     // No specific actions on end
   }
 
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  public static boolean isRunning () {
+    return running;
   }
 }

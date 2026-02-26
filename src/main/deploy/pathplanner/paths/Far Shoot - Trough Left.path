@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9,
-        "y": 4.0
+        "x": 2.904,
+        "y": 7.003
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9,
-        "y": 4.0
+        "x": 3.2432530120481924,
+        "y": 7.357024096385543
       },
       "isLocked": false,
-      "linkedName": "Shoot"
+      "linkedName": "Shoot Trough Left"
     },
     {
       "anchor": {
-        "x": 0.426,
-        "y": 6.864
+        "x": 3.9494932432432437,
+        "y": 7.293254504504505
       },
       "prevControl": {
-        "x": 1.2019369369369375,
-        "y": 8.253367117117117
+        "x": 3.439951807228915,
+        "y": 7.44444578313253
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Start"
+      "linkedName": "Left Trough Forward"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Depot",
+  "folder": "Left Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -67.0
   },
   "useDefaultConstraints": true
 }

@@ -3,45 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 5.68661934338953,
+        "y": 7.293
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.9188994146192204,
-        "y": 7.412379500510636
+        "x": 5.808745654279202,
+        "y": 7.051932753106071
       },
       "isLocked": false,
-      "linkedName": "Left Trough Backward"
+      "linkedName": "Left Trough Center"
     },
     {
       "anchor": {
-        "x": 0.4256756756756762,
-        "y": 7.293254504504505
+        "x": 7.7951730257312,
+        "y": 6.839698314105558
       },
       "prevControl": {
-        "x": 0.409730972287424,
-        "y": 7.753122038516783
+        "x": 6.5159615047039905,
+        "y": 7.964457121522924
       },
       "nextControl": {
-        "x": 0.43483132530120483,
-        "y": 7.029192771084338
+        "x": 8.038608257465677,
+        "y": 6.625655588232378
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.4256756756756762,
-        "y": 6.864268018018018
+        "x": 7.8,
+        "y": 4.25
       },
       "prevControl": {
-        "x": 0.3960100077926858,
-        "y": 7.11250167437641
+        "x": 7.759201659193,
+        "y": 4.609695542417243
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot Start"
+      "linkedName": "Neutral Zone Left Deep"
     }
   ],
   "rotationTargets": [

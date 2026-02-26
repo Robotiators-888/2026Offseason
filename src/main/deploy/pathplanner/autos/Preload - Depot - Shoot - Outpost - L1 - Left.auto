@@ -144,6 +144,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "PreLoad",
   "choreoAuto": false
 }

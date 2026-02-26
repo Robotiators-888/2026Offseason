@@ -18,15 +18,15 @@ import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
     public static boolean extended;
-    private PIDController controller = new PIDController(0.05, 0, 0);
+    private PIDController controller = new PIDController(0.001, 0, 0);
     private TalonFX intake;
     private SparkMax arm;
     private SparkMax armFollower;
     private SparkLimitSwitch forwardLimit;
     private SparkLimitSwitch reverseLimit;
-    private boolean isSpeedPositive = true;
-    private boolean positiveVoltageReached = false;
-    private boolean negativeVoltageReached = false;
+    private boolean stickUp = false;
+    private boolean stickDown = false;
+    private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
@@ -67,14 +67,13 @@ public class SUB_Intake extends SubsystemBase {
         intake.getConfigurator().apply(talonConfig);
     }
 
+    
     public boolean isForwardPressed() {
-        // Double check this
-        return forwardLimit.isPressed() || negativeVoltageReached;
+        return forwardLimit.isPressed()||stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
     }
 
     public boolean isReversePressed() {
-        // Double check this
-        return reverseLimit.isPressed() || positiveVoltageReached;
+        return reverseLimit.isPressed()||stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
     }
 
     public void set(double speed){
@@ -86,38 +85,60 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
-        if (isForwardPressed()) {
-            arm.getEncoder().setPosition(0);
+        if (forwardLimit.isPressed()) {
+            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+        }
+        if (reverseLimit.isPressed()) {
+            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
         }
         SmartDashboard.putNumber("intakeRPM", intakeRPM());
         SmartDashboard.putBoolean("Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
-        // This all might be reversed
-        if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && isSpeedPositive) {
-            positiveVoltageReached = true;
-            negativeVoltageReached = false;
-            arm.set(0);
-        }
-        else if (arm.getOutputCurrent() >= Constants.Intake.kIntake_ARM_FAULT_AMPS && !isSpeedPositive) {
-            positiveVoltageReached = false;
-            negativeVoltageReached = true;
-            arm.set(0);
-        }
-        else {
-            positiveVoltageReached = false;
-            negativeVoltageReached = false;
+        SmartDashboard.putNumber("Arm Arm Output Amps", arm.getOutputCurrent());
+        SmartDashboard.putBoolean("Stick Up", stickUp);
+        SmartDashboard.putBoolean("Stick Down", stickDown);
+        if (periodicCountFault > 0) {
+            periodicCountFault--;
         }
     }
 
-    public void setArm (double speed) {
+    public void setArm(double speed) {
+        if (arm.getOutputCurrent() > Constants.Intake.kIntake_ARM_FAULT_AMPS) {
+            periodicCountFault+=2;
+        }
+        if (periodicCountFault > 12) {
+            if (speed > 0) {
+                stickUp = true;
+                stickDown = false;
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+            } else if (speed < 0) {
+                stickUp = false;
+                stickDown = true;
+                arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
+            }
+            speed = 0;
+        }
+        if (stickUp) {
+            if (speed < 0) {
+                stickUp = false;
+            } else {
+                speed = 0;
+            }
+        }
+        if (stickDown) {
+            if (speed > 0) {
+                stickDown = false;
+            } else {
+                speed = 0;
+            }
+        }
         arm.set(speed);
-        // If its zero it will be positive so idk if thats an issue
-        isSpeedPositive = (speed >= 0) ? true : false;
+        
     }
 
     public Command retractArm() {
-        return Commands.run(() -> setArm(-0.5), this)
+        return Commands.run(() -> setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
             .until(this::isReversePressed) // Stop command when switch is hit
             .finallyDo(() -> {
                 setArm(0);
@@ -127,7 +148,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public Command extendArm() {
-        return Commands.run(() -> setArm(0.5), this)
+        return Commands.run(() -> setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
             .until(this::isForwardPressed) // Stop command when switch is hit
             .finallyDo(() -> setArm(0));
     }
@@ -145,5 +166,13 @@ public class SUB_Intake extends SubsystemBase {
     public void intakeArmUp() {
         // This is also a one liner for the sake of memory efficiency
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
+    }
+
+    public boolean isArmDownReached() {
+            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)== 0;
+    }
+
+    public boolean isArmUpReached() {
+            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)== 0;
     }
 }
