@@ -427,6 +427,7 @@ public class RobotContainer {
                                         currentPose.getRotation().getRadians());
 
                 });
+                shooter.stopWhileFalse(() -> true);
         }
 
         public void autonomousPeriodic() {
