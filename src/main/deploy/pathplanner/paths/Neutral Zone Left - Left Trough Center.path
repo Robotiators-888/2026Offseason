@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 7.8,
+        "y": 5.25
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.949493243243244,
-        "y": 7.293254504504505
+        "x": 7.188156626506023,
+        "y": 5.783433734939758
       },
       "isLocked": false,
-      "linkedName": "Left Trough Forward"
+      "linkedName": "Neutral Zone Left"
     },
     {
       "anchor": {
@@ -20,8 +20,8 @@
         "y": 7.293
       },
       "prevControl": {
-        "x": 4.68661934338953,
-        "y": 7.293
+        "x": 6.248373493975904,
+        "y": 6.8434216867469875
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 0,
     "rotation": 180.0
   },
   "reversed": false,
   "folder": "Left Trough Path",
   "idealStartingState": {
-    "velocity": 1.0,
-    "rotation": 180.0
+    "velocity": 0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

@@ -3,48 +3,53 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9049949652613565,
-        "y": 4.006361396791157
+        "x": 5.68661934338953,
+        "y": 7.293
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.267214834986426,
-        "y": 5.911029875931395
+        "x": 5.808745654279202,
+        "y": 7.051932753106071
       },
       "isLocked": false,
-      "linkedName": "Shoot"
+      "linkedName": "Left Trough Center"
     },
     {
       "anchor": {
-        "x": 3.4895385980479148,
-        "y": 7.250141969831411
+        "x": 7.7951730257312,
+        "y": 6.839698314105558
       },
       "prevControl": {
-        "x": 3.2902177290389916,
-        "y": 7.09924070682302
+        "x": 6.5159615047039905,
+        "y": 7.964457121522924
       },
       "nextControl": {
-        "x": 3.688859467056838,
-        "y": 7.401043232839802
+        "x": 8.038608257465677,
+        "y": 6.625655588232378
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.9494932432432437,
-        "y": 7.293254504504505
+        "x": 7.8,
+        "y": 4.25
       },
       "prevControl": {
-        "x": 3.7052341525029493,
-        "y": 7.239986347123903
+        "x": 7.759201659193,
+        "y": 4.609695542417243
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Trough Forward"
+      "linkedName": "Neutral Zone Left Deep"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -58,13 +63,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "Left Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }
