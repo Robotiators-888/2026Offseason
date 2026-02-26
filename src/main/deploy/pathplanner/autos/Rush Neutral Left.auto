@@ -146,6 +146,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Left Trough",
   "choreoAuto": false
 }
