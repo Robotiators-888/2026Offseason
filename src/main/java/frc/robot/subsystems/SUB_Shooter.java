@@ -13,7 +13,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -30,6 +29,7 @@ public class SUB_Shooter extends SubsystemBase {
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
     private BooleanSupplier canShoot;
+    private boolean isAutonomous = false;
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -89,7 +89,7 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public void shootMeters(double meters) {
-        if ((!DriverStation.isAutonomous() && canShoot.getAsBoolean()) || DriverStation.isAutonomous()) {
+        if ((!isAutonomous && canShoot.getAsBoolean()) || isAutonomous) {
             // query the map for the RPM associated with this distance
             double targetRPM = distanceToRPM.get(meters);
         
@@ -116,6 +116,10 @@ public class SUB_Shooter extends SubsystemBase {
 
     public void stopWhileFalse (BooleanSupplier supplier) {
         canShoot = supplier;
+    }
+
+    public void setAutonomous (boolean b) {
+        isAutonomous = b;
     }
 
     public void periodic() {

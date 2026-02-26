@@ -369,6 +369,7 @@ public class RobotContainer {
 
                 });
                 shooter.stopWhileFalse(() -> true);
+                shooter.setAutonomous(true);
         }
 
         public void autonomousPeriodic() {
@@ -382,6 +383,7 @@ public class RobotContainer {
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
                 shooter.stopWhileFalse(() -> !photonTimer.hasElapsed(Constants.PhotonVision.kPhotonTrustTimeout));
+                shooter.setAutonomous(false);
         }
 
         public void teleopPeriodic() {
