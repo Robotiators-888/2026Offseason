@@ -17,9 +17,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough Center - Neutral Zone Right"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         },
         {
@@ -71,9 +83,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough Center - Neutral Zone Right Deep"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
           }
         },
         {
@@ -109,7 +133,7 @@
         {
           "type": "named",
           "data": {
-            "name": "StopShooting"
+            "name": "StopIntake"
           }
         }
       ]
