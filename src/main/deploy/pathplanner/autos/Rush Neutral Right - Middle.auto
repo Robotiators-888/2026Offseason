@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot - Right Trough"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "DeployIntake"
