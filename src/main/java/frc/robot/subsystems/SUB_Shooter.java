@@ -35,9 +35,9 @@ public class SUB_Shooter extends SubsystemBase {
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
         // Metering wheel speed at .3
-        distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
-        distanceToRPM.put(Units.inchesToMeters(95), 1430.0);
-        distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
+        // distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
+        // distanceToRPM.put(Units.inchesToMeters(95), 1430.0);
+        // distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
         distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
         distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
         configFlywheel();

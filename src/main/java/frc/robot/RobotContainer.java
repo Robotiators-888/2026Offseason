@@ -129,6 +129,7 @@ public class RobotContainer {
                                 .withVelocityY((Driver1.getLeftX() >= 0) ? -1 : 1 * Math.pow(-MathUtil.applyDeadband(Driver1.getLeftX(),Operator.kDriveDeadband ), 2) * TunerConstants.kSpeedAt12Volts * speed)
                                 .withRotationalRate((Driver1.getRightX() >= 0) ? -1 : 1 * Math.pow(-MathUtil.applyDeadband(Driver1.getRightX(),Operator.kDriveDeadband ), 2) * Math.PI * 2  * speed);
                 }));
+                // drivetrain.setDefaultCommand(() -> drivetrain.drive(1.0,1.0,0.0,false,false));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
