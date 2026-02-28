@@ -4,6 +4,8 @@
 // Thanks Omar for the name AimBot, it is a very good name for this command
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.*;
+
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
@@ -16,9 +18,13 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_PhotonVision;
+
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class CMD_AimBot extends RunCommand {
@@ -32,7 +38,11 @@ public class CMD_AimBot extends RunCommand {
   private final PIDController robotAngleController = new PIDController(2.5, 0, 0);
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-
+  private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
     super(() -> {});
@@ -85,7 +95,11 @@ public class CMD_AimBot extends RunCommand {
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
         drivetrain.setControl(brakeRequest);
     } else {
-        drivetrain.drive(xInput, yInput, omegaSpeed, true, true);
+        // drivetrain.drive(xInput, yInput, omegaSpeed, true, true);
+        CommandScheduler.getInstance().schedule(drivetrain.applyRequest(() ->
+                        drive.withVelocityX(xInput * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(yInput * MaxSpeed) // Drive left with negative X (left)
+                        .withRotationalRate(omegaSpeed * MaxAngularRate))); // Drive counterclockwise with negative X (left)
     }
   }
 

@@ -10,20 +10,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.ejml.simple.SimpleMatrix;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
+// import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
+// import com.pathplanner.lib.commands.PathPlannerAuto;
+// import com.pathplanner.lib.path.PathConstraints;
+// import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -33,10 +29,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -51,8 +44,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
@@ -71,6 +62,7 @@ import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
+import static edu.wpi.first.units.Units.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -83,20 +75,22 @@ import frc.robot.utils.Hub;
  */
 public class RobotContainer {
         // The robot's subsystems and commands are defined here...
-        private static final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
+        public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
-
-        private final SendableChooser<Command> autoChooser;
+        private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+        // Everything relating to autos was commented out becuase it was crashing the code
+        // private final SendableChooser<Command> autoChooser;
         public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         // public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        private static String autoName, newAutoName;
+        // private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
-        public static Field2d autoField = new Field2d();
+        // public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
         private Boolean lastActiveAlliance = true;
@@ -107,28 +101,24 @@ public class RobotContainer {
 
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric() 
-            .withDeadband(Operator.kDriveDeadband)
-            .withRotationalDeadband(Operator.kDriveDeadband)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        // private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric() 
-        //     .withDeadband(Operator.kDriveDeadband)
-        //     .withRotationalDeadband(Operator.kDriveDeadband)
+        private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+        // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+        //     .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
         //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> {
-                        // If Left Bumper is held, drive at 30% speed. Otherwise, 100% speed.
-                        double speed = Driver1.getHID().getLeftBumper() ? 0.3 : 1.0;
-                        
-                        return drive
-                                .withVelocityX((Driver1.getLeftY() >= 0) ? -1 : 1 * Math.pow(-MathUtil.applyDeadband(Driver1.getLeftY(),Operator.kDriveDeadband ), 2) * TunerConstants.kSpeedAt12Volts  * speed)
-                                .withVelocityY((Driver1.getLeftX() >= 0) ? -1 : 1 * Math.pow(-MathUtil.applyDeadband(Driver1.getLeftX(),Operator.kDriveDeadband ), 2) * TunerConstants.kSpeedAt12Volts * speed)
-                                .withRotationalRate((Driver1.getRightX() >= 0) ? -1 : 1 * Math.pow(-MathUtil.applyDeadband(Driver1.getRightX(),Operator.kDriveDeadband ), 2) * Math.PI * 2  * speed);
-                }));
+                drivetrain.setDefaultCommand(
+                drivetrain.applyRequest(() ->
+                        drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed*0.3) // Drive forward with negative Y (forward)
+                        .withVelocityY(-Driver1.getLeftX() * MaxSpeed*0.3) // Drive left with negative X (left)
+                        .withRotationalRate(-Driver1.getRightX() * MaxAngularRate*0.3) // Drive counterclockwise with negative X (left)
+                )
+                );
                 // drivetrain.setDefaultCommand(() -> drivetrain.drive(1.0,1.0,0.0,false,false));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
@@ -236,9 +226,9 @@ public class RobotContainer {
                                 new InstantCommand(() -> shooter.stop(), shooter)));
 
                 configureBindings();
-                autoChooser = AutoBuilder.buildAutoChooser();
-                SmartDashboard.putData("Auto Chooser", autoChooser);
-                SmartDashboard.putData("Active Auto Path", autoField);
+                // autoChooser = AutoBuilder.buildAutoChooser();
+                // SmartDashboard.putData("Auto Chooser", autoChooser);
+                // SmartDashboard.putData("Active Auto Path", autoField);
 
         }
 
@@ -295,7 +285,8 @@ public class RobotContainer {
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                         // index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                        index.setMeteringRPM(1600);
+                        // index.setMeteringRPM(1600);
+                        index.setMeteringVolts(10);
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
@@ -319,18 +310,18 @@ public class RobotContainer {
                 powerDistribution.setSwitchableChannel(true);
         }
 
-        public Command getPathCommand(String pathName) {
-                Pathfinding.setPathfinder(new LocalADStar());
-                try {
-                        PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-                        PathConstraints constraints = new PathConstraints(0.5, 0.5,
-                                        Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
-                        return AutoBuilder.pathfindThenFollowPath(path, constraints);
-                } catch (Exception e) {
-                        Alert.registerError("Failed to retreive path command: " + e.getMessage());
-                        return Commands.none();
-                }
-        }
+        // public Command getPathCommand(String pathName) {
+        //         Pathfinding.setPathfinder(new LocalADStar());
+        //         try {
+        //                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+        //                 PathConstraints constraints = new PathConstraints(0.5, 0.5,
+        //                                 Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
+        //                 return AutoBuilder.pathfindThenFollowPath(path, constraints);
+        //         } catch (Exception e) {
+        //                 Alert.registerError("Failed to retreive path command: " + e.getMessage());
+        //                 return Commands.none();
+        //         }
+        // }
 
         /**
          * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -338,15 +329,15 @@ public class RobotContainer {
          * @return the command to run in autonomous
          */
         public Command getAutonomousCommand() {
-                return autoChooser.getSelected();
+                return Commands.none();//autoChooser.getSelected();
         }
 
         public void robotPeriodic() {
 
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
-                autoField.setRobotPose(drivetrain.getPose());
-                SmartDashboard.putNumber(autoName, listIndex);
+                // autoField.setRobotPose(drivetrain.getPose());
+                // SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Set RPM",targetRPM);
         }
 
@@ -411,60 +402,60 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
-                newAutoName = getAutonomousCommand().getName();
+                // newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
-                if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
-                        autoName = newAutoName;
-                        lastAlliance = alliance;
-                        if (AutoBuilder.getAllAutoNames().contains(autoName)) {
-                                try {
-                                        List<PathPlannerPath> pathPlannerPaths = PathPlannerAuto
-                                                        .getPathGroupFromAutoFile(autoName);
-                                        List<Pose2d> poses = new ArrayList<>();
-                                        for (PathPlannerPath path : pathPlannerPaths) {
+                // if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
+                //         autoName = newAutoName;
+                //         lastAlliance = alliance;
+                //         if (AutoBuilder.getAllAutoNames().contains(autoName)) {
+                //                 try {
+                //                         List<PathPlannerPath> pathPlannerPaths = PathPlannerAuto
+                //                                         .getPathGroupFromAutoFile(autoName);
+                //                         List<Pose2d> poses = new ArrayList<>();
+                //                         for (PathPlannerPath path : pathPlannerPaths) {
 
-                                                if (DriverStation.getAlliance().equals(
-                                                                Optional.of(Alliance.Red))) {
-                                                        poses.addAll(path.getAllPathPoints()
-                                                                        .stream()
-                                                                        .map(point -> new Pose2d(
-                                                                                        Field.fieldLength
-                                                                                                        - point.position.getX(),
-                                                                                        Field.fieldWidth - point.position
-                                                                                                        .getY(),
-                                                                                        new Rotation2d()))
-                                                                        .collect(Collectors
-                                                                                        .toList()));
-                                                } else {
-                                                        poses.addAll(path.getAllPathPoints()
-                                                                        .stream()
-                                                                        .map(point -> new Pose2d(
-                                                                                        point.position.getX(),
-                                                                                        point.position.getY(),
-                                                                                        new Rotation2d()))
-                                                                        .collect(Collectors
-                                                                                        .toList()));
-                                                }
-                                        }
-                                        autoField.getObject("path").setPoses(poses);
-                                } catch (IOException e) {
-                                        Alert.registerError("Failed to read path file: " + e.getMessage());
-                                        return;
-                                } catch (ParseException e) {
-                                        Alert.registerError("Failed to parse path file: " + e.getMessage());
-                                        return;
-                                }
-                        }
-                }
+                //                                 if (DriverStation.getAlliance().equals(
+                //                                                 Optional.of(Alliance.Red))) {
+                //                                         poses.addAll(path.getAllPathPoints()
+                //                                                         .stream()
+                //                                                         .map(point -> new Pose2d(
+                //                                                                         Field.fieldLength
+                //                                                                                         - point.position.getX(),
+                //                                                                         Field.fieldWidth - point.position
+                //                                                                                         .getY(),
+                //                                                                         new Rotation2d()))
+                //                                                         .collect(Collectors
+                //                                                                         .toList()));
+                //                                 } else {
+                //                                         poses.addAll(path.getAllPathPoints()
+                //                                                         .stream()
+                //                                                         .map(point -> new Pose2d(
+                //                                                                         point.position.getX(),
+                //                                                                         point.position.getY(),
+                //                                                                         new Rotation2d()))
+                //                                                         .collect(Collectors
+                //                                                                         .toList()));
+                //                                 }
+                //                         }
+                //                         autoField.getObject("path").setPoses(poses);
+                //                 } catch (IOException e) {
+                //                         Alert.registerError("Failed to read path file: " + e.getMessage());
+                //                         return;
+                //                 } catch (ParseException e) {
+                //                         Alert.registerError("Failed to parse path file: " + e.getMessage());
+                //                         return;
+                //                 }
+                //         }
+                // }
                 photonPoseUpdate();
         }
 
-        public static void photonPoseUpdate() {
+        public void photonPoseUpdate() {
                 processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
                 processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
         }
 
-        private static void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
+        private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
                         StructPublisher<Pose2d> publisher) {
                 if (poseOptional.isPresent()) {
                         EstimatedRobotPose estimatedPose = poseOptional.get();
