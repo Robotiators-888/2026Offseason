@@ -35,7 +35,7 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
 
-  private final PIDController robotAngleController = new PIDController(2.5, 0, 0);
+  private final PIDController robotAngleController = new PIDController(3, 0, 0);
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
   private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -43,7 +43,6 @@ public class CMD_AimBot extends RunCommand {
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
-
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
     super(() -> {});
 
@@ -62,7 +61,6 @@ public class CMD_AimBot extends RunCommand {
   public void initialize() {
     robotAngleController.setTolerance(Units.degreesToRadians(5.0));
     Pose2d currentPose = drivetrain.getPose();
-
     Pose2d tPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
       : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
@@ -89,7 +87,7 @@ public class CMD_AimBot extends RunCommand {
 
     double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
     SmartDashboard.putNumber("Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5);
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()<=3;// Code here to calculate the angulart velocity and check if it is below 5
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
@@ -103,7 +101,7 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate));
+          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(0.1,omegaSpeed * MaxAngularRate)));
         // drivetrain.setControl(
         //   drive.withVelocityX(0)
         //   .withVelocityY(0)
