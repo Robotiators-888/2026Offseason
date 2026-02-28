@@ -15,11 +15,11 @@ import org.photonvision.EstimatedRobotPose;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-// import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-// import com.pathplanner.lib.commands.PathPlannerAuto;
-// import com.pathplanner.lib.path.PathConstraints;
-// import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -80,17 +80,17 @@ public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         // Everything relating to autos was commented out becuase it was crashing the code
-        // private final SendableChooser<Command> autoChooser;
+        private final SendableChooser<Command> autoChooser;
         public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         // public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        // private static String autoName, newAutoName;
+        private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
-        // public static Field2d autoField = new Field2d();
+        public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public int targetId = 7;
         private Boolean lastActiveAlliance = true;
@@ -226,9 +226,9 @@ public class RobotContainer {
                                 new InstantCommand(() -> shooter.stop(), shooter)));
 
                 configureBindings();
-                // autoChooser = AutoBuilder.buildAutoChooser();
-                // SmartDashboard.putData("Auto Chooser", autoChooser);
-                // SmartDashboard.putData("Active Auto Path", autoField);
+                autoChooser = AutoBuilder.buildAutoChooser();
+                SmartDashboard.putData("Auto Chooser", autoChooser);
+                SmartDashboard.putData("Active Auto Path", autoField);
 
         }
 
@@ -336,8 +336,8 @@ public class RobotContainer {
 
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
-                // autoField.setRobotPose(drivetrain.getPose());
-                // SmartDashboard.putNumber(autoName, listIndex);
+                autoField.setRobotPose(drivetrain.getPose());
+                SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Set RPM",targetRPM);
         }
 
@@ -402,51 +402,51 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
-                // newAutoName = getAutonomousCommand().getName();
+                newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
-                // if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
-                //         autoName = newAutoName;
-                //         lastAlliance = alliance;
-                //         if (AutoBuilder.getAllAutoNames().contains(autoName)) {
-                //                 try {
-                //                         List<PathPlannerPath> pathPlannerPaths = PathPlannerAuto
-                //                                         .getPathGroupFromAutoFile(autoName);
-                //                         List<Pose2d> poses = new ArrayList<>();
-                //                         for (PathPlannerPath path : pathPlannerPaths) {
+                if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
+                        autoName = newAutoName;
+                        lastAlliance = alliance;
+                        if (AutoBuilder.getAllAutoNames().contains(autoName)) {
+                                try {
+                                        List<PathPlannerPath> pathPlannerPaths = PathPlannerAuto
+                                                        .getPathGroupFromAutoFile(autoName);
+                                        List<Pose2d> poses = new ArrayList<>();
+                                        for (PathPlannerPath path : pathPlannerPaths) {
 
-                //                                 if (DriverStation.getAlliance().equals(
-                //                                                 Optional.of(Alliance.Red))) {
-                //                                         poses.addAll(path.getAllPathPoints()
-                //                                                         .stream()
-                //                                                         .map(point -> new Pose2d(
-                //                                                                         Field.fieldLength
-                //                                                                                         - point.position.getX(),
-                //                                                                         Field.fieldWidth - point.position
-                //                                                                                         .getY(),
-                //                                                                         new Rotation2d()))
-                //                                                         .collect(Collectors
-                //                                                                         .toList()));
-                //                                 } else {
-                //                                         poses.addAll(path.getAllPathPoints()
-                //                                                         .stream()
-                //                                                         .map(point -> new Pose2d(
-                //                                                                         point.position.getX(),
-                //                                                                         point.position.getY(),
-                //                                                                         new Rotation2d()))
-                //                                                         .collect(Collectors
-                //                                                                         .toList()));
-                //                                 }
-                //                         }
-                //                         autoField.getObject("path").setPoses(poses);
-                //                 } catch (IOException e) {
-                //                         Alert.registerError("Failed to read path file: " + e.getMessage());
-                //                         return;
-                //                 } catch (ParseException e) {
-                //                         Alert.registerError("Failed to parse path file: " + e.getMessage());
-                //                         return;
-                //                 }
-                //         }
-                // }
+                                                if (DriverStation.getAlliance().equals(
+                                                                Optional.of(Alliance.Red))) {
+                                                        poses.addAll(path.getAllPathPoints()
+                                                                        .stream()
+                                                                        .map(point -> new Pose2d(
+                                                                                        Field.fieldLength
+                                                                                                        - point.position.getX(),
+                                                                                        Field.fieldWidth - point.position
+                                                                                                        .getY(),
+                                                                                        new Rotation2d()))
+                                                                        .collect(Collectors
+                                                                                        .toList()));
+                                                } else {
+                                                        poses.addAll(path.getAllPathPoints()
+                                                                        .stream()
+                                                                        .map(point -> new Pose2d(
+                                                                                        point.position.getX(),
+                                                                                        point.position.getY(),
+                                                                                        new Rotation2d()))
+                                                                        .collect(Collectors
+                                                                                        .toList()));
+                                                }
+                                        }
+                                        autoField.getObject("path").setPoses(poses);
+                                } catch (IOException e) {
+                                        Alert.registerError("Failed to read path file: " + e.getMessage());
+                                        return;
+                                } catch (ParseException e) {
+                                        Alert.registerError("Failed to parse path file: " + e.getMessage());
+                                        return;
+                                }
+                        }
+                }
                 photonPoseUpdate();
         }
 
