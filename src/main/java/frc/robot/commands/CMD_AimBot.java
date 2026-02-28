@@ -18,6 +18,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.generated.TunerConstants;
@@ -33,7 +34,6 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
-  private double lastAngleCalculation = 0;
 
   private final PIDController robotAngleController = new PIDController(3, 0, 0);
   public static boolean isThetaErrorCorrect = false;
@@ -70,7 +70,6 @@ public class CMD_AimBot extends RunCommand {
     robotAngleController.reset();
     drivetrain.publisher2.set(targetPose);
     running = true;
-    lastAngleCalculation = 0;
   }
 
   @Override
@@ -89,7 +88,7 @@ public class CMD_AimBot extends RunCommand {
     double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
     SmartDashboard.putNumber("Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     SmartDashboard.putNumber("Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(lastAngleCalculation - (omegaSpeed * MaxAngularRate + Math.copySign(0.1,omegaSpeed * MaxAngularRate))) <= Units.degreesToRadians(30);// Code here to calculate the angulart velocity and check if it is below 5
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()<=3;// Code here to calculate the angulart velocity and check if it is below 5
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
@@ -109,7 +108,6 @@ public class CMD_AimBot extends RunCommand {
         //   .withVelocityY(0)
         //   .withRotationalRate(omegaSpeed * MaxAngularRate));
     }
-    lastAngleCalculation = omegaSpeed * MaxAngularRate + Math.copySign(0.1,omegaSpeed * MaxAngularRate);
   }
 
   @Override
