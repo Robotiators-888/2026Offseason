@@ -100,14 +100,14 @@ public class CMD_AimBot extends RunCommand {
         //                 drive.withVelocityX(xInput * MaxSpeed) // Drive forward with negative Y (forward)
         //                 .withVelocityY(yInput * MaxSpeed) // Drive left with negative X (left)
         //                 .withRotationalRate(omegaSpeed * MaxAngularRate))); // Drive counterclockwise with negative X (left)
-        // drivetrain.setControl(
-        //   drive.withVelocityX(xInput * MaxSpeed)
-        //   .withVelocityY(yInput * MaxSpeed)
-        //   .withRotationalRate(omegaSpeed * MaxAngularRate));
         drivetrain.setControl(
-          drive.withVelocityX(0)
-          .withVelocityY(0)
+          drive.withVelocityX(xInput * MaxSpeed)
+          .withVelocityY(yInput * MaxSpeed)
           .withRotationalRate(omegaSpeed * MaxAngularRate));
+        // drivetrain.setControl(
+        //   drive.withVelocityX(0)
+        //   .withVelocityY(0)
+        //   .withRotationalRate(omegaSpeed * MaxAngularRate));
     }
   }
 
