@@ -478,7 +478,7 @@ public class RobotContainer {
                                 SmartDashboard.putNumber("PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                                 drivetrain.addVisionMeasurement(
                                                 photonPose.toPose2d(),
-                                                Utils.fpgaToCurrentTime(estimatedPose.timestampSeconds),
+                                                estimatedPose.timestampSeconds,
                                                 VecBuilder.fill(xyStddev,xyStddev,rotStddev));
                                 publisher.set(photonPose.toPose2d());
                         }
