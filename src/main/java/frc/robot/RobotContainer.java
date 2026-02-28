@@ -337,6 +337,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
+                drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Set RPM",targetRPM);
         }

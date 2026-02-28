@@ -79,7 +79,7 @@ public class CMD_AimBot extends RunCommand {
     Pose2d currentPose = drivetrain.getPose();
 
     drivetrain.publisher1.set(targetPose);
-
+    drivetrain.setControl(brakeRequest);
 
     Rotation2d targetRotation = new Rotation2d(targetPose.getX()-currentPose.getX(),targetPose.getY()-currentPose.getY());
     double omegaSpeed = robotAngleController.calculate(
@@ -96,10 +96,18 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.setControl(brakeRequest);
     } else {
         // drivetrain.drive(xInput, yInput, omegaSpeed, true, true);
-        CommandScheduler.getInstance().schedule(drivetrain.applyRequest(() ->
-                        drive.withVelocityX(xInput * MaxSpeed) // Drive forward with negative Y (forward)
-                        .withVelocityY(yInput * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(omegaSpeed * MaxAngularRate))); // Drive counterclockwise with negative X (left)
+        // CommandScheduler.getInstance().schedule(drivetrain.applyRequest(() ->
+        //                 drive.withVelocityX(xInput * MaxSpeed) // Drive forward with negative Y (forward)
+        //                 .withVelocityY(yInput * MaxSpeed) // Drive left with negative X (left)
+        //                 .withRotationalRate(omegaSpeed * MaxAngularRate))); // Drive counterclockwise with negative X (left)
+        // drivetrain.setControl(
+        //   drive.withVelocityX(xInput * MaxSpeed)
+        //   .withVelocityY(yInput * MaxSpeed)
+        //   .withRotationalRate(omegaSpeed * MaxAngularRate));
+        drivetrain.setControl(
+          drive.withVelocityX(0)
+          .withVelocityY(0)
+          .withRotationalRate(omegaSpeed * MaxAngularRate));
     }
   }
 
