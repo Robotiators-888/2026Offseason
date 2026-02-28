@@ -101,12 +101,12 @@ public class RobotContainer {
 
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
-        // private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+        // private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric()
         //     .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
-        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -114,9 +114,9 @@ public class RobotContainer {
         public RobotContainer() {
                 drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() ->
-                        drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed*0.3) // Drive forward with negative Y (forward)
-                        .withVelocityY(-Driver1.getLeftX() * MaxSpeed*0.3) // Drive left with negative X (left)
-                        .withRotationalRate(-Driver1.getRightX() * MaxAngularRate*0.3) // Drive counterclockwise with negative X (left)
+                        drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
                 )
                 );
                 // drivetrain.setDefaultCommand(() -> drivetrain.drive(1.0,1.0,0.0,false,false));
@@ -291,7 +291,7 @@ public class RobotContainer {
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
-                        intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
+                        // intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
                         index.set(-Constants.Index.kINDEX_MOTOR_SPEED);
                         index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                         shooter.setVolts(-2.5);
@@ -340,6 +340,8 @@ public class RobotContainer {
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Set RPM",targetRPM);
+                SmartDashboard.putNumber("Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+
         }
 
         public void autonomousInit() {
@@ -384,6 +386,9 @@ public class RobotContainer {
                         lastActiveAlliance = activeAlliance.get();
                 }
                 SmartDashboard.putNumber("Time until next alliance change", Hub.getTimeUntilNextChange());
+                if (Hub.isAllianceHubActive().isPresent()) {
+                        SmartDashboard.putBoolean("Is our Alliance Active", Hub.isAllianceHubActive().get());
+                }
                 if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
                                 || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
                                 || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {

@@ -14,6 +14,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -74,7 +75,13 @@ public class CMD_AimBot extends RunCommand {
 
   @Override
   public void execute() {
-    Pose2d currentPose = drivetrain.getPose();
+    Pose2d currentPose;
+    {
+      Pose2d tempPose = drivetrain.getPose();
+      currentPose = new Pose2d(tempPose.getX(),tempPose.getY(),tempPose.getRotation());
+    }
+    Transform2d shooterOffset = new Transform2d(-10, -5, new Rotation2d(0));
+    currentPose.transformBy(shooterOffset);
 
     drivetrain.publisher1.set(targetPose);
     drivetrain.setControl(brakeRequest);
@@ -87,8 +94,7 @@ public class CMD_AimBot extends RunCommand {
 
     double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
     SmartDashboard.putNumber("Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
-    SmartDashboard.putNumber("Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()<=3;// Code here to calculate the angulart velocity and check if it is below 5
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(10) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())<=5;// Code here to calculate the angulart velocity and check if it is below 5
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
@@ -102,7 +108,7 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(0.1,omegaSpeed * MaxAngularRate)));
+          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9),omegaSpeed * MaxAngularRate)));
         // drivetrain.setControl(
         //   drive.withVelocityX(0)
         //   .withVelocityY(0)
