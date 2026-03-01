@@ -23,7 +23,7 @@ import frc.robot.utils.Alert;
 public class SUB_PhotonVision extends SubsystemBase {
   private static SUB_PhotonVision INSTANCE = null;
 
-  private final PhotonCamera cam1 = new PhotonCamera(PhotonVision.kCamName);
+  private final PhotonCamera cam1 = new PhotonCamera(PhotonVision.kCamName1);
   private final PhotonCamera cam2 = new PhotonCamera(PhotonVision.kCam2Name);
   private PhotonTrackedTarget cam1BestTarget;
   private PhotonTrackedTarget cam2BestTarget;

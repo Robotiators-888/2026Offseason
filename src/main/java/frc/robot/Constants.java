@@ -83,7 +83,7 @@ public final class Constants {
 
         public static final class PhotonVision {
 
-                public static final String kCamName = "BackLeftCam";
+                public static final String kCamName1 = "BackLeftCam";
                 public static final double kMaxZError = 0.2;
                 public static final double kMaxAmbiguity = 0.1;
                 public static final double kMaxDistance = 12.0;
