@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.9494932432432437,
+        "y": 7.293254504504505
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 3.4945903614457823,
+        "y": 7.3023855421686745
+      },
+      "isLocked": false,
+      "linkedName": "Left Trough Forward"
+    },
+    {
+      "anchor": {
+        "x": 2.904,
+        "y": 7.003
+      },
+      "prevControl": {
+        "x": 3.166759036144578,
+        "y": 7.728566265060241
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Shoot Trough Left"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 2.5,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -67.0
+  },
+  "reversed": false,
+  "folder": "Left Trough Path",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

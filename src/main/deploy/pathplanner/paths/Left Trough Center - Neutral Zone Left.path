@@ -1,0 +1,75 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.68661934338953,
+        "y": 7.293
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.808745654279202,
+        "y": 7.051932753106071
+      },
+      "isLocked": false,
+      "linkedName": "Left Trough Center"
+    },
+    {
+      "anchor": {
+        "x": 7.7951730257312,
+        "y": 6.839698314105558
+      },
+      "prevControl": {
+        "x": 6.5159615047039905,
+        "y": 7.964457121522924
+      },
+      "nextControl": {
+        "x": 8.038608257465677,
+        "y": 6.625655588232378
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.8,
+        "y": 5.25
+      },
+      "prevControl": {
+        "x": 7.759201659193,
+        "y": 5.609695542417243
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Neutral Zone Left"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": -90.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 2.5,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -90.0
+  },
+  "reversed": false,
+  "folder": "Left Trough Path",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}

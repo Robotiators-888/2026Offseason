@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.78,
+        "y": 3.75
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.071464285714285,
+        "y": 2.6259107142857143
+      },
+      "isLocked": false,
+      "linkedName": "Neutral Zone Right Deep"
+    },
+    {
+      "anchor": {
+        "x": 5.710763087843833,
+        "y": 0.6588997338065656
+      },
+      "prevControl": {
+        "x": 6.504589285714285,
+        "y": 1.8646785714285714
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Right Trough Center"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 2.5,
+    "maxAngularVelocity": 180.0,
+    "maxAngularAcceleration": 180.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": "Right Trough Path",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}
