@@ -38,7 +38,7 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 2; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kP = 3; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
@@ -47,7 +47,7 @@ public final class Constants {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kINTAKE_MOTOR_SPEED = 0.8;
+                public static final double kINTAKE_MOTOR_SPEED = 0.6;
                 public static final double kINTAKE_ARM_MOTOR_SPEED = 0.1;
                 public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -209;
                 public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
@@ -72,8 +72,6 @@ public final class Constants {
                 // Gear ratio: 36:1
                 // 4.75 in per rotation
                 // Clockwise positive motor
-                // public static final double kCLIMBER_PIVOT_SPEED = 0.1;
-                // public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
         }
 
         public static final class Field {
