@@ -79,7 +79,6 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-        // Everything relating to autos was commented out becuase it was crashing the code
         private final SendableChooser<Command> autoChooser;
         public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
@@ -119,7 +118,6 @@ public class RobotContainer {
                         .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
                 )
                 );
-                // drivetrain.setDefaultCommand(() -> drivetrain.drive(1.0,1.0,0.0,false,false));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
@@ -284,8 +282,6 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        // index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                        // index.setMeteringRPM(1600);
                         index.setMeteringVolts(10);
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
@@ -302,6 +298,13 @@ public class RobotContainer {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake));//, climber));
+                Driver2.rightBumper().and(Driver2.a()).whileTrue(
+                    new RunCommand(() -> {
+                        SUB_Shooter.setVoltage(1.0);      // Slow crawl for shooter wheels
+                        SUB_Indexer.setVoltage(2.0);      // Slow crawl for indexer
+                        SUB_Metering.setVoltage(2.0);     // Slow crawl for metering wheel
+                    }, SUB_Shooter, SUB_Indexer, SUB_Metering);
+
                 
         }
 
@@ -309,19 +312,6 @@ public class RobotContainer {
                 Pathfinding.setPathfinder(new LocalADStar());
                 powerDistribution.setSwitchableChannel(true);
         }
-
-        // public Command getPathCommand(String pathName) {
-        //         Pathfinding.setPathfinder(new LocalADStar());
-        //         try {
-        //                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-        //                 PathConstraints constraints = new PathConstraints(0.5, 0.5,
-        //                                 Units.degreesToRadians(180), Units.degreesToRadians(180)); // unstable
-        //                 return AutoBuilder.pathfindThenFollowPath(path, constraints);
-        //         } catch (Exception e) {
-        //                 Alert.registerError("Failed to retreive path command: " + e.getMessage());
-        //                 return Commands.none();
-        //         }
-        // }
 
         /**
          * Use this to pass the autonomous command to the main {@link Robot} class.
