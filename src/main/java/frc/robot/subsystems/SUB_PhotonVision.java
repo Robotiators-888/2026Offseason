@@ -25,10 +25,13 @@ public class SUB_PhotonVision extends SubsystemBase {
 
   private final PhotonCamera cam1 = new PhotonCamera(PhotonVision.kCamName1);
   private final PhotonCamera cam2 = new PhotonCamera(PhotonVision.kCam2Name);
+  private final PhotonCamera cam3 = new PhotonCamera(PhotonVision.kCam3Name);
   private PhotonTrackedTarget cam1BestTarget;
   private PhotonTrackedTarget cam2BestTarget;
+  private PhotonTrackedTarget cam3BestTarget;
   private final PhotonPoseEstimator poseEstimator1;
   private final PhotonPoseEstimator poseEstimator2;
+  private final PhotonPoseEstimator poseEstimator3;
   public AprilTagFieldLayout at_field;
 
   public static SUB_PhotonVision getInstance() {
@@ -43,13 +46,17 @@ public class SUB_PhotonVision extends SubsystemBase {
 
     cam1.setPipelineIndex(0);
     cam2.setPipelineIndex(0);
+    cam3.setPipelineIndex(0);
 
     poseEstimator1 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
         PhotonVision.kRobotToCamera1);
     poseEstimator2 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
          PhotonVision.kRobotToCamera2); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
+    poseEstimator3 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+         PhotonVision.kRobotToCamera3); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
     poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+    poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
   public Optional<EstimatedRobotPose> getCam1Pose() {
@@ -84,6 +91,21 @@ public class SUB_PhotonVision extends SubsystemBase {
     }
     return finalPose2;
   }
+  public Optional<EstimatedRobotPose> getCam3Pose() {
+    List<PhotonPipelineResult> results3 = cam3.getAllUnreadResults();
+    Optional<EstimatedRobotPose> finalPose3 = Optional.empty();
+    // Process results in reverse order to find the latest valid result
+    java.util.ListIterator<PhotonPipelineResult> iterator = results3.listIterator(results3.size());
+    while (iterator.hasPrevious()) {
+      PhotonPipelineResult result = iterator.previous();
+      if (result.hasTargets()) {
+        cam3BestTarget = result.getBestTarget();
+        finalPose3 = poseEstimator3.update(result);
+        break; // Found the latest result, stop processing older ones
+      }
+    }
+    return finalPose3;
+  }
 
   public PhotonTrackedTarget getCam1BestTarget() {
     return cam1BestTarget;
@@ -91,6 +113,9 @@ public class SUB_PhotonVision extends SubsystemBase {
 
   public PhotonTrackedTarget getCam2BestTarget() {
     return cam2BestTarget;
+  }
+  public PhotonTrackedTarget getCam3BestTarget() {
+    return cam3BestTarget;
   }
 
   public double getTargetYaw(PhotonTrackedTarget target) {
@@ -115,6 +140,9 @@ public class SUB_PhotonVision extends SubsystemBase {
       Alert.registerError("PhotonVision Camera 1 Disconnected");
     }
     if (!cam2.isConnected()) {
+      Alert.registerError("PhotonVision Camera 2 Disconnected");
+    }
+    if (!cam3.isConnected()) {
       Alert.registerError("PhotonVision Camera 2 Disconnected");
     }
   }

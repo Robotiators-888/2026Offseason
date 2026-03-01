@@ -44,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
@@ -266,7 +267,8 @@ public class RobotContainer {
                                                 )).orElse(drivetrain.getPose().getTranslation())
                                         );
                                         shooter.shootMeters(distance);
-                                        if (CMD_AimBot.isThetaErrorCorrect && shooter.atDesiredRPM()) {
+                                        new WaitUntilCommand(()->shooter.atDesiredRPM());
+                                        if (CMD_AimBot.isThetaErrorCorrect) { //&& shooter.atDesiredRPM()
                                                 index.set(Constants.Index.kINDEX_MOTOR_SPEED);
                                                 index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
                                         } else {
@@ -300,10 +302,10 @@ public class RobotContainer {
                 }, intake));//, climber));
                 Driver2.rightBumper().and(Driver2.a()).whileTrue(
                     new RunCommand(() -> {
-                        SUB_Shooter.setVoltage(1.0);      // Slow crawl for shooter wheels
-                        SUB_Indexer.setVoltage(2.0);      // Slow crawl for indexer
-                        SUB_Metering.setVoltage(2.0);     // Slow crawl for metering wheel
-                    }, SUB_Shooter, SUB_Indexer, SUB_Metering);
+                        shooter.setVolts(1.0);      // Slow crawl for shooter wheels
+                        index.set(0.1);      // Slow crawl for indexer
+                        index.setMeteringVolts(2.0);     // Slow crawl for metering wheel
+                    }, shooter, index));
 
                 
         }
@@ -449,6 +451,7 @@ public class RobotContainer {
         public void photonPoseUpdate() {
                 processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
                 processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
+                processCameraPose(photonVision.getCam3Pose(), drivetrain.publisher5);
         }
 
         private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,

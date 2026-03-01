@@ -130,6 +130,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
         .getStructTopic("PhotonCam2Pose", Pose2d.struct).publish(); 
+        public final StructPublisher<Pose2d> publisher5 = NetworkTableInstance.getDefault()
+        .getStructTopic("HighCamPose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic("SelectedPose", Pose2d.struct).publish();
         public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
