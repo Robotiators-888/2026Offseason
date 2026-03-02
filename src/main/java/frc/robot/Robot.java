@@ -35,7 +35,7 @@ import edu.wpi.first.epilogue.Logged;
  @Logged
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
-  @Logged
+  // @Logged
   private final RobotContainer m_robotContainer;
 
   /**
