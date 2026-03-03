@@ -371,7 +371,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setReachedTarget(boolean value) {
         reachedAutoTarget = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("ReachedAutoTarget", reachedAutoTarget);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/ReachedAutoTarget", reachedAutoTarget);
     }
 
     public boolean getReachedTarget() {
@@ -380,7 +380,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setIntakeComplete(boolean value) {
         intakeComplete = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("IntakeComplete", intakeComplete);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/IntakeComplete", intakeComplete);
     }
 
     public boolean getIntakeComplete() {

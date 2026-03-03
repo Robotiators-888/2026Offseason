@@ -226,8 +226,8 @@ public class RobotContainer {
 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
-                SmartDashboard.putData("Auto Chooser", autoChooser);
-                SmartDashboard.putData("Active Auto Path", autoField);
+                SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
+                SmartDashboard.putData("Autos/Active Auto Path", autoField);
 
         }
 
@@ -326,13 +326,13 @@ public class RobotContainer {
 
         public void robotPeriodic() {
 
-                SmartDashboard.putNumber("Battery Voltage", powerDistribution.getVoltage());
-                SmartDashboard.putNumber("Match Time", DriverStation.getMatchTime());
+                SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
+                SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
-                SmartDashboard.putNumber("Set RPM",targetRPM);
-                SmartDashboard.putNumber("Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
+                SmartDashboard.putNumber("Drivetrain/Stat/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
 
         }
 
@@ -344,12 +344,12 @@ public class RobotContainer {
 
                         Pose2d currentPose = drivetrain.getPose();
 
-                        SmartDashboard.putNumber("X Error", pose.getX() - currentPose.getX());
-                        SmartDashboard.putNumber("Y Error", pose.getY() - currentPose.getY());
-                        SmartDashboard.putNumber("Theta Error", pose.getRotation().getRadians()
+                        SmartDashboard.putNumber("Drivetrain/Stat/X Error", pose.getX() - currentPose.getX());
+                        SmartDashboard.putNumber("Drivetrain/Stat/Y Error", pose.getY() - currentPose.getY());
+                        SmartDashboard.putNumber("Drivetrain/Stat/Theta Error", pose.getRotation().getRadians()
                                         - currentPose.getRotation().getRadians());
-                        SmartDashboard.putNumber("Desired Theta", pose.getRotation().getRadians());
-                        SmartDashboard.putNumber("Actual Theta",
+                        SmartDashboard.putNumber("Drivetrain/Stat/Desired Theta", pose.getRotation().getRadians());
+                        SmartDashboard.putNumber("Drivetrain/Stat/Actual Theta",
                                         currentPose.getRotation().getRadians());
 
                 });
@@ -370,16 +370,16 @@ public class RobotContainer {
         public void teleopPeriodic() {
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-                SmartDashboard.putBoolean("Last Active Alliance", lastActiveAlliance);
+                SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
                 if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                         Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
                                         "The active hub has changed!"));
                         // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
                 }
-                SmartDashboard.putNumber("Time until next alliance change", Hub.getTimeUntilNextChange());
+                SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
                 if (Hub.isAllianceHubActive().isPresent()) {
-                        SmartDashboard.putBoolean("Is our Alliance Active", Hub.isAllianceHubActive().get());
+                        SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
                 }
                 if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
                                 || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
@@ -473,7 +473,7 @@ public class RobotContainer {
 
                                 double xyStddev = Math.pow(minDist, 2) / 16.0;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                SmartDashboard.putNumber("PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
+                                SmartDashboard.putNumber("Stat/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                                 drivetrain.addVisionMeasurement(
                                                 photonPose.toPose2d(),
                                                 estimatedPose.timestampSeconds,

@@ -1,2 +1,2 @@
 #!/usr/bin/sh
-find . -exec clang-format -i -style=file --assume-filename java {} +
+find src/main/java/frc/robot -exec clang-format -i -style=file --assume-filename java {} +

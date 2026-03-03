@@ -91,13 +91,13 @@ public class SUB_Intake extends SubsystemBase {
         if (reverseLimit.isPressed()) {
             arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
         }
-        SmartDashboard.putNumber("intakeRPM", intakeRPM());
-        SmartDashboard.putBoolean("Arm Forward Limit", isForwardPressed());
-        SmartDashboard.putBoolean("Arm Reverse Limit", isReversePressed());
-        SmartDashboard.putNumber("Arm Encoder Pos", arm.getEncoder().getPosition());
-        SmartDashboard.putNumber("Arm Arm Output Amps", arm.getOutputCurrent());
-        SmartDashboard.putBoolean("Stick Up", stickUp);
-        SmartDashboard.putBoolean("Stick Down", stickDown);
+        SmartDashboard.putNumber("Intake/intakeRPM", intakeRPM());
+        SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed());
+        SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
+        SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition());
+        SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent());
+        SmartDashboard.putBoolean("Intake/Stick Up", stickUp);
+        SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }

@@ -77,8 +77,8 @@ public class SUB_Index extends SubsystemBase {
     }
 
     public void periodic() {
-      SmartDashboard.putNumber("indexRPM", intakeRPM());
-      SmartDashboard.putNumber("meteringRPM", intakeMeteringRPM());
-      SmartDashboard.putNumber("meteringTargetRPM", targetMeteringRPM);
+      SmartDashboard.putNumber("Index/indexRPM", intakeRPM());
+      SmartDashboard.putNumber("Index/meteringRPM", intakeMeteringRPM());
+      SmartDashboard.putNumber("Index/meteringTargetRPM", targetMeteringRPM);
     }
 }

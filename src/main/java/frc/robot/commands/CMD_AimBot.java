@@ -93,7 +93,7 @@ public class CMD_AimBot extends RunCommand {
     );
 
     double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetPose.getRotation()).getRadians());
-    SmartDashboard.putNumber("Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
+    SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(2) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())<=5;// Code here to calculate the angulart velocity and check if it is below 5
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
