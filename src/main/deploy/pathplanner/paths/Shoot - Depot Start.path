@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9,
-        "y": 4.0
+        "x": 3.4727349397624065,
+        "y": 4.996638554210324
       },
       "isLocked": false,
       "linkedName": "Shoot"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 0.426,
-        "y": 6.864
+        "y": 7.15
       },
       "prevControl": {
-        "x": 1.2019369369369375,
-        "y": 8.253367117117117
+        "x": 0.9484337349431615,
+        "y": 7.663000000003493
       },
       "nextControl": null,
       "isLocked": false,

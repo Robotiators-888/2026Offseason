@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.071464285714285,
-        "y": 2.6259107142857143
+        "x": 7.7653922967189715,
+        "y": 2.2171184022824537
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Right Deep"
@@ -20,8 +20,8 @@
         "y": 0.6588997338065656
       },
       "prevControl": {
-        "x": 6.504589285714285,
-        "y": 1.8646785714285714
+        "x": 7.209029957203994,
+        "y": 1.1043937232524967
       },
       "nextControl": null,
       "isLocked": false,

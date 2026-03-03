@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.48,
+        "x": 0.75,
         "y": 0.66
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.48000000000000004,
-        "y": 2.0
+        "x": 3.2213975903614456,
+        "y": 1.9368795180722884
       },
       "isLocked": false,
       "linkedName": "Outpost"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 0.426,
-        "y": 6.864
+        "y": 7.15
       },
       "prevControl": {
-        "x": 0.4260000000000001,
-        "y": 5.0
+        "x": 2.2379036144578315,
+        "y": 7.171253012048193
       },
       "nextControl": null,
       "isLocked": false,

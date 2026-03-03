@@ -8,27 +8,11 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.153368488160968,
-        "y": 3.977890479657419
+        "x": 2.7840085592011405,
+        "y": 3.5886162624821685
       },
       "isLocked": false,
       "linkedName": "Shoot"
-    },
-    {
-      "anchor": {
-        "x": 3.478016666666667,
-        "y": 0.8680583333333334
-      },
-      "prevControl": {
-        "x": 3.15272871502363,
-        "y": 1.4827409301860484
-      },
-      "nextControl": {
-        "x": 3.5949514624035324,
-        "y": 0.6470916988701694
-      },
-      "isLocked": false,
-      "linkedName": null
     },
     {
       "anchor": {
@@ -36,20 +20,15 @@
         "y": 0.66
       },
       "prevControl": {
-        "x": 3.601677611459101,
-        "y": 1.0946013609345993
+        "x": 2.8228245363766047,
+        "y": 1.0008844507845935
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Right Trough Forward"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1,
-      "rotationDegrees": 0.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.188156626506023,
-        "y": 5.783433734939758
+        "x": 7.7265763195435095,
+        "y": 6.176348074179743
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Left"
@@ -20,8 +20,8 @@
         "y": 7.293
       },
       "prevControl": {
-        "x": 6.248373493975904,
-        "y": 6.8434216867469875
+        "x": 6.730299572039942,
+        "y": 7.379643366619116
       },
       "nextControl": null,
       "isLocked": false,
