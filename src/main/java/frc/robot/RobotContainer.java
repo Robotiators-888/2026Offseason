@@ -97,7 +97,7 @@ public class RobotContainer {
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         private final StructArrayPublisher<Pose3d> fuelPublisher = NetworkTableInstance.getDefault()
-        .getStructArrayTopic("Vision/DetectedFuel", Pose3d.struct)
+        .getStructArrayTopic("SmartDashboard/Vision/DetectedFuel", Pose3d.struct)
         .publish();
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -336,7 +336,7 @@ public class RobotContainer {
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
-                SmartDashboard.putNumber("Drivetrain/Stat/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
                 fuelPublisher.set(photonVision.getFieldFuelPoses(drivetrain.getPose()).toArray(new Pose3d[0]));
 
         }

@@ -123,19 +123,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean intakeComplete = true;
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugXPoint", Pose2d.struct).publish(); 
-        public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugYPoint", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/debugXPoint", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/debugYPoint", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam2Pose", Pose2d.struct).publish(); 
-        public final StructPublisher<Pose2d> publisher5 = NetworkTableInstance.getDefault()
-        .getStructTopic("HighCamPose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher5 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SelectedPose", Pose2d.struct).publish();
-        public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("Robot Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/SelectedPose", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/Robot Pose", Pose2d.struct).publish(); 
 
         
     /**
