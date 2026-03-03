@@ -97,7 +97,7 @@ public class RobotContainer {
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         private final StructArrayPublisher<Pose3d> fuelPublisher = NetworkTableInstance.getDefault()
-        .getStructArrayTopic("SmartDashboard/Vision/DetectedFuel", Pose3d.struct)
+        .getStructArrayTopic("Vision/DetectedFuel", Pose3d.struct)
         .publish();
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -478,7 +478,7 @@ public class RobotContainer {
 
                                 double xyStddev = Math.pow(minDist, 2) / 16.0;
                                 double rotStddev = Units.degreesToRadians(120.0);
-                                SmartDashboard.putNumber("Stat/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
+                                SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                                 drivetrain.addVisionMeasurement(
                                                 photonPose.toPose2d(),
                                                 estimatedPose.timestampSeconds,
