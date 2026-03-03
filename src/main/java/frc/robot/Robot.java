@@ -23,8 +23,6 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.utils.Alert;
-// import edu.wpi.first.epilogue.Epilogue;
-import edu.wpi.first.epilogue.Logged;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -32,10 +30,9 @@ import edu.wpi.first.epilogue.Logged;
  * this project, you must also update the Main.java file in the project.
  */
 
- @Logged
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
-  // @Logged
+
   private final RobotContainer m_robotContainer;
 
   /**
@@ -53,7 +50,6 @@ public class Robot extends LoggedRobot {
     m_robotContainer = new RobotContainer();
     m_robotContainer.robotInit();
     Alert.setup();
-    // Epilogue.bind(this);
   }
 
   /**
@@ -72,7 +68,6 @@ public class Robot extends LoggedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     m_robotContainer.robotPeriodic();
-    // Epilogue.update(this);
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

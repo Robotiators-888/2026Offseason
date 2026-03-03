@@ -26,6 +26,7 @@ public final class Constants {
         // Back motors are negative is forward
 
         public static class Operator {
+                // Defines the Controller Ports for Driver1 and 2
                 public static final int kDriver1ControllerPort = 0;
                 public static final int kDriver2ControllerPort = 1;
                 public static final double kDriveDeadband = 0.05;
