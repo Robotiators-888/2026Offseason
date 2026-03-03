@@ -31,6 +31,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -92,9 +94,11 @@ public class RobotContainer {
         Optional<Alliance> alliance;
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
-        public int targetId = 7;
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
+        private final StructArrayPublisher<Pose3d> fuelPublisher = NetworkTableInstance.getDefault()
+        .getStructArrayTopic("SmartDashboard/Vision/DetectedFuel", Pose3d.struct)
+        .publish();
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -105,8 +109,8 @@ public class RobotContainer {
         //     .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
         //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+            .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
+            .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -255,8 +259,8 @@ public class RobotContainer {
                 }, intake));
                 Driver1.rightTrigger().whileTrue(
                         new CMD_AimBot(drivetrain, photonVision,
-                                () -> -MathUtil.applyDeadband(Driver1.getLeftY(), Operator.kDriveDeadband),
-                                () -> -MathUtil.applyDeadband(Driver1.getLeftX(), Operator.kDriveDeadband))
+                                () -> -(Driver1.getLeftY()),
+                                () -> -(Driver1.getLeftX()))
                         .alongWith(
                                 new RunCommand(() -> {
                                         double distance = drivetrain.getPose().getTranslation().getDistance(
@@ -333,6 +337,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Set RPM",targetRPM);
                 SmartDashboard.putNumber("Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                fuelPublisher.set(photonVision.getFieldFuelPoses(drivetrain.getPose()).toArray(new Pose3d[0]));
 
         }
 
