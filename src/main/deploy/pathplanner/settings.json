@@ -16,10 +16,10 @@
     "PreLoad",
     "Right Trough"
   ],
-  "defaultMaxVel": 4.0,
+  "defaultMaxVel": 1.0,
   "defaultMaxAccel": 2.5,
-  "defaultMaxAngVel": 180.0,
-  "defaultMaxAngAccel": 180.0,
+  "defaultMaxAngVel": 30.0,
+  "defaultMaxAngAccel": 30.0,
   "defaultNominalVoltage": 12.0,
   "robotMass": 45.8128,
   "robotMOI": 7.98,
