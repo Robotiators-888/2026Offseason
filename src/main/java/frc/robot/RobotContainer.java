@@ -471,19 +471,24 @@ public class RobotContainer {
 
                                 double minDist = Double.MAX_VALUE;
                                 for (var target : estimatedPose.targetsUsed) {
+                                        if (target.getPoseAmbiguity()>0.2) continue;
                                         double dist = target.getBestCameraToTarget().getTranslation().getNorm();
                                         if (dist < minDist)
                                                 minDist = dist;
                                 }
 
-                                double xyStddev = Math.pow(minDist, 2) / 16.0;
-                                double rotStddev = Units.degreesToRadians(120.0);
-                                SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
-                                drivetrain.addVisionMeasurement(
-                                                photonPose.toPose2d(),
-                                                estimatedPose.timestampSeconds,
-                                                VecBuilder.fill(xyStddev,xyStddev,rotStddev));
-                                publisher.set(photonPose.toPose2d());
+                                if (minDist<4.0) {
+                                        double xyStddev = Math.pow(minDist, 2) / 16.0;
+                                        double rotStddev = Units.degreesToRadians(120.0);
+                                        SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
+                                        drivetrain.addVisionMeasurement(
+                                                        photonPose.toPose2d(),
+                                                        estimatedPose.timestampSeconds,
+                                                        VecBuilder.fill(xyStddev,xyStddev,rotStddev));
+                                        publisher.set(photonPose.toPose2d());
+                                }
+
+                                
                         }
                 }
         }
