@@ -188,8 +188,8 @@ public class RobotContainer {
                 Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
                 Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 }, shooter, index)
                 ));
 
@@ -216,8 +216,8 @@ public class RobotContainer {
                                                 .until(shooter::atDesiredRPM),
 
                 Commands.run(() -> {
-                        index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 }, shooter, index)
                 ));
 
@@ -273,8 +273,8 @@ public class RobotContainer {
                                         shooter.shootMeters(distance);
                                         new WaitUntilCommand(()->shooter.atDesiredRPM());
                                         if (CMD_AimBot.isThetaErrorCorrect) { //&& shooter.atDesiredRPM()
-                                                index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                                                index.setMeteringSpeed(Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                                                index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                                         } else {
                                                 index.set(0);
                                                 index.setMeteringSpeed(0);
@@ -287,15 +287,14 @@ public class RobotContainer {
                 // =========================================================
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
-                        index.set(Constants.Index.kINDEX_MOTOR_SPEED);
-                        index.setMeteringVolts(10);
+                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
-                        // intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
-                        index.set(-Constants.Index.kINDEX_MOTOR_SPEED);
-                        index.setMeteringSpeed(-Constants.Index.kINDEX_METERING_MOTOR_SPEED);
+                        index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
+                        index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, intake, index, shooter));
                 Driver2.povDown().onTrue(intake.extendArm());
@@ -307,7 +306,7 @@ public class RobotContainer {
                 Driver2.rightBumper().and(Driver2.a()).whileTrue(
                     new RunCommand(() -> {
                         shooter.setVolts(1.0);      // Slow crawl for shooter wheels
-                        index.set(0.1);      // Slow crawl for indexer
+                        index.setVolts(1.0);      // Slow crawl for indexer
                         index.setMeteringVolts(2.0);     // Slow crawl for metering wheel
                     }, shooter, index));
 

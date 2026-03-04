@@ -62,6 +62,9 @@ public class SUB_Index extends SubsystemBase {
         targetMeteringRPM = -1;
         meteringWheel.set(speed);
     }
+    public void setVolts(double volts) {
+        index.setVoltage(volts);
+    }
     public void setMeteringVolts(double volts) {
         targetMeteringRPM = -1;
         meteringWheel.setVoltage(volts);

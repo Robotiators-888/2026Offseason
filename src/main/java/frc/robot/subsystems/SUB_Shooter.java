@@ -45,7 +45,7 @@ public class SUB_Shooter extends SubsystemBase {
 
     private void configFlywheel() {
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 40; 
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 70; 
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 2; 
         shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 2;
