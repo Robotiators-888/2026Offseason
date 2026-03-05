@@ -169,10 +169,10 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public boolean isArmDownReached() {
-            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)== 0;
+        return Math.abs(arm.getEncoder().getPosition() - Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT) < 3.0;
     }
 
     public boolean isArmUpReached() {
-            return controller.calculate(arm.getEncoder().getPosition(),Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)== 0;
+        return Math.abs(arm.getEncoder().getPosition() - Constants.Intake.kINTAKE_ARM_TOP_SETPOINT) < 3.0;
     }
 }

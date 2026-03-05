@@ -46,6 +46,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -188,7 +189,7 @@ public class RobotContainer {
                 Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
                 Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 }, shooter, index)
                 ));
@@ -216,7 +217,7 @@ public class RobotContainer {
                                                 .until(shooter::atDesiredRPM),
 
                 Commands.run(() -> {
-                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
+                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 }, shooter, index)
                 ));
@@ -262,24 +263,29 @@ public class RobotContainer {
                                 () -> -(Driver1.getLeftY()),
                                 () -> -(Driver1.getLeftX()))
                         .alongWith(
-                                new RunCommand(() -> {
-                                        double distance = drivetrain.getPose().getTranslation().getDistance(
-                                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                                ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                                        new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                                                )).orElse(drivetrain.getPose().getTranslation())
-                                        );
-                                        shooter.shootMeters(distance);
-                                        new WaitUntilCommand(()->shooter.atDesiredRPM());
-                                        if (CMD_AimBot.isThetaErrorCorrect) { //&& shooter.atDesiredRPM()
-                                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                                                index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
-                                        } else {
-                                                index.set(0);
-                                                index.setMeteringSpeed(0);
-                                        }
-                                }, shooter, index)
+                                new SequentialCommandGroup(
+                                        Commands.run(()->{
+                                                double distance = drivetrain.getPose().getTranslation().getDistance(
+                                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
+                                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+                                                        )).orElse(drivetrain.getPose().getTranslation())
+                                                );
+                                                shooter.shootMeters(distance);
+                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                index.setVolts(-1.0);
+                                        },shooter,index).until(() -> shooter.atDesiredRPM()&&Math.abs(index.intakeMeteringRPM()-Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100),
+                                        Commands.run(()->{
+                                                if (CMD_AimBot.isThetaErrorCorrect) { //&& shooter.atDesiredRPM()
+                                                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                                                } else {
+                                                        index.set(0);
+                                                        index.setMeteringSpeed(0);
+                                                }
+                                        },shooter,index)
+                                )
                         )
                 );
                 // =========================================================
@@ -288,7 +294,7 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
@@ -303,12 +309,6 @@ public class RobotContainer {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake));//, climber));
-                Driver2.rightBumper().and(Driver2.a()).whileTrue(
-                    new RunCommand(() -> {
-                        shooter.setVolts(1.0);      // Slow crawl for shooter wheels
-                        index.setVolts(1.0);      // Slow crawl for indexer
-                        index.setMeteringVolts(2.0);     // Slow crawl for metering wheel
-                    }, shooter, index));
 
                 
         }

@@ -59,7 +59,8 @@ public final class Constants {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
                 public static final double kINDEX_MOTOR_VOLTS = 2.5;
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 10;
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0;
+                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); // Max RPM of NEO at 12V is 5676
                 
         }
 
