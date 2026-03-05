@@ -39,7 +39,7 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 3; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kP = 0.15; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
