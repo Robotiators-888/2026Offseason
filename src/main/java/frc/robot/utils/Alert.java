@@ -94,14 +94,14 @@ public class Alert {
     SmartDashboard.putString("Alert/Alerts", alertColor.toHexString());
   }
 
-  public static void triggerStop () { // Stops the robot from running if it has errors (This will not be used because errors shouldn't kill the robot)
+  // public static void triggerStop () { // Stops the robot from running if it has errors (This will not be used because errors shouldn't kill the robot)
     // Todo: implement this
-  }
+  // }
 
-  private static void testcalls () {
-    registerWarning("There may be an issue");
-    notifyWarning("Photonvision has optional type idk");
-  }
+  // private static void testcalls () {
+  //   registerWarning("There may be an issue");
+  //   notifyWarning("Photonvision has optional type idk");
+  // }
 
   private static void updateSmartDashboard () {
     SmartDashboard.putStringArray("Alert/errors", error.toArray());
