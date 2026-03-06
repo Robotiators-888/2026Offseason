@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -9,11 +10,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
 
 public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
@@ -38,8 +40,12 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
         // distanceToRPM.put(Units.inchesToMeters(95), 1430.0);
         // distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
-        distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
-        distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
+        // distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
+        // distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
+        distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
+        distanceToRPM.put(2.49493587092, 1260.0);
+        distanceToRPM.put(3.03308176613, 1375.0);
+        distanceToRPM.put(1.6346195276, 1080.0);
         configFlywheel();
     }
 
