@@ -13,43 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center Trough - Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Shoot - Right Trough"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "DeployIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
             "pathName": "Right Trough - Right Trough Center"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
           }
         },
         {
           "type": "path",
           "data": {
             "pathName": "Right Trough Center - Neutral Zone Right"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
           }
         },
         {
@@ -67,7 +37,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Right - Far Shoot"
+            "pathName": "Right Trough - Shoot"
           }
         },
         {
@@ -98,7 +68,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Far Shoot - Trough Right"
+            "pathName": "Shoot - Right Trough"
           }
         }
       ]
