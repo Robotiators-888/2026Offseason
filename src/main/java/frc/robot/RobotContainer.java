@@ -191,33 +191,24 @@ public class RobotContainer {
                 }, shooter, index)
                 ));
 
-                NamedCommands.registerCommand("ShootDistance", Commands.sequence(
-                                Commands.run(() -> shooter.shootMeters(
-                                                drivetrain.getPose().getTranslation().getDistance(
-                                                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                                                DriverStation.getAlliance().orElse(
-                                                                                                Alliance.Blue) == Alliance.Red
-                                                                                                                ? 10
-                                                                                                                : 26)
-                                                                                .map(pose -> pose.toPose2d()
-                                                                                                .getTranslation()
-                                                                                                .plus(new Translation2d(
-                                                                                                                Units.inchesToMeters(
-                                                                                                                                DriverStation.getAlliance()
-                                                                                                                                                .orElse(Alliance.Blue) == Alliance.Red
-                                                                                                                                                                ? -23.5
-                                                                                                                                                                : 23.5),
-                                                                                                                0)))
-                                                                                .orElse(drivetrain.getPose()
-                                                                                                .getTranslation()))),
-                                                shooter)
-                                                .until(shooter::atDesiredRPM),
-
-                Commands.run(() -> {
-                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); //Maintianting shoot req means we don't need to constantly set the RPM, just make sure it doesn't drop when we start shooting
-                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                }, shooter, index)
-                ));
+                NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
+                                        Commands.run(()->{
+                                                double distance = drivetrain.getPose().getTranslation().getDistance(
+                                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
+                                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+                                                        )).orElse(drivetrain.getPose().getTranslation())
+                                                );
+                                                shooter.shootMeters(distance);
+                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                index.setVolts(-1.0);
+                                        },shooter,index).until(() -> shooter.atDesiredRPM()&&Math.abs(index.intakeMeteringRPM()-Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100),
+                                        Commands.run(()->{
+                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                                        },shooter,index)
+                                ));
 
                 NamedCommands.registerCommand("StopShooting", Commands.parallel(
                                 new InstantCommand(() -> {

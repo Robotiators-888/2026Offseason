@@ -7,6 +7,12 @@
         {
           "type": "path",
           "data": {
+            "pathName": "Center Trough - Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "Shoot - Right Trough"
           }
         },
