@@ -68,7 +68,7 @@
   "reversed": false,
   "folder": "Left Trough Path",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true
