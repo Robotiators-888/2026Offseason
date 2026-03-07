@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.75,
-        "y": 0.6600000000000001
+        "x": 1.7606761583301862,
+        "y": 1.0974126149680183
       },
       "isLocked": false,
       "linkedName": "Outpost"
@@ -20,8 +20,8 @@
         "y": 0.66
       },
       "prevControl": {
-        "x": 1.0502282453637657,
-        "y": 0.44452211126961527
+        "x": 1.1382373108567392,
+        "y": 0.7352648339852292
       },
       "nextControl": null,
       "isLocked": false,
