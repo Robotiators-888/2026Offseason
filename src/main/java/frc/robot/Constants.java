@@ -37,9 +37,9 @@ public final class Constants {
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.145; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 0.15; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kP = 0.3; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
@@ -58,7 +58,7 @@ public final class Constants {
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kINDEX_MOTOR_VOLTS = 2.5;
+                public static final double kINDEX_MOTOR_VOLTS = 5;
                 public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0;
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); // Max RPM of NEO at 12V is 5676
                 
