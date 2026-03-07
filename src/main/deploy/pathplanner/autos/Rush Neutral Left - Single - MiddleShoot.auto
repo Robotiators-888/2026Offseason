@@ -17,27 +17,41 @@
           }
         },
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Trough Center - Neutral Zone Left"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Trough Center - Neutral Zone Left"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Left - Left Trough Center"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Neutral Zone Left - Left Trough Center"
           }
         },
         {
@@ -67,8 +81,20 @@
                 "data": {
                   "waitTime": 5.0
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {

@@ -27,18 +27,31 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Left Trough Center - Neutral Zone Left"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Trough Center - Neutral Zone Left"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Left - Left Trough Center"
+                      }
+                    }
+                  ]
                 }
               }
             ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Neutral Zone Left - Left Trough Center"
+            "name": "StopIntake"
           }
         },
         {
@@ -113,9 +126,22 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Left Trough Center - Neutral Zone Left Deep"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Left Trough Center - Neutral Zone Left Deep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Left Deep - Left Trough Center"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -125,12 +151,6 @@
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Neutral Zone Left Deep - Left Trough Center"
           }
         },
         {
