@@ -169,14 +169,12 @@ public class RobotContainer {
                                 Commands.run(() -> intake.intakeArmDown()).until(() -> intake.isArmDownReached() || intake.isReversePressed()),           // If false (retracted)
                                 intake::isForwardPressed
                         ),
-                        new RunCommand(() -> intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED),intake)
+                        new RunCommand(() -> intake.set(.9),intake)
                 ));
 
                 NamedCommands.registerCommand("StopIntake",
                                 new InstantCommand(() -> intake.set(0), intake));
 
-                // Depricated do not use
-                NamedCommands.registerCommand("DeployIntake", intake.extendArm());
 
                 // Favor "Intake" over this
                 NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> intake.intakeArmDown(), intake).until(() -> intake.isArmDownReached() || intake.isForwardPressed()));
@@ -291,8 +289,8 @@ public class RobotContainer {
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, intake, index, shooter));
-                Driver2.povDown().onTrue(intake.extendArm());
-                Driver2.povUp().onTrue(intake.retractArm());
+                Driver2.povDown().onTrue(Commands.run(()->intake.intakeArmDown(),intake));
+                Driver2.povUp().onTrue(Commands.run(()->intake.intakeArmUp(),intake));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);

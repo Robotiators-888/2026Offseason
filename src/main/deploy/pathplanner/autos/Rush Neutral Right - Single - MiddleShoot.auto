@@ -17,9 +17,28 @@
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Right Trough Center - Neutral Zone Right"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Right Trough Center - Neutral Zone Right"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {
@@ -55,6 +74,12 @@
                 "data": {
                   "waitTime": 5.0
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
               }
             ]
           }
@@ -63,6 +88,12 @@
           "type": "named",
           "data": {
             "name": "StopShooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {

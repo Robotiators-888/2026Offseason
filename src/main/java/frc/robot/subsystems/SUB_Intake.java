@@ -62,18 +62,18 @@ public class SUB_Intake extends SubsystemBase {
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        talonConfig.CurrentLimits.SupplyCurrentLimit = 35;
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 50;
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         intake.getConfigurator().apply(talonConfig);
     }
 
     
     public boolean isForwardPressed() {
-        return forwardLimit.isPressed()||stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
+        return stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
     }
 
     public boolean isReversePressed() {
-        return reverseLimit.isPressed()||stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
+        return stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
     }
 
     public void set(double speed){
@@ -137,21 +137,6 @@ public class SUB_Intake extends SubsystemBase {
         
     }
 
-    public Command retractArm() {
-        return Commands.run(() -> setArm(Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
-            .until(this::isReversePressed) // Stop command when switch is hit
-            .finallyDo(() -> {
-                setArm(0);
-                // HOMING: Reset encoder to 0 once we hit the back limit
-                arm.getEncoder().setPosition(0);
-            });
-    }
-
-    public Command extendArm() {
-        return Commands.run(() -> setArm(-Constants.Intake.kINTAKE_ARM_MOTOR_SPEED), this)
-            .until(this::isForwardPressed) // Stop command when switch is hit
-            .finallyDo(() -> setArm(0));
-    }
 
     public boolean isExtended() {
         return extended;
