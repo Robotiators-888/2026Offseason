@@ -43,6 +43,12 @@
                 "data": {
                   "waitTime": 5.0
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
               }
             ]
           }
@@ -51,6 +57,12 @@
           "type": "named",
           "data": {
             "name": "StopShooting"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {

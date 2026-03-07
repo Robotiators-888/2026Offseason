@@ -23,33 +23,28 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "DeployIntake"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Right Trough - Right Trough Center"
           }
         },
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "Intake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Trough Center - Neutral Zone Right"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Right Trough Center - Neutral Zone Right"
+                }
+              }
+            ]
           }
         },
         {
@@ -85,8 +80,20 @@
                 "data": {
                   "waitTime": 5.0
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
               }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {
