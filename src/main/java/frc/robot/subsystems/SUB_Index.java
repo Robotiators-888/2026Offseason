@@ -35,10 +35,10 @@ public class SUB_Index extends SubsystemBase {
         index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         SparkMaxConfig meteringConfig = new SparkMaxConfig();
         meteringConfig.smartCurrentLimit(60);
-        double kP = 0.0066; // Super Aggressive P to get metering wheel to speed FAST
+        double kP = 0.00005; // Super Aggressive P to get metering wheel to speed FAST
         double kI = 0.0;
         double kD = 0.0; 
-        double kFF = 0.000176; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676. Since we measure the wheel, not the flywheel reduction: 1/5676 = 0.000176
+        double kFF = 0.0021; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676. Since we measure the wheel, not the flywheel reduction: 1/5676 = 0.000176
         meteringConfig.closedLoop.pid(kP, kI, kD);
         meteringConfig.closedLoop.velocityFF(kFF);
         meteringConfig.encoder.uvwMeasurementPeriod(8); 
@@ -81,8 +81,10 @@ public class SUB_Index extends SubsystemBase {
     }
 
     public void periodic() {
-      SmartDashboard.putNumber("Index/indexRPM", intakeRPM());
-      SmartDashboard.putNumber("Index/meteringRPM", intakeMeteringRPM());
-      SmartDashboard.putNumber("Index/meteringTargetRPM", targetMeteringRPM);
+        SmartDashboard.putNumber("Index/indexRPM", intakeRPM());
+        SmartDashboard.putNumber("Index/meteringRPM", intakeMeteringRPM());
+        SmartDashboard.putNumber("Index/meteringTargetRPM", targetMeteringRPM);
+        SmartDashboard.putNumber("Index/meteringCurrent", meteringWheel.getOutputCurrent());
+
     }
 }

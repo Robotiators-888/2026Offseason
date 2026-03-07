@@ -282,8 +282,8 @@ public class RobotContainer {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                         index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
                 }, index));
-                Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 50));
-                Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 50));
+                Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
+                Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
