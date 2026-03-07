@@ -11,13 +11,19 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough - Depot Start"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Trough - Depot Start"
+                  "pathName": "Depot Start - Depot End"
                 }
               },
               {
@@ -27,12 +33,6 @@
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Depot Start - Depot End"
           }
         },
         {
@@ -62,6 +62,12 @@
                 "data": {
                   "waitTime": 5.0
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
               }
             ]
           }
@@ -69,7 +75,25 @@
         {
           "type": "named",
           "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "StopShooting"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot - Left Trough"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough - Left Trough Center"
           }
         },
         {
@@ -80,18 +104,6 @@
                 "type": "sequential",
                 "data": {
                   "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Shoot - Left Trough"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Left Trough - Left Trough Center"
-                      }
-                    },
                     {
                       "type": "path",
                       "data": {
