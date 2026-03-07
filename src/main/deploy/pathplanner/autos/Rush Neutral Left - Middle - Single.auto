@@ -61,7 +61,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Left - Far Shoot"
+            "pathName": "Trough Left - Left Far Shoot"
           }
         },
         {
@@ -92,7 +92,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Far Shoot - Trough Left"
+            "pathName": "Left Far Shoot - Trough Left"
           }
         }
       ]

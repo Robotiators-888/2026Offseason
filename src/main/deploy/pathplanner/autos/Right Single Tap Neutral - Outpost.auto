@@ -63,7 +63,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Right - Far Shoot"
+            "pathName": "Trough Right - Right Far Shoot"
           }
         },
         {
@@ -106,13 +106,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Far Shoot - Trough Right"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Right Trough - Outpost"
+            "pathName": "Right Far Shoot - Outpost"
           }
         },
         {
