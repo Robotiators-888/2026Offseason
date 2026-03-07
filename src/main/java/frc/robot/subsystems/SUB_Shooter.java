@@ -42,10 +42,12 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
         // distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
         // distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
-        distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
-        distanceToRPM.put(2.49493587092, 1260.0);
+        // distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
+        distanceToRPM.put(2.49493587092, 1250.0);
         distanceToRPM.put(3.03308176613, 1375.0);
-        distanceToRPM.put(1.6346195276, 1080.0);
+        distanceToRPM.put(1.6346195276, 1075.0);
+        distanceToRPM.put(4.10526503, 1575.0);
+        distanceToRPM.put(5.34766117, 1750.0);
         configFlywheel();
     }
 
