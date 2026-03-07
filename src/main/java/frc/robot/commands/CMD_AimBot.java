@@ -14,7 +14,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -43,16 +43,14 @@ public class CMD_AimBot extends RunCommand {
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
     super(() -> {});
-
-
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
-    
     
     addRequirements(drivetrain);
   }
@@ -60,57 +58,74 @@ public class CMD_AimBot extends RunCommand {
   @Override
   public void initialize() {
     robotAngleController.setTolerance(Units.degreesToRadians(5.0));
-    Pose2d currentPose = drivetrain.getPose();
-    Pose2d tPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
+    
+    Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
       : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
-    Rotation2d targetRotation = new Rotation2d(tPose.getX()-currentPose.getX(),tPose.getY()-currentPose.getY());
-    targetPose = new Pose2d(tPose.getX()+((DriverStation.getAlliance().equals(Optional.of(Alliance.Red))) ?  Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5)), tPose.getY(),
-        targetRotation);
+      
+    double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
+    Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
+    
+    // Save as targetPose for visualization (Rotation doesn't matter yet, it gets calculated in execute)
+    targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
+    
     robotAngleController.reset();
-    drivetrain.publisher2.set(targetPose);
     running = true;
   }
 
   @Override
   public void execute() {
-    Pose2d currentPose;
-    {
-      Pose2d tempPose = drivetrain.getPose();
-      currentPose = new Pose2d(tempPose.getX(),tempPose.getY(),tempPose.getRotation());
-    }
-    Transform2d shooterOffset = new Transform2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5), new Rotation2d(0)); //TODO: I am 90% sure this was supposed to eb inches, also, this is def not right??
-    currentPose.transformBy(shooterOffset);
+    Pose2d currentPose = drivetrain.getPose();
+    
+    // 1. Define the shooter's physical offset relative to the robot's center
+    // Back Right translates to negative X and negative Y
+    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+    
+    // 2. Rotate this offset by the robot's current heading to orient it to the field
+    Translation2d rotatedShooterOffset = shooterOffset.rotateBy(currentPose.getRotation());
+    
+    // 3. Add the rotated offset to the robot's center field position to get the shooter's field position
+    Translation2d shooterFieldPosition = currentPose.getTranslation().plus(rotatedShooterOffset);
 
-    drivetrain.publisher1.set(targetPose);
-    drivetrain.setControl(brakeRequest);
-
-    Rotation2d targetRotation = new Rotation2d(targetPose.getX()-currentPose.getX(),targetPose.getY()-currentPose.getY());
-    double omegaSpeed = robotAngleController.calculate(
-        MathUtil.angleModulus(currentPose.getRotation().getRadians()),
-        MathUtil.angleModulus(targetRotation.getRadians())
+    // 4. Calculate the angle required for the *shooter* to face the *hub center*
+    Translation2d targetTranslation = targetPose.getTranslation();
+    Rotation2d targetRotation = new Rotation2d(
+        targetTranslation.getX() - shooterFieldPosition.getX(),
+        targetTranslation.getY() - shooterFieldPosition.getY()
     );
 
-    
-    double thetaErrorRads = Math.abs(currentPose.getRotation().minus(targetRotation).getRadians());
+    // Update telemetry so you can see where the robot is trying to aim in AdvantageScope/Glass
+    drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
+    drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation)); // Visualizing the shooter position
+
+    // 5. Calculate rotational velocity (omega) using the PID controller
+    double omegaSpeed = robotAngleController.calculate(
+        currentPose.getRotation().getRadians(),
+        targetRotation.getRadians()
+    );
+
+    // Calculate error for deadband checking
+    double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(2) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())<=5;// Code here to calculate the angulart velocity and check if it is below 5
+    
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(2) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
+    
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
+    
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
         drivetrain.setControl(brakeRequest);
     } else {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9),omegaSpeed * MaxAngularRate)));
+          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
     }
   }
 
   @Override
   public void end(boolean interrupted) {
     running = false;
-    // No specific actions on end
   }
 
   @Override
