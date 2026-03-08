@@ -120,11 +120,10 @@ public class RobotContainer {
         public RobotContainer() {
                 drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() ->
-                        drive.withVelocityX(MathUtil.applyDeadband(-Driver1.getLeftY(), Constants.Operator.kDriveDeadband) * MaxSpeed) // Drive forward with negative Y (forward)
-                        .withVelocityY(MathUtil.applyDeadband(-Driver1.getLeftX(), Constants.Operator.kDriveDeadband) * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(MathUtil.applyDeadband(-Driver1.getRightX(), Constants.Operator.kDriveDeadband) * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                )
-                );
+                        drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                        .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                ));
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
