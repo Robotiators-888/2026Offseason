@@ -4,6 +4,10 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -63,7 +68,6 @@ import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
-import static edu.wpi.first.units.Units.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -163,14 +167,17 @@ public class RobotContainer {
                 
                 // Intake
 
-                NamedCommands.registerCommand("Intake", Commands.sequence( // Could be a Commands.parallel
-                        Commands.either(
-                                Commands.none(),              // If true (already extended)
-                                Commands.run(() -> intake.intakeArmDown()).until(() -> intake.isArmDownReached() || intake.isReversePressed()),           // If false (retracted)
-                                intake::isForwardPressed
-                        ),
+                NamedCommands.registerCommand("Intake",
                         new RunCommand(() -> intake.set(.9),intake)
-                ));
+                );
+
+                NamedCommands.registerCommand("SetPoseAndIntake", 
+                        new SequentialCommandGroup(
+                                new InstantCommand(() -> drivetrain.resetPose(new Pose2d(0, 0, new Rotation2d(0)))),
+                                // new RunCommand(() -> intake.set(.9), intake).raceWith(new WaitCommand(5))
+                                new RunCommand(()-> intake.set(1), intake)
+                        )
+                );
 
                 NamedCommands.registerCommand("StopIntake",
                                 new InstantCommand(() -> intake.set(0), intake));
@@ -341,6 +348,8 @@ public class RobotContainer {
          * @return the command to run in autonomous
          */
         public Command getAutonomousCommand() {
+                drivetrain.resetPose(new Pose2d(0, 0, new Rotation2d(0)));
+                // System.out.println((AutoBuilder.getCurrentPose() == null) ? "\n\n\n\n\n\n\n\n\n\n\nPose is Null\n\n\n\n\n\n\n\n\n" : "\n\n\n\n\n\n\nPose is good\n\n\n\n\n\n\n");
                 return autoChooser.getSelected();
         }
 

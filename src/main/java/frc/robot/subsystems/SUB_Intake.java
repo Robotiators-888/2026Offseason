@@ -96,6 +96,7 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition());
         SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent());
+        SmartDashboard.putNumber("Intake/Intake Output Amps", intake.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putBoolean("Intake/Stick Up", stickUp);
         SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {
