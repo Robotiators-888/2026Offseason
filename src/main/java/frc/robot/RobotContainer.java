@@ -169,16 +169,9 @@ public class RobotContainer {
                 // Intake
 
                 NamedCommands.registerCommand("Intake",
-                        new RunCommand(() -> intake.set(.9),intake)
+                        new RunCommand(() -> intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE),intake)
                 );
 
-                NamedCommands.registerCommand("SetPoseAndIntake", 
-                        new SequentialCommandGroup(
-                                new InstantCommand(() -> drivetrain.resetPose(new Pose2d(0, 0, new Rotation2d(0)))),
-                                // new RunCommand(() -> intake.set(.9), intake).raceWith(new WaitCommand(5))
-                                new RunCommand(()-> intake.set(1), intake)
-                        )
-                );
 
                 NamedCommands.registerCommand("StopIntake",
                                 new InstantCommand(() -> intake.set(0), intake));
@@ -281,8 +274,7 @@ public class RobotContainer {
                 // =========================================================
                 Driver1.leftBumper().onTrue(CMD_TrenchCrossing.create(drivetrain));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
-                        intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED);
-                        // index.set(Constants.Index.kINDEX_MOTOR_SPEED);
+                        intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
                 }, intake));
                 Driver1.rightTrigger().whileTrue(
                         new CMD_AimBot(
@@ -316,9 +308,10 @@ public class RobotContainer {
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake));//, climber));
                 Driver2.b().whileTrue(new RunCommand(() -> {
-                        intake.set(-Constants.Intake.kINTAKE_MOTOR_SPEED);
+                        intake.setVolts(-Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
+                        shooter.setVolts(-2.5);
                 }, intake,index));
 
                 

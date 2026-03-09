@@ -4,10 +4,10 @@
   "holonomicMode": true,
   "pathFolders": [
     "Center Trough Path",
+    "Climb",
     "Depot",
     "Left Trough Path",
-    "Neuteral zone",
-    "Climb",
+    "Neutral zone",
     "Outpost",
     "Right Trough Path"
   ],

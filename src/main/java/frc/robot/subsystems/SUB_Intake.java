@@ -62,7 +62,7 @@ public class SUB_Intake extends SubsystemBase {
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        talonConfig.CurrentLimits.SupplyCurrentLimit = 50;
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 60;
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         intake.getConfigurator().apply(talonConfig);
     }
@@ -76,10 +76,12 @@ public class SUB_Intake extends SubsystemBase {
         return stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
     }
 
+    public void setVolts(double speed){
+        intake.setVoltage(speed);
+    }
     public void set(double speed){
         intake.set(speed);
     }
-
     public double intakeRPM(){
         return intake.getVelocity().getValue().baseUnitMagnitude();
     }

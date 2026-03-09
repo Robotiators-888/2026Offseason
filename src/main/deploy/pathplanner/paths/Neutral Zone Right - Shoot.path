@@ -100,7 +100,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Neuteral zone",
+  "folder": "Neutral zone",
   "idealStartingState": {
     "velocity": 1.0,
     "rotation": 90.0
