@@ -56,6 +56,7 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
+import frc.robot.commands.CMD_TrenchCrossing;
 import frc.robot.generated.TunerConstants;
 // import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
@@ -257,6 +258,7 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
+                Driver1.leftBumper().onTrue(CMD_TrenchCrossing.create(drivetrain));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.set(Constants.Intake.kINTAKE_MOTOR_SPEED);
                         // index.set(Constants.Index.kINDEX_MOTOR_SPEED);

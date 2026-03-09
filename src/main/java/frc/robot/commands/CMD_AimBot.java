@@ -119,7 +119,7 @@ public class CMD_AimBot extends RunCommand {
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(
         currentPose.getRotation().getRadians() - targetRotation.getRadians()
     ));    
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3.0) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
     boolean isPerfectlyAligned = thetaErrorRads <= Units.degreesToRadians(1) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
 
     if (isPerfectlyAligned) {
