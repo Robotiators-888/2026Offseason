@@ -113,4 +113,22 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
       SmartDashboard.putNumber("Shooter/Top Motor Amperage", getCurrentDrawTop());
     }
+    public double getExpectedTOF(double distanceMeters) {
+        double targetRPM = distanceToRPM.get(distanceMeters);
+        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
+        double averageHorizontalVelocity = targetRPM * 0.00434;
+        if (averageHorizontalVelocity <= 0.0) {
+            return 0.0;
+        }
+        return distanceMeters / averageHorizontalVelocity;
+    }
+    public static double getExpectedTOFStatic(double distanceMeters) {
+        double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
+        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
+        double averageHorizontalVelocity = targetRPM * 0.00434;
+        if (averageHorizontalVelocity <= 0.0) {
+            return 0.0;
+        }
+        return distanceMeters / averageHorizontalVelocity;
+    }
 }
