@@ -43,6 +43,7 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
+  private boolean isLocked = false;
 
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
@@ -93,6 +94,7 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
+    isLocked = false;
     running = true;
   }
 
@@ -117,8 +119,15 @@ public class CMD_AimBot extends RunCommand {
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(
         currentPose.getRotation().getRadians() - targetRotation.getRadians()
     ));    
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(2) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
     boolean isPerfectlyAligned = thetaErrorRads <= Units.degreesToRadians(1) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
+
+    if (isPerfectlyAligned) {
+        isLocked = true;
+    }
+    if (!isThetaErrorCorrect) {
+        isLocked = false;
+    }
 
     // Logging for debugging and tuning
     drivetrain.publisher1.set(new Pose2d(virtualTarget, targetRotation));
@@ -148,13 +157,14 @@ public class CMD_AimBot extends RunCommand {
     double xInput = translationXSupplier.getAsDouble();
     double yInput = translationYSupplier.getAsDouble();
     
-    if (Math.abs(xInput) < Operator.kDriveDeadband && Math.abs(yInput) < Operator.kDriveDeadband && isPerfectlyAligned) {
+    if (Math.abs(xInput) < Operator.kDriveDeadband && Math.abs(yInput) < Operator.kDriveDeadband && isLocked) {
         drivetrain.setControl(brakeRequest);
     } else {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
           .withRotationalRate((pidOutput)));
+        isLocked = false;
     }
   }
 
