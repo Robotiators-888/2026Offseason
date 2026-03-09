@@ -55,6 +55,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_TrenchCrossing;
 import frc.robot.generated.TunerConstants;
@@ -233,6 +234,26 @@ public class RobotContainer {
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
 
+                NamedCommands.registerCommand("ShootOnTheMove", 
+                        Commands.runOnce(() -> {
+                                PPHolonomicDriveController.overrideRotationFeedback(() -> {
+                                        Pose2d currentPose = drivetrain.getPose();
+                                        var chassisSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
+                                        Rotation2d targetRotation = CMD_AimBot.getTargetRotation(
+                                                currentPose, 
+                                                CMD_AimBot.getTargetTranslation(photonVision), 
+                                                CMD_AimBot.shooterOffset, 
+                                                chassisSpeeds.vxMetersPerSecond, 
+                                                chassisSpeeds.vyMetersPerSecond, 
+                                                shooter
+                                        );
+                                        return CMD_AimBot.calculateRotationalFeedback(currentPose, targetRotation);
+                                });
+                        })
+                        .andThen(new CMD_AimBot(drivetrain, photonVision, shooter, index, () -> 0.0, () -> 0.0))
+                        .finallyDo(() -> PPHolonomicDriveController.clearRotationFeedbackOverride())
+                );
+
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
@@ -352,6 +373,25 @@ public class RobotContainer {
         }
 
         public void autonomousPeriodic() {
+                photonPoseUpdate();
+        }
+
+        public void testInit() {
+                // Example test path: follow a simple path while auto-aligning
+                // Note: You need to have a path named "TestPath" in PathPlanner
+                try {
+                        PathPlannerPath testPath = PathPlannerPath.fromPathFile("TestPath");
+                        
+                        // Start the ShootOnTheMove logic
+                        NamedCommands.getCommand("ShootOnTheMove").schedule();
+
+                        AutoBuilder.followPath(testPath).schedule();
+                } catch (Exception e) {
+                        DriverStation.reportError("Failed to load TestPath: " + e.getMessage(), e.getStackTrace());
+                }
+        }
+
+        public void testPeriodic() {
                 photonPoseUpdate();
         }
 
