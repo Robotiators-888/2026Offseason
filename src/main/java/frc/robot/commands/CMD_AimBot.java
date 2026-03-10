@@ -39,6 +39,7 @@ public class CMD_AimBot extends RunCommand {
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
+  private boolean isLocked;
   private final PIDController robotAngleController = new PIDController(3, 0, 0);
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
@@ -75,6 +76,7 @@ public class CMD_AimBot extends RunCommand {
     targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
     robotAngleController.reset();
+    isLocked = false;
     running = true;
   }
 
@@ -132,7 +134,14 @@ public class CMD_AimBot extends RunCommand {
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
     
-    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect) {
+    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
+      isLocked = true;
+    }
+    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(2)) {
+      isLocked = false;
+    }
+
+    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
         drivetrain.setControl(brakeRequest);
     } else {
         drivetrain.setControl(

@@ -92,7 +92,7 @@ public class SUB_Shooter extends SubsystemBase {
         double targetRPM = distanceToRPM.get(meters);
         
         // Pass it to your existing setRPM method
-        setRPM(targetRPM);
+        setRPM(targetRPM-10);
     }
 
     public void stop() {
