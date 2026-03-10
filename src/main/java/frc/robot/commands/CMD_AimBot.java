@@ -58,7 +58,7 @@ public class CMD_AimBot extends RunCommand {
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
-    addRequirements(drivetrain);
+    addRequirements(drivetrain, shooter, index);
   }
 
   @Override
