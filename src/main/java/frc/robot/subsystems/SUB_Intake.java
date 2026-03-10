@@ -62,7 +62,7 @@ public class SUB_Intake extends SubsystemBase {
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         TalonFXConfiguration talonConfig = new TalonFXConfiguration();
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        talonConfig.CurrentLimits.SupplyCurrentLimit = 60;
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 80;
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         intake.getConfigurator().apply(talonConfig);
     }

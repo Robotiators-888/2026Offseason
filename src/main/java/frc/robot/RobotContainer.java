@@ -272,7 +272,7 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                Driver1.leftBumper().onTrue(CMD_TrenchCrossing.create(drivetrain));
+                // Driver1.leftBumper().onTrue(CMD_TrenchCrossing.create(drivetrain));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
                 }, intake));

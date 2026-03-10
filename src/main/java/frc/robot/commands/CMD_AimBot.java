@@ -174,9 +174,7 @@ public class CMD_AimBot extends RunCommand {
     boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
     if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-    } else {
-        index.setVolts(-1.0);
-    }   
+    }
 
 
     // Rotational Control
