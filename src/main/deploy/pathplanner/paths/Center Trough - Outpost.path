@@ -45,7 +45,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Center Trough",
+  "folder": "Center Trough Path",
   "idealStartingState": {
     "velocity": 1.0,
     "rotation": 180.0

@@ -9,7 +9,9 @@
     "Left Trough Path",
     "Neutral zone",
     "Outpost",
-    "Right Trough Path"
+    "Right Trough Path",
+    "Shoot",
+    "Other"
   ],
   "autoFolders": [
     "Left Trough",

@@ -61,7 +61,7 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Depot",
+  "folder": "Neutral zone",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0
