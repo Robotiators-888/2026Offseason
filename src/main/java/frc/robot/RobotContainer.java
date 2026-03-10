@@ -370,12 +370,9 @@ public class RobotContainer {
         }
 
         public void testInit() {
-                // Example test path: follow a simple path while auto-aligning
-                // Note: You need to have a path named "TestPath" in PathPlanner
                 try {
                         PathPlannerPath testPath = PathPlannerPath.fromPathFile("TestPath");
                         
-                        // Start the ShootOnTheMove logic
                         NamedCommands.getCommand("ShootOnTheMove").schedule();
 
                         AutoBuilder.followPath(testPath).schedule();

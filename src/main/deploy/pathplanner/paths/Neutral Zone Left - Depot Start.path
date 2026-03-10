@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9049949652613565,
-        "y": 4.006361396791157
+        "x": 7.8,
+        "y": 5.25
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.7840085592011405,
-        "y": 3.5886162624821685
+        "x": 7.75,
+        "y": 5.6
       },
       "isLocked": false,
-      "linkedName": "Shoot"
+      "linkedName": "Neutral Zone Left"
     },
     {
       "anchor": {
-        "x": 3.7043581081081083,
-        "y": 0.66
+        "x": 5.68661934338953,
+        "y": 7.293
       },
       "prevControl": {
-        "x": 2.8228245363766047,
-        "y": 1.0008844507845935
+        "x": 6.5,
+        "y": 7.9
+      },
+      "nextControl": {
+        "x": 5.0,
+        "y": 7.293
+      },
+      "isLocked": false,
+      "linkedName": "Left Trough Center"
+    },
+    {
+      "anchor": {
+        "x": 0.426,
+        "y": 7.15
+      },
+      "prevControl": {
+        "x": 0.426,
+        "y": 6.15
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trough Forward"
+      "linkedName": "Depot Start"
     }
   ],
   "rotationTargets": [],
@@ -41,14 +57,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 180.0
+    "velocity": 0,
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "Right Trough",
+  "folder": "Depot",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
