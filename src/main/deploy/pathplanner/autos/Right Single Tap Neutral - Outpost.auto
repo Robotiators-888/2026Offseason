@@ -73,7 +73,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {
@@ -128,7 +128,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {
