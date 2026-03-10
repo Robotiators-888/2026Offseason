@@ -227,25 +227,25 @@ public class RobotContainer {
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
 
-                NamedCommands.registerCommand("ShootOnTheMove", 
-                        Commands.runOnce(() -> {
-                                PPHolonomicDriveController.overrideRotationFeedback(() -> {
-                                        Pose2d currentPose = drivetrain.getPose();
-                                        var chassisSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
-                                        Rotation2d targetRotation = CMD_AimBot.getTargetRotation(
-                                                currentPose, 
-                                                CMD_AimBot.getTargetTranslation(photonVision), 
-                                                CMD_AimBot.shooterOffset, 
-                                                chassisSpeeds.vxMetersPerSecond, 
-                                                chassisSpeeds.vyMetersPerSecond, 
-                                                shooter
-                                        );
-                                        return CMD_AimBot.calculateRotationalFeedback(currentPose, targetRotation);
-                                });
-                        })
-                        .andThen(new CMD_AimBot(drivetrain, photonVision, shooter, index, () -> 0.0, () -> 0.0))
-                        .finallyDo(() -> PPHolonomicDriveController.clearRotationFeedbackOverride())
-                );
+                // NamedCommands.registerCommand("ShootOnTheMove", 
+                //         Commands.runOnce(() -> {
+                //                 PPHolonomicDriveController.overrideRotationFeedback(() -> {
+                //                         Pose2d currentPose = drivetrain.getPose();
+                //                         var chassisSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
+                //                         Rotation2d targetRotation = CMD_AimBot.getTargetRotation(
+                //                                 currentPose, 
+                //                                 CMD_AimBot.getTargetTranslation(photonVision), 
+                //                                 CMD_AimBot.shooterOffset, 
+                //                                 chassisSpeeds.vxMetersPerSecond, 
+                //                                 chassisSpeeds.vyMetersPerSecond, 
+                //                                 shooter
+                //                         );
+                //                         return CMD_AimBot.calculateRotationalFeedback(currentPose, targetRotation);
+                //                 });
+                //         })
+                //         .andThen(new CMD_AimBot(drivetrain, photonVision, shooter, index, () -> 0.0, () -> 0.0))
+                //         .finallyDo(() -> PPHolonomicDriveController.clearRotationFeedbackOverride())
+                // );
 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -378,7 +378,7 @@ public class RobotContainer {
                 try {
                         PathPlannerPath testPath = PathPlannerPath.fromPathFile("TestPath");
                         
-                        NamedCommands.getCommand("ShootOnTheMove").schedule();
+                        // NamedCommands.getCommand("ShootOnTheMove").schedule();
 
                         AutoBuilder.followPath(testPath).schedule();
                 } catch (Exception e) {
