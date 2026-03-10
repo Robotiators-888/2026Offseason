@@ -328,8 +328,6 @@ public class RobotContainer {
          * @return the command to run in autonomous
          */
         public Command getAutonomousCommand() {
-                drivetrain.resetPose(new Pose2d(0, 0, new Rotation2d(0)));
-                // System.out.println((AutoBuilder.getCurrentPose() == null) ? "\n\n\n\n\n\n\n\n\n\n\nPose is Null\n\n\n\n\n\n\n\n\n" : "\n\n\n\n\n\n\nPose is good\n\n\n\n\n\n\n");
                 return autoChooser.getSelected();
         }
 
