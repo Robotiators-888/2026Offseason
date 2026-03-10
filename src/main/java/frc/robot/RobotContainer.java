@@ -304,15 +304,22 @@ public class RobotContainer {
                 Driver2.povDown().onTrue(Commands.run(()->intake.intakeArmDown(),intake));
                 Driver2.povUp().onTrue(Commands.run(()->intake.intakeArmUp(),intake));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                        intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
+                        intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband+.02) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake));//, climber));
-                Driver2.b().whileTrue(new RunCommand(() -> {
-                        intake.setVolts(-Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
-                        index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
-                        index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
-                        shooter.setVolts(-2.5);
-                }, intake,index));
+                // Driver2.b().whileTrue(new RunCommand(() -> {
+                //         intake.setVolts(-Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
+                //         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                //         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
+                //         shooter.setVolts(-2.5);
+                // }, intake,index));
+                Driver2.b().whileTrue(
+                        new RunCommand(() -> {
+                                shooter.setRPM(1000);
+                                index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                        })
+                );
 
                 
         }
