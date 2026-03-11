@@ -333,7 +333,7 @@ public class RobotContainer {
                                 shooter.setRPM(1000);
                                 index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                                 index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        })
+                        },shooter,index)
                 );
 
                 
