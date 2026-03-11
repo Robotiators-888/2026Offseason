@@ -22,6 +22,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
@@ -66,6 +67,7 @@ import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
+import frc.robot.utils.AllianceFlipUtil;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
@@ -104,6 +106,11 @@ public class RobotContainer {
         .getStructArrayTopic("SmartDashboard/Vision/DetectedFuel", Pose3d.struct)
         .publish();
 
+        private PathPlannerPath pathLeftToNeutral;
+        private PathPlannerPath pathNeutralToLeft;
+        private PathPlannerPath pathRightToNeutral;
+        private PathPlannerPath pathNeutralToRight;
+
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
 
@@ -120,8 +127,16 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
-                drivetrain.setDefaultCommand(
-                drivetrain.applyRequest(() ->
+                try {
+                        pathLeftToNeutral = PathPlannerPath.fromPathFile("Left Trough - Left Trough Center");
+                        pathNeutralToLeft = PathPlannerPath.fromPathFile("Left Trough Center - Left Trough");
+                        pathRightToNeutral = PathPlannerPath.fromPathFile("Right Trough - Right Trough Center");
+                        pathNeutralToRight = PathPlannerPath.fromPathFile("Right Trough Center - Right Trough");
+                } catch (Exception e) {
+                        Alert.registerError("Failed to load trench paths: " + e.getMessage());
+                }
+
+                drivetrain.setDefaultCommand(                drivetrain.applyRequest(() ->
                         drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
                         .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                         .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
@@ -349,6 +364,44 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
                 fuelPublisher.set(photonVision.getFieldFuelPoses(drivetrain.getPose()).toArray(new Pose3d[0]));
 
+                Pose2d currentPose = drivetrain.getPose();
+                
+                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+
+                drivetrain.testPath1Publisher.set(p1);
+                drivetrain.testPath2Publisher.set(p2);
+                drivetrain.testPath3Publisher.set(p3);
+                drivetrain.testPath4Publisher.set(p4);
+
+                double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
+                double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
+                double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
+                double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
+
+                double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
+                String closestTrough = "";
+                Pose2d closestPose = p1;
+
+                if (minD == d1) {
+                        closestTrough = "Left Trough -> Neutral Zone";
+                        closestPose = p1;
+                } else if (minD == d2) {
+                        closestTrough = "Neutral Zone -> Left Trough";
+                        closestPose = p2;
+                } else if (minD == d3) {
+                        closestTrough = "Right Trough -> Neutral Zone";
+                        closestPose = p3;
+                } else {
+                        closestTrough = "Neutral Zone -> Right Trough";
+                        closestPose = p4;
+                }
+
+                drivetrain.selectedTestPathPublisher.set(closestPose);
+                SmartDashboard.putString("Trough/Closest", closestTrough);
+
         }
 
         public void autonomousInit() {
@@ -375,14 +428,35 @@ public class RobotContainer {
         }
 
         public void testInit() {
-                try {
-                        PathPlannerPath testPath = PathPlannerPath.fromPathFile("TestPath");
-                        
-                        // NamedCommands.getCommand("ShootOnTheMove").schedule();
+                Pose2d currentPose = drivetrain.getPose();
+                
+                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
 
-                        AutoBuilder.followPath(testPath).schedule();
+                double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
+                double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
+                double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
+                double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
+
+                double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
+                PathPlannerPath selectedPath = pathNeutralToRight;
+
+                if (minD == d1) {
+                        selectedPath = pathLeftToNeutral;
+                } else if (minD == d2) {
+                        selectedPath = pathNeutralToLeft;
+                } else if (minD == d3) {
+                        selectedPath = pathRightToNeutral;
+                }
+
+                try {
+                        PathConstraints constraints = new PathConstraints(3.0, 2.0,
+                                        Units.degreesToRadians(360), Units.degreesToRadians(540));
+                        AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).schedule();
                 } catch (Exception e) {
-                        DriverStation.reportError("Failed to load TestPath: " + e.getMessage(), e.getStackTrace());
+                        Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                 }
         }
 

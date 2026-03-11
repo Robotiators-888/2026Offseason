@@ -11,10 +11,12 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -83,7 +85,10 @@ public class CMD_AimBot extends RunCommand {
     // Save as targetPose for visualization (Rotation doesn't matter yet, it gets calculated in execute)
     targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
-    robotAngleController.reset();
+    robotAngleController.reset(
+        drivetrain.getPose().getRotation().getRadians(),
+        drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
+    );
     isLocked = false;
     running = true;
   }

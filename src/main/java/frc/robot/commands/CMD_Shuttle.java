@@ -19,22 +19,20 @@ import frc.robot.subsystems.SUB_Shooter;
 public class CMD_Shuttle extends RunCommand{
     private SUB_Index index;
     private SUB_Shooter shooter;
-    private SUB_Intake intake;
     private SUB_PhotonVision photonVision;
     private CommandSwerveDrivetrain drivetrain;
     private final PIDController robotAngleController = new PIDController(3, 0, 0);
     private Pose2d targetPose = new Pose2d();
     private boolean isThetaErrorCorrect;
-    public CMD_Shuttle (CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Shooter shooter, SUB_Intake intake) {
+    public CMD_Shuttle (CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Shooter shooter) {
         super(()->{});
         this.index = index;
         this.shooter = shooter;
-        this.intake = intake;
         this.photonVision = photonVision;
         this.drivetrain = drivetrain;
         robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
         isThetaErrorCorrect = false;
-        addRequirements(photonVision, drivetrain, index, shooter, intake);
+        addRequirements(photonVision, drivetrain, index, shooter);
     }
 
     @Override

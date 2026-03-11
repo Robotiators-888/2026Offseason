@@ -137,6 +137,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic("SmartDashboard/Drivetrain/Robot Pose", Pose2d.struct).publish(); 
 
+    public final StructPublisher<Pose2d> testPath1Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath1", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath2Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath2", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath3Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath3", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath4Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath4", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> selectedTestPathPublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/SelectedTestPath", Pose2d.struct).publish(); 
+
         
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
