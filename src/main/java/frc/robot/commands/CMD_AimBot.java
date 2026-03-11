@@ -40,7 +40,15 @@ public class CMD_AimBot extends RunCommand {
   private final SUB_Shooter shooter;
   private final SUB_Index index;
   private boolean isLocked;
-  private final PIDController robotAngleController = new PIDController(3, 0, 0);
+  private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
+      RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
+      RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
+  );
+
+  private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
+      5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+      thetaConstraints
+  );
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
   private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
