@@ -48,6 +48,7 @@ public class SUB_Shooter extends SubsystemBase {
         distanceToRPM.put(1.6346195276, 1075.0);
         distanceToRPM.put(4.10526503, 1575.0);
         distanceToRPM.put(5.34766117, 1750.0);
+        distanceToRPM.put(10.5, 2400.0);
         configFlywheel();
     }
 

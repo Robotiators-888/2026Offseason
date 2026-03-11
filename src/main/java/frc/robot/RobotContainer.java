@@ -58,6 +58,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import frc.robot.commands.CMD_AimBot;
+import frc.robot.commands.CMD_Shuttle;
 import frc.robot.commands.CMD_TrenchCrossing;
 import frc.robot.generated.TunerConstants;
 // import frc.robot.subsystems.SUB_Climber;
@@ -322,18 +323,18 @@ public class RobotContainer {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
                 //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
                 }, intake));//, climber));
-                // Driver2.b().whileTrue(new RunCommand(() -> {
-                //         intake.setVolts(-Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
-                //         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
-                //         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
-                //         shooter.setVolts(-2.5);
-                // }, intake,index));
+                // Driver2.b().whileTrue(
+                //         new RunCommand(() -> {
+                //                 shooter.setRPM(1000);
+                //                 index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                //                 index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                //         },shooter,index)
+                // );
                 Driver2.b().whileTrue(
-                        new RunCommand(() -> {
-                                shooter.setRPM(1000);
-                                index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
-                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        },shooter,index)
+                        new CMD_Shuttle(drivetrain, photonVision, index, shooter,
+                                () -> -(Driver1.getLeftY()),
+                                () -> -(Driver1.getLeftX())
+                        )
                 );
 
                 

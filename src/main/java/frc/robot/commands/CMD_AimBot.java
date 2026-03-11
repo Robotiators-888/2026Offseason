@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
+import frc.robot.Constants.Operator;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
@@ -56,7 +57,7 @@ public class CMD_AimBot extends RunCommand {
   private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(0) 
+            .withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
@@ -73,7 +74,7 @@ public class CMD_AimBot extends RunCommand {
 
   @Override
   public void initialize() {
-    robotAngleController.setTolerance(Units.degreesToRadians(5.0));
+    robotAngleController.setTolerance(Units.degreesToRadians(0.0));
     
     Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
@@ -116,7 +117,7 @@ public class CMD_AimBot extends RunCommand {
 
     // Update telemetry so you can see where the robot is trying to aim in AdvantageScope/Glass
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
-    drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation)); // Visualizing the shooter position
+    // drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation)); // Visualizing the shooter position
 
     // 5. Calculate rotational velocity (omega) using the PID controller
     double omegaSpeed = robotAngleController.calculate(
@@ -144,9 +145,9 @@ public class CMD_AimBot extends RunCommand {
     if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     }
-    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), 0.05);
-    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), 0.05);
-    
+    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
+    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);
+
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
       isLocked = true;
     }
