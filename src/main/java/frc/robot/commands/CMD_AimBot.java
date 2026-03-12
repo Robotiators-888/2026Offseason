@@ -43,6 +43,7 @@ public class CMD_AimBot extends RunCommand {
   private final SUB_Shooter shooter;
   private final SUB_Index index;
   private boolean isLocked;
+  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
       RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
@@ -54,11 +55,11 @@ public class CMD_AimBot extends RunCommand {
   );
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withRotationalDeadband(0) 
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withCenterOfRotation(shooterOffset); 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     this.drivetrain = drivetrain;
@@ -97,29 +98,20 @@ public class CMD_AimBot extends RunCommand {
   @Override
   public void execute() {
     Pose2d currentPose = drivetrain.getPose();
-    
-    // 1. Define the shooter's physical offset relative to the robot's center
-    // Back Right translates to negative X and negative Y
-    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
-    
-    // 2. Rotate this offset by the robot's current heading to orient it to the field
-    Translation2d rotatedShooterOffset = shooterOffset.rotateBy(currentPose.getRotation());
-    
-    // 3. Add the rotated offset to the robot's center field position to get the shooter's field position
-    Translation2d shooterFieldPosition = currentPose.getTranslation().plus(rotatedShooterOffset);
 
-    // 4. Calculate the angle required for the *shooter* to face the *hub center*
+    // 2. Calculate the angle required for the robot to face the hub center.
+    // Since we are now rotating AROUND the shooter, the robot's center-to-target 
+    // angle (with the rotation offset applied) will align the shooter with the target.
     Translation2d targetTranslation = targetPose.getTranslation();
     Rotation2d targetRotation = new Rotation2d(
-        targetTranslation.getX() - shooterFieldPosition.getX(),
-        targetTranslation.getY() - shooterFieldPosition.getY()
+        targetTranslation.getX() - currentPose.getX(),
+        targetTranslation.getY() - currentPose.getY()
     );
 
-    // Update telemetry so you can see where the robot is trying to aim in AdvantageScope/Glass
+    // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
-    // drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation)); // Visualizing the shooter position
 
-    // 5. Calculate rotational velocity (omega) using the PID controller
+    // 3. Calculate rotational velocity (omega) using the PID controller
     double omegaSpeed = robotAngleController.calculate(
         currentPose.getRotation().getRadians(),
         targetRotation.getRadians()
@@ -129,7 +121,7 @@ public class CMD_AimBot extends RunCommand {
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(2) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 5;
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
     double distance = drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
@@ -151,7 +143,7 @@ public class CMD_AimBot extends RunCommand {
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
       isLocked = true;
     }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(2)) {
+    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
       isLocked = false;
     }
 

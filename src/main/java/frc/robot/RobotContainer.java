@@ -59,7 +59,6 @@ import frc.robot.Constants.Operator;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
-import frc.robot.commands.CMD_TrenchCrossing;
 import frc.robot.generated.TunerConstants;
 // import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
@@ -117,9 +116,9 @@ public class RobotContainer {
 
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
 
-        // private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric()
-        //     .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) 
-        //     .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+        private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
+            .withDriveRequestType(DriveRequestType.Velocity); 
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
             .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
@@ -288,7 +287,38 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                // Driver1.leftBumper().onTrue(CMD_TrenchCrossing.create(drivetrain));
+                Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
+                        Pose2d currentPose = drivetrain.getPose();
+                        
+                        Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                        Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                        Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                        Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+
+                        double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
+                        double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
+                        double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
+                        double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
+
+                        double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
+                        PathPlannerPath selectedPath = pathNeutralToRight;
+
+                        if (minD == d1) {
+                                selectedPath = pathLeftToNeutral;
+                        } else if (minD == d2) {
+                                selectedPath = pathNeutralToLeft;
+                        } else if (minD == d3) {
+                                selectedPath = pathRightToNeutral;
+                        }
+
+                        try {
+                                PathConstraints constraints = new PathConstraints(4.0, 4.0,
+                                                Units.degreesToRadians(360), Units.degreesToRadians(540));
+                                AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).schedule();
+                        } catch (Exception e) {
+                                Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
+                        }
+                }));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
                 }, intake));
@@ -428,37 +458,8 @@ public class RobotContainer {
                 photonPoseUpdate();
         }
 
+
         public void testInit() {
-                Pose2d currentPose = drivetrain.getPose();
-                
-                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-
-                double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
-                double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
-                double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
-                double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
-
-                double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
-                PathPlannerPath selectedPath = pathNeutralToRight;
-
-                if (minD == d1) {
-                        selectedPath = pathLeftToNeutral;
-                } else if (minD == d2) {
-                        selectedPath = pathNeutralToLeft;
-                } else if (minD == d3) {
-                        selectedPath = pathRightToNeutral;
-                }
-
-                try {
-                        PathConstraints constraints = new PathConstraints(3.0, 2.0,
-                                        Units.degreesToRadians(360), Units.degreesToRadians(540));
-                        AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).schedule();
-                } catch (Exception e) {
-                        Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
-                }
         }
 
         public void testPeriodic() {
