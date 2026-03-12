@@ -56,11 +56,13 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+
+
+
+
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
-// import frc.robot.subsystems.SUB_Climber;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
@@ -93,7 +95,6 @@ public class RobotContainer {
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Intake intake = SUB_Intake.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
-        // public static final SUB_Climber climber = SUB_Climber.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
@@ -110,6 +111,7 @@ public class RobotContainer {
         private PathPlannerPath pathNeutralToLeft;
         private PathPlannerPath pathRightToNeutral;
         private PathPlannerPath pathNeutralToRight;
+        private boolean fieldRelative = true; 
 
         // Replace with CommandPS4Controller or CommandJoystick if needed
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -136,11 +138,20 @@ public class RobotContainer {
                         Alert.registerError("Failed to load trench paths: " + e.getMessage());
                 }
 
-                drivetrain.setDefaultCommand(                drivetrain.applyRequest(() ->
-                        drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                        .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                        .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                ));
+                drivetrain.setDefaultCommand(            
+                        (fieldRelative) ? 
+                        drivetrain.applyRequest(() ->
+                                drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                                .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                                .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                        )
+                        :
+                        drivetrain.applyRequest(() ->
+                                driveRobot.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                                .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                                .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                        )
+                );
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
                         intake.set(0);
@@ -154,7 +165,6 @@ public class RobotContainer {
                         index.setMeteringSpeed(0);
                 }, index));
                 leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
-                // climber.setDefaultCommand(new InstantCommand(() -> climber.stopClimb(), climber));
 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
@@ -163,23 +173,6 @@ public class RobotContainer {
                 NamedCommands.registerCommand("ResetReachedTarget",
                                 new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
-                //CLimber
-                // NamedCommands.registerCommand("ClimbExtend",
-                //         new SequentialCommandGroup (
-                //                 new RunCommand(()->intake.retractArm(),intake),
-                //                 new InstantCommand(() -> climber.climb(), climber),
-                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(true)),
-                //                 new InstantCommand(() -> climber.stopClimb(),climber)
-                //         )
-                // );
-
-                // NamedCommands.registerCommand("ClimbRetract",
-                //         new SequentialCommandGroup (
-                //                 new InstantCommand(() -> climber.unClimb(), climber),
-                //                 new WaitUntilCommand(() -> climber.hasReachedSetPoint(false)),
-                //                 new InstantCommand(() -> climber.stopClimb())
-                //         )
-                // );
                 
                 // Intake
 
@@ -191,8 +184,6 @@ public class RobotContainer {
                 NamedCommands.registerCommand("StopIntake",
                                 new InstantCommand(() -> intake.set(0), intake));
 
-
-                // Favor "Intake" over this
                 NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> intake.intakeArmDown(), intake).until(() -> intake.isArmDownReached() || intake.isForwardPressed()));
 
                 // Shooter and Indexer
@@ -211,8 +202,8 @@ public class RobotContainer {
                                 photonVision, 
                                 shooter, 
                                 index,
-                                () -> -(Driver1.getLeftY()), // X Translation
-                                () -> -(Driver1.getLeftX())  // Y Translation
+                                () -> -(Driver1.getLeftY()),
+                                () -> -(Driver1.getLeftX()) 
                         )
                 );
 
@@ -241,26 +232,6 @@ public class RobotContainer {
                                         index.setMeteringSpeed(0);
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
-
-                // NamedCommands.registerCommand("ShootOnTheMove", 
-                //         Commands.runOnce(() -> {
-                //                 PPHolonomicDriveController.overrideRotationFeedback(() -> {
-                //                         Pose2d currentPose = drivetrain.getPose();
-                //                         var chassisSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
-                //                         Rotation2d targetRotation = CMD_AimBot.getTargetRotation(
-                //                                 currentPose, 
-                //                                 CMD_AimBot.getTargetTranslation(photonVision), 
-                //                                 CMD_AimBot.shooterOffset, 
-                //                                 chassisSpeeds.vxMetersPerSecond, 
-                //                                 chassisSpeeds.vyMetersPerSecond, 
-                //                                 shooter
-                //                         );
-                //                         return CMD_AimBot.calculateRotationalFeedback(currentPose, targetRotation);
-                //                 });
-                //         })
-                //         .andThen(new CMD_AimBot(drivetrain, photonVision, shooter, index, () -> 0.0, () -> 0.0))
-                //         .finallyDo(() -> PPHolonomicDriveController.clearRotationFeedbackOverride())
-                // );
 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -332,6 +303,10 @@ public class RobotContainer {
                                 () -> -(Driver1.getLeftX()) 
                         )
                 );
+                Driver1.leftStick().onTrue(new InstantCommand(() -> {
+                        fieldRelative = !fieldRelative;
+                }
+                ));
                 // =========================================================
                 // DRIVER 2
                 // =========================================================
@@ -351,15 +326,7 @@ public class RobotContainer {
                 Driver2.povUp().onTrue(Commands.run(()->intake.intakeArmUp(),intake));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
-                //        climber.setClimber(MathUtil.applyDeadband(Driver2.getRightY(), Operator.kDriveDeadband) * Constants.Climber.kCLIMBER_MOTOR_SPEED);
-                }, intake));//, climber));
-                // Driver2.b().whileTrue(
-                //         new RunCommand(() -> {
-                //                 shooter.setRPM(1000);
-                //                 index.setMeteringVolts(Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
-                //                 index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                //         },shooter,index)
-                // );
+                }, intake));
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
                                 () -> -(Driver1.getLeftY()),
