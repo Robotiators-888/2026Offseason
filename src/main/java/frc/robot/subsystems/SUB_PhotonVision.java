@@ -43,8 +43,8 @@ public class SUB_PhotonVision extends SubsystemBase {
   private final PhotonPoseEstimator poseEstimator2;
   private final PhotonPoseEstimator poseEstimator3;
   public AprilTagFieldLayout at_field;
-  private static final double FUEL_DIAMETER_METERS = 0.15; 
-  private static final int FUEL_PIPELINE_INDEX = 1; 
+  // private static final double FUEL_DIAMETER_METERS = 0.15; 
+  // private static final int FUEL_PIPELINE_INDEX = 1; 
 
   public static SUB_PhotonVision getInstance() {
     if (INSTANCE == null) {
@@ -146,101 +146,101 @@ public class SUB_PhotonVision extends SubsystemBase {
     return target.getFiducialId();
   }
 
- public List<Pose3d> getFieldFuelPoses(Pose2d currentRobotPose) {
-    List<Pose3d> allFuelPoses = new ArrayList<>();
+//  public List<Pose3d> getFieldFuelPoses(Pose2d currentRobotPose) {
+//     List<Pose3d> allFuelPoses = new ArrayList<>();
     
-    PhotonCamera[] cameras = {cam1, cam2, cam3};
-    Transform3d[] cameraTransforms = {
-        PhotonVision.kRobotToCamera1, 
-        PhotonVision.kRobotToCamera2, 
-        PhotonVision.kRobotToCamera3
-    };
+//     PhotonCamera[] cameras = {cam1, cam2, cam3};
+//     Transform3d[] cameraTransforms = {
+//         PhotonVision.kRobotToCamera1, 
+//         PhotonVision.kRobotToCamera2, 
+//         PhotonVision.kRobotToCamera3
+//     };
 
-    for (int i = 0; i < cameras.length; i++) {
-        if (!cameras[i].isConnected()) continue;
+//     for (int i = 0; i < cameras.length; i++) {
+//         if (!cameras[i].isConnected()) continue;
 
-        // Ensure we only process if we are on the Fuel Pipeline
-        // (If your pipeline switching logic is elsewhere, remove this check or ensure it matches)
-        if (cameras[i].getPipelineIndex() != FUEL_PIPELINE_INDEX) continue;
+//         // Ensure we only process if we are on the Fuel Pipeline
+//         // (If your pipeline switching logic is elsewhere, remove this check or ensure it matches)
+//         if (cameras[i].getPipelineIndex() != FUEL_PIPELINE_INDEX) continue;
 
-        List<PhotonPipelineResult> results = cameras[i].getAllUnreadResults();
-        if (results.isEmpty()) continue;
+//         List<PhotonPipelineResult> results = cameras[i].getAllUnreadResults();
+//         if (results.isEmpty()) continue;
         
-        // Use the latest result
-        PhotonPipelineResult latestResult = results.get(results.size() - 1);
+//         // Use the latest result
+//         PhotonPipelineResult latestResult = results.get(results.size() - 1);
         
-        if (latestResult.hasTargets()) {
-            // Retrieve Camera Matrix (Intrinsics)
-            Optional<Matrix<N3, N3>> cameraMatrixOpt = cameras[i].getCameraMatrix();
-            if (cameraMatrixOpt.isEmpty()) continue; 
+//         if (latestResult.hasTargets()) {
+//             // Retrieve Camera Matrix (Intrinsics)
+//             Optional<Matrix<N3, N3>> cameraMatrixOpt = cameras[i].getCameraMatrix();
+//             if (cameraMatrixOpt.isEmpty()) continue; 
             
-            Matrix<N3, N3> cameraMatrix = cameraMatrixOpt.get();
-            // [ fx,  0, cx ]
-            // [  0, fy, cy ]
-            // [  0,  0,  1 ]
-            double fx = cameraMatrix.get(0, 0);
-            double fy = cameraMatrix.get(1, 1);
+//             Matrix<N3, N3> cameraMatrix = cameraMatrixOpt.get();
+//             // [ fx,  0, cx ]
+//             // [  0, fy, cy ]
+//             // [  0,  0,  1 ]
+//             double fx = cameraMatrix.get(0, 0);
+//             double fy = cameraMatrix.get(1, 1);
             
-            // Average focal lengths for a generalized pixel focal length
-            double focalLengthPixels = (fx + fy) / 2.0;
+//             // Average focal lengths for a generalized pixel focal length
+//             double focalLengthPixels = (fx + fy) / 2.0;
 
-            Pose3d robotPose3d = new Pose3d(currentRobotPose);
-            Pose3d cameraPose3d = robotPose3d.transformBy(cameraTransforms[i]);
+//             Pose3d robotPose3d = new Pose3d(currentRobotPose);
+//             Pose3d cameraPose3d = robotPose3d.transformBy(cameraTransforms[i]);
 
-            for (PhotonTrackedTarget target : latestResult.getTargets()) {
+//             for (PhotonTrackedTarget target : latestResult.getTargets()) {
                 
-                // Get the corners of the minimum area bounding rectangle
-                List<TargetCorner> corners = target.getMinAreaRectCorners();
-                if (corners == null || corners.size() < 4) continue;
+//                 // Get the corners of the minimum area bounding rectangle
+//                 List<TargetCorner> corners = target.getMinAreaRectCorners();
+//                 if (corners == null || corners.size() < 4) continue;
                 
-                // Calculate all 6 pairwise distances between the 4 corners
-                // (4 sides + 2 diagonals)
-                double[] distances = new double[6];
-                int distIdx = 0;
-                for (int j = 0; j < corners.size(); j++) {
-                    for (int k = j + 1; k < corners.size(); k++) {
-                        double dx = corners.get(j).x - corners.get(k).x;
-                        double dy = corners.get(j).y - corners.get(k).y;
-                        distances[distIdx++] = Math.sqrt(dx * dx + dy * dy);
-                    }
-                }
+//                 // Calculate all 6 pairwise distances between the 4 corners
+//                 // (4 sides + 2 diagonals)
+//                 double[] distances = new double[6];
+//                 int distIdx = 0;
+//                 for (int j = 0; j < corners.size(); j++) {
+//                     for (int k = j + 1; k < corners.size(); k++) {
+//                         double dx = corners.get(j).x - corners.get(k).x;
+//                         double dy = corners.get(j).y - corners.get(k).y;
+//                         distances[distIdx++] = Math.sqrt(dx * dx + dy * dy);
+//                     }
+//                 }
                 
-                // Sort distances: smallest 4 are the rectangle sides, largest 2 are diagonals
-                Arrays.sort(distances);
+//                 // Sort distances: smallest 4 are the rectangle sides, largest 2 are diagonals
+//                 Arrays.sort(distances);
                 
-                // distances[0] and distances[1] are the two lengths of the shorter side
-                // distances[2] and distances[3] are the two lengths of the longer side
-                double widthPixels = (distances[0] + distances[1]) / 2.0;
-                double heightPixels = (distances[2] + distances[3]) / 2.0;
+//                 // distances[0] and distances[1] are the two lengths of the shorter side
+//                 // distances[2] and distances[3] are the two lengths of the longer side
+//                 double widthPixels = (distances[0] + distances[1]) / 2.0;
+//                 double heightPixels = (distances[2] + distances[3]) / 2.0;
                 
-                // The average of the width and height gives a robust pixel diameter for the sphere
-                double pixelDiameter = (widthPixels + heightPixels) / 2.0;
+//                 // The average of the width and height gives a robust pixel diameter for the sphere
+//                 double pixelDiameter = (widthPixels + heightPixels) / 2.0;
 
-                // Distance calculation using the pinhole camera model: Z = (f * Real_Size) / Pixel_Size
-                double distanceMeters = (FUEL_DIAMETER_METERS * focalLengthPixels) / pixelDiameter;
+//                 // Distance calculation using the pinhole camera model: Z = (f * Real_Size) / Pixel_Size
+//                 double distanceMeters = (FUEL_DIAMETER_METERS * focalLengthPixels) / pixelDiameter;
 
-                // Trigonometry to get translation from camera (PhotonVision gives Pitch/Yaw in degrees)
-                // Note: Positive Pitch is UP, Positive Yaw is LEFT
-                double pitchRad = Math.toRadians(target.getPitch());
-                double yawRad = Math.toRadians(target.getYaw());
+//                 // Trigonometry to get translation from camera (PhotonVision gives Pitch/Yaw in degrees)
+//                 // Note: Positive Pitch is UP, Positive Yaw is LEFT
+//                 double pitchRad = Math.toRadians(target.getPitch());
+//                 double yawRad = Math.toRadians(target.getYaw());
 
-                // Convert Spherical (Distance, Pitch, Yaw) to Cartesian (x, y, z) in Camera Frame
-                // Camera Frame: X is forward, Y is left, Z is up
-                double xCam = distanceMeters * Math.cos(pitchRad) * Math.cos(yawRad);
-                double yCam = distanceMeters * Math.cos(pitchRad) * Math.sin(yawRad);
-                double zCam = distanceMeters * Math.sin(pitchRad);
+//                 // Convert Spherical (Distance, Pitch, Yaw) to Cartesian (x, y, z) in Camera Frame
+//                 // Camera Frame: X is forward, Y is left, Z is up
+//                 double xCam = distanceMeters * Math.cos(pitchRad) * Math.cos(yawRad);
+//                 double yCam = distanceMeters * Math.cos(pitchRad) * Math.sin(yawRad);
+//                 double zCam = distanceMeters * Math.sin(pitchRad);
 
-                Translation3d cameraToBallTranslation = new Translation3d(xCam, yCam, zCam);
+//                 Translation3d cameraToBallTranslation = new Translation3d(xCam, yCam, zCam);
 
-                // Transform the ball relative to the camera's position on the field
-                // This automatically handles the camera's rotation (like if Cam 3 is sideways)
-                Pose3d ballFieldPose = cameraPose3d.transformBy(new Transform3d(cameraToBallTranslation, new Rotation3d()));
-                allFuelPoses.add(ballFieldPose);
-            }
-        }
-    }
-    return allFuelPoses;
-  }
+//                 // Transform the ball relative to the camera's position on the field
+//                 // This automatically handles the camera's rotation (like if Cam 3 is sideways)
+//                 Pose3d ballFieldPose = cameraPose3d.transformBy(new Transform3d(cameraToBallTranslation, new Rotation3d()));
+//                 allFuelPoses.add(ballFieldPose);
+//             }
+//         }
+//     }
+//     return allFuelPoses;
+//   }
 
   @Override
   public void periodic() {
