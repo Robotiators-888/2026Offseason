@@ -39,7 +39,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Neutral zone right deep - Right trough center sideways"
+                        "pathName": "Neutral Zone Right Deep - Right Trough Center Sideways"
                       }
                     }
                   ]
@@ -57,7 +57,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right trough center sideways - Right trough"
+            "pathName": "Right Trough Center Sideways - Right Trough Sideways"
           }
         },
         {
@@ -100,7 +100,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right trough - Right trough center sideways"
+            "pathName": "Right Trough Sideways - Right Trough Center Sideways"
           }
         },
         {
@@ -144,7 +144,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right trough center sideways - Right trough"
+            "pathName": "Right Trough Center Sideways - Right Trough Sideways"
           }
         },
         {

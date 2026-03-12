@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.75,
-        "y": 0.66
+        "x": 7.78,
+        "y": 2.52
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.7606761583301862,
-        "y": 1.0974126149680183
+        "x": 6.788716442949698,
+        "y": 1.548812871307709
       },
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "Neutral Zone Right"
     },
     {
       "anchor": {
-        "x": 1.7618544935805986,
-        "y": 0.66
+        "x": 5.614566265060241,
+        "y": 0.4616385542168677
       },
       "prevControl": {
-        "x": 1.1382373108567392,
-        "y": 0.7352648339852292
+        "x": 5.899960675465364,
+        "y": 0.7465759695301435
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Trough Center Sideways"
     }
   ],
   "rotationTargets": [],
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 59.99999999999999
+    "velocity": 1.0,
+    "rotation": 90.0
   },
   "reversed": false,
-  "folder": "Outpost",
+  "folder": "Right Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

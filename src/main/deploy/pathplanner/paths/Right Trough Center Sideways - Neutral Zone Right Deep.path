@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.78,
-        "y": 3.75
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 6.87696311927167,
-        "y": 2.3673791866152794
-      },
-      "isLocked": false,
-      "linkedName": "Neutral Zone Right Deep"
-    },
-    {
-      "anchor": {
         "x": 5.614566265060241,
         "y": 0.4616385542168677
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.4013614457831345,
+        "y": 0.3851445783132522
+      },
+      "isLocked": false,
+      "linkedName": "Right Trough Center Sideways"
+    },
+    {
+      "anchor": {
+        "x": 7.647120481927713,
+        "y": 1.0626626506024093
+      },
       "prevControl": {
-        "x": 5.800807316598823,
-        "y": 0.7570495650705868
+        "x": 7.472277108433737,
+        "y": 0.6255542168674697
+      },
+      "nextControl": {
+        "x": 7.75295190787642,
+        "y": 1.327241215474176
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.78,
+        "y": 3.75
+      },
+      "prevControl": {
+        "x": 7.778253012048195,
+        "y": 2.7783132530120485
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Trough Center Sideways"
+      "linkedName": "Neutral Zone Right Deep"
     }
   ],
   "rotationTargets": [],
