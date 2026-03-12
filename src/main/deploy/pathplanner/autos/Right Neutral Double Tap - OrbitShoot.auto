@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Right Trough - Right Trough Center"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -30,6 +24,12 @@
                 "type": "sequential",
                 "data": {
                   "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough - Right Trough Center"
+                      }
+                    },
                     {
                       "type": "path",
                       "data": {
@@ -67,7 +67,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {
@@ -154,7 +154,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {

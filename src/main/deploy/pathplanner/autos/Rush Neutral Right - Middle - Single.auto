@@ -72,7 +72,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {
