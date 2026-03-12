@@ -21,7 +21,7 @@ public class Vector <T> {
 
   private static <T> T[] createArray(int size, T defaultValue) {
     // Terrible casting needed because of runtime objects and rules against generic arrays
-    T[] array = (T[]) Array.newInstance(defaultValue.getClass(), size); 
+    T[] array = (T[]) Array.newInstance(defaultValue.getClass(), size); // TODO: Is this okay?
     Arrays.fill(array, defaultValue);
     return array;
   }

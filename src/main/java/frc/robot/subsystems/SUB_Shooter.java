@@ -12,7 +12,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -48,7 +47,7 @@ public class SUB_Shooter extends SubsystemBase {
         distanceToRPM.put(1.6346195276, 1075.0);
         distanceToRPM.put(4.10526503, 1575.0);
         distanceToRPM.put(5.34766117, 1750.0);
-        distanceToRPM.put(10.5, 2400.0);
+        distanceToRPM.put(10.5, 2400.0); //TODO:  VERY TEMPORARY< NEEDS  OTBE TESTED IRL
         configFlywheel();
     }
 
@@ -91,7 +90,7 @@ public class SUB_Shooter extends SubsystemBase {
     public void shootMeters(double meters) {
         // query the map for the RPM associated with this distance
         double targetRPM = distanceToRPM.get(meters);
-        
+
         // Pass it to your existing setRPM method
         setRPM(targetRPM);
     }

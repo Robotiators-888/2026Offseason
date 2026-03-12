@@ -11,8 +11,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -22,8 +20,6 @@ public class SUB_Intake extends SubsystemBase {
     private TalonFX intake;
     private SparkMax arm;
     private SparkMax armFollower;
-    private SparkLimitSwitch forwardLimit;
-    private SparkLimitSwitch reverseLimit;
     private boolean stickUp = false;
     private boolean stickDown = false;
     private int periodicCountFault = 0;
@@ -39,18 +35,11 @@ public class SUB_Intake extends SubsystemBase {
         intake = new TalonFX(Constants.Intake.kINTAKE_MOTOR_CANID);
         arm = new SparkMax(Constants.Intake.kARM_MOTOR_CANID, MotorType.kBrushless);
         armFollower = new SparkMax(Constants.Intake.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
-        forwardLimit = arm.getForwardLimitSwitch();
-        reverseLimit = arm.getReverseLimitSwitch();
         configureMotors();
     }
 
     private void configureMotors(){
         SparkMaxConfig config = new SparkMaxConfig();
-        config.limitSwitch
-            .forwardLimitSwitchEnabled(true)
-            .forwardLimitSwitchType(Type.kNormallyOpen)//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
-            .reverseLimitSwitchEnabled(true)
-            .reverseLimitSwitchType(Type.kNormallyOpen);//TODO: Test if normally open or normally closed, we want it to be normally open so that if the switch breaks it will just not trigger instead of always triggering and breaking the code
         config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees, Thrifty bot cycloial gearbox 23:1
         config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
         config.smartCurrentLimit(35);
@@ -87,12 +76,6 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
-        if (forwardLimit.isPressed()) {
-            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
-        }
-        if (reverseLimit.isPressed()) {
-            arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT);
-        }
         SmartDashboard.putNumber("Intake/intakeRPM", intakeRPM());
         SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
