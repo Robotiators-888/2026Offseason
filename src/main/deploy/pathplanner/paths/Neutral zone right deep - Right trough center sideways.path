@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.87696311927167,
-        "y": 2.3673791866152794
+        "x": 7.183152639087017,
+        "y": 2.100670470756063
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Right Deep"
@@ -20,8 +20,8 @@
         "y": 0.4616385542168677
       },
       "prevControl": {
-        "x": 5.800807316598823,
-        "y": 0.7570495650705868
+        "x": 6.342139800285306,
+        "y": 0.36689015691868687
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 2.0,
     "rotation": 90.0
   },
   "reversed": false,
