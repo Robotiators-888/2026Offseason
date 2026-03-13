@@ -1,2 +1,2 @@
-@rem Get-ChildItem -Path . -Recurse | ForEach-Object { clang-format -i -style=file --assume-filename java $_.FullName }
-Get-ChildItem -Path . -Recurse -Include *.java | ForEach-Object { clang-format -i -style=file --assume-filename java $_.FullName }
+@rem Get-ChildItem -Path src\main\java\frc\robot -Recurse | ForEach-Object { clang-format -i -style=file --assume-filename java $_.FullName }
+Get-ChildItem -Path src\main\java\frc\robot -Recurse -Include *.java | ForEach-Object { clang-format -i -style=file --assume-filename java $_.FullName }

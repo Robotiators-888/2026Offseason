@@ -55,8 +55,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
-    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+    // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
+    // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -74,48 +74,48 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         )
     );
 
-    /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            null,        // Use default ramp rate (1 V/s)
-            Volts.of(7), // Use dynamic voltage of 7 V
-            null,        // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            volts -> setControl(m_steerCharacterization.withVolts(volts)),
-            null,
-            this
-        )
-    );
+    // /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
+    // private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         null,        // Use default ramp rate (1 V/s)
+    //         Volts.of(7), // Use dynamic voltage of 7 V
+    //         null,        // Use default timeout (10 s)
+    //         // Log state with SignalLogger class
+    //         state -> SignalLogger.writeString("SysIdSteer_State", state.toString())
+    //     ),
+    //     new SysIdRoutine.Mechanism(
+    //         volts -> setControl(m_steerCharacterization.withVolts(volts)),
+    //         null,
+    //         this
+    //     )
+    // );
 
-    /*
-     * SysId routine for characterizing rotation.
-     * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
-     * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
-     */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-        new SysIdRoutine.Config(
-            /* This is in radians per second², but SysId only supports "volts per second" */
-            Volts.of(Math.PI / 6).per(Second),
-            /* This is in radians per second, but SysId only supports "volts" */
-            Volts.of(Math.PI),
-            null, // Use default timeout (10 s)
-            // Log state with SignalLogger class
-            state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
-        ),
-        new SysIdRoutine.Mechanism(
-            output -> {
-                /* output is actually radians per second, but SysId only supports "volts" */
-                setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                /* also log the requested output for SysId */
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-            },
-            null,
-            this
-        )
-    );
+    // /*
+    //  * SysId routine for characterizing rotation.
+    //  * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
+    //  * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
+    //  */
+    // private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+    //     new SysIdRoutine.Config(
+    //         /* This is in radians per second², but SysId only supports "volts per second" */
+    //         Volts.of(Math.PI / 6).per(Second),
+    //         /* This is in radians per second, but SysId only supports "volts" */
+    //         Volts.of(Math.PI),
+    //         null, // Use default timeout (10 s)
+    //         // Log state with SignalLogger class
+    //         state -> SignalLogger.writeString("SysIdRotation_State", state.toString())
+    //     ),
+    //     new SysIdRoutine.Mechanism(
+    //         output -> {
+    //             /* output is actually radians per second, but SysId only supports "volts" */
+    //             setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
+    //             /* also log the requested output for SysId */
+    //             SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+    //         },
+    //         null,
+    //         this
+    //     )
+    // );
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
@@ -123,17 +123,30 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean intakeComplete = true;
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugXPoint", Pose2d.struct).publish(); 
-        public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
-        .getStructTopic("debugYPoint", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/debugXPoint", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/debugYPoint", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam1Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
-        .getStructTopic("PhotonCam2Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose2d> publisher5 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SelectedPose", Pose2d.struct).publish();
-        public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("Robot Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/SelectedPose", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/Robot Pose", Pose2d.struct).publish(); 
+
+    public final StructPublisher<Pose2d> testPath1Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath1", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath2Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath2", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath3Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath3", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> testPath4Publisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/TestPath4", Pose2d.struct).publish();
+    public final StructPublisher<Pose2d> selectedTestPathPublisher = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/SelectedTestPath", Pose2d.struct).publish(); 
 
         
     /**
@@ -369,7 +382,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setReachedTarget(boolean value) {
         reachedAutoTarget = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("ReachedAutoTarget", reachedAutoTarget);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/ReachedAutoTarget", reachedAutoTarget);
     }
 
     public boolean getReachedTarget() {
@@ -378,7 +391,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setIntakeComplete(boolean value) {
         intakeComplete = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("IntakeComplete", intakeComplete);
+        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/IntakeComplete", intakeComplete);
     }
 
     public boolean getIntakeComplete() {

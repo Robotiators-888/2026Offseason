@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Right Trough - Right Trough Center"
@@ -20,6 +26,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Test",
   "choreoAuto": false
 }

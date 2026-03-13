@@ -30,18 +30,19 @@ public class SUB_Index extends SubsystemBase {
         index = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
         meteringWheel = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
         SparkMaxConfig indexConfig = new SparkMaxConfig();
-        indexConfig.smartCurrentLimit(50);
+        indexConfig.smartCurrentLimit(60);
         indexConfig.inverted(true);
         index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         SparkMaxConfig meteringConfig = new SparkMaxConfig();
-        meteringConfig.smartCurrentLimit(35);
-        meteringConfig.encoder.velocityConversionFactor(1.0 / 3.0);
-        double kP = 0.0001; // Very low to start
+        meteringConfig.smartCurrentLimit(60);
+        double kP = 0.00005; // Super Aggressive P to get metering wheel to speed FAST
         double kI = 0.0;
         double kD = 0.0; 
-        double kFF = 0.0005; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676/3 = 1892. 1 / 1892 = 0.0005
+        double kFF = 0.0021; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676. Since we measure the wheel, not the flywheel reduction: 1/5676 = 0.000176
         meteringConfig.closedLoop.pid(kP, kI, kD);
         meteringConfig.closedLoop.velocityFF(kFF);
+        meteringConfig.encoder.uvwMeasurementPeriod(8); 
+        meteringConfig.encoder.uvwAverageDepth(2);
         meteringWheel.configure(meteringConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         meteringController = meteringWheel.getClosedLoopController();
     }
@@ -62,6 +63,9 @@ public class SUB_Index extends SubsystemBase {
         targetMeteringRPM = -1;
         meteringWheel.set(speed);
     }
+    public void setVolts(double volts) {
+        index.setVoltage(volts);
+    }
     public void setMeteringVolts(double volts) {
         targetMeteringRPM = -1;
         meteringWheel.setVoltage(volts);
@@ -77,8 +81,10 @@ public class SUB_Index extends SubsystemBase {
     }
 
     public void periodic() {
-      SmartDashboard.putNumber("indexRPM", intakeRPM());
-      SmartDashboard.putNumber("meteringRPM", intakeMeteringRPM());
-      SmartDashboard.putNumber("meteringTargetRPM", targetMeteringRPM);
+        SmartDashboard.putNumber("Index/indexRPM", intakeRPM());
+        SmartDashboard.putNumber("Index/meteringRPM", intakeMeteringRPM());
+        SmartDashboard.putNumber("Index/meteringTargetRPM", targetMeteringRPM);
+        SmartDashboard.putNumber("Index/meteringCurrent", meteringWheel.getOutputCurrent());
+
     }
 }

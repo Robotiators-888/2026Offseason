@@ -4,22 +4,24 @@
   "holonomicMode": true,
   "pathFolders": [
     "Center Trough Path",
+    "Climb",
     "Depot",
     "Left Trough Path",
-    "Neuteral zone",
-    "Climb",
+    "Neutral zone",
     "Outpost",
     "Right Trough Path"
   ],
   "autoFolders": [
-    "Left Trough",
-    "PreLoad",
-    "Right Trough"
+    "Fits 20s",
+    "Too Long",
+    "Orbit",
+    "TO FIX",
+    "Test"
   ],
-  "defaultMaxVel": 4.0,
-  "defaultMaxAccel": 2.5,
-  "defaultMaxAngVel": 180.0,
-  "defaultMaxAngAccel": 180.0,
+  "defaultMaxVel": 5.25,
+  "defaultMaxAccel": 4.0,
+  "defaultMaxAngVel": 540.0,
+  "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
   "robotMass": 45.8128,
   "robotMOI": 7.98,

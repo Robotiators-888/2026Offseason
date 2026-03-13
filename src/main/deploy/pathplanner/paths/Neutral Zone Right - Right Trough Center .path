@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.035168674698796,
-        "y": 1.860385542168674
+        "x": 7.260784593437946,
+        "y": 1.5443081312410847
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Right"
@@ -20,8 +20,8 @@
         "y": 0.6588997338065656
       },
       "prevControl": {
-        "x": 6.303012048192771,
-        "y": 1.2484337349397594
+        "x": 6.497403708987161,
+        "y": 0.9361911554921551
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,15 +33,15 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.0,
-    "maxAcceleration": 2.5,
-    "maxAngularVelocity": 180.0,
-    "maxAngularAcceleration": 180.0,
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 180.0
   },
   "reversed": false,

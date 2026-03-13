@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.808745654279202,
-        "y": 7.051932753106071
+        "x": 6.051674698795181,
+        "y": 7.291457831325301
       },
       "isLocked": false,
       "linkedName": "Left Trough Center"
@@ -20,12 +20,12 @@
         "y": 6.839698314105558
       },
       "prevControl": {
-        "x": 6.5159615047039905,
-        "y": 7.964457121522924
+        "x": 7.706867525005073,
+        "y": 7.231966140799964
       },
       "nextControl": {
-        "x": 8.038608257465677,
-        "y": 6.625655588232378
+        "x": 7.86567469879518,
+        "y": 6.526518072289157
       },
       "isLocked": false,
       "linkedName": null
@@ -36,8 +36,8 @@
         "y": 4.25
       },
       "prevControl": {
-        "x": 7.759201659193,
-        "y": 4.609695542417243
+        "x": 7.811036144578313,
+        "y": 4.657879518072289
       },
       "nextControl": null,
       "isLocked": false,
@@ -54,10 +54,10 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.0,
-    "maxAcceleration": 2.5,
-    "maxAngularVelocity": 180.0,
-    "maxAngularAcceleration": 180.0,
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
@@ -68,7 +68,7 @@
   "reversed": false,
   "folder": "Left Trough Path",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true

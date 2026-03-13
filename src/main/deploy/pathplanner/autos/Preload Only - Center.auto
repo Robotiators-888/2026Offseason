@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "DeployIntake"
+            "name": "DeployIntakeEncoder"
           }
         },
         {
@@ -23,28 +23,22 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootDistance"
+                  "name": "ShootAutoAim"
                 }
               },
               {
-                "type": "wait",
+                "type": "named",
                 "data": {
-                  "waitTime": 5.0
+                  "name": "Intake"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShooting"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "PreLoad",
+  "folder": "Fits 20s",
   "choreoAuto": false
 }

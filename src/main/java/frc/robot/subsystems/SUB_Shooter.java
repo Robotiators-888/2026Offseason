@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -9,11 +10,11 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
 
 public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
@@ -38,17 +39,22 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(64), 1241.0);
         // distanceToRPM.put(Units.inchesToMeters(95), 1430.0);
         // distanceToRPM.put(Units.inchesToMeters(129), 1660.0);
-        distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
-        distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
+        // distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
+        // distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
+        // distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
+        distanceToRPM.put(2.49493587092, 1250.0);
+        distanceToRPM.put(3.03308176613, 1375.0);
+        distanceToRPM.put(1.6346195276, 1075.0);
+        distanceToRPM.put(4.10526503, 1575.0);
+        distanceToRPM.put(5.34766117, 1750.0);
+        distanceToRPM.put(10.5, 2400.0); //TODO:  VERY TEMPORARY< NEEDS  OTBE TESTED IRL
         configFlywheel();
     }
 
     private void configFlywheel() {
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 40; 
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 70; 
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 2; 
-        shooterConfig.OpenLoopRamps.VoltageOpenLoopRampPeriod = 2;
         shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
@@ -84,7 +90,7 @@ public class SUB_Shooter extends SubsystemBase {
     public void shootMeters(double meters) {
         // query the map for the RPM associated with this distance
         double targetRPM = distanceToRPM.get(meters);
-        
+
         // Pass it to your existing setRPM method
         setRPM(targetRPM);
     }
@@ -103,8 +109,26 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public void periodic() {
-      SmartDashboard.putNumber("FlywheelRPM", flywheelRPM());
-      SmartDashboard.putNumber("Desired RPM", desiredSpeed);
-      SmartDashboard.putNumber("Top Motor Amperage", getCurrentDrawTop());
+      SmartDashboard.putNumber("Shooter/FlywheelRPM", flywheelRPM());
+      SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
+      SmartDashboard.putNumber("Shooter/Top Motor Amperage", getCurrentDrawTop());
+    }
+    public double getExpectedTOF(double distanceMeters) {
+        double targetRPM = distanceToRPM.get(distanceMeters);
+        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
+        double averageHorizontalVelocity = targetRPM * 0.00434;
+        if (averageHorizontalVelocity <= 0.0) {
+            return 0.0;
+        }
+        return distanceMeters / averageHorizontalVelocity;
+    }
+    public static double getExpectedTOFStatic(double distanceMeters) {
+        double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
+        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
+        double averageHorizontalVelocity = targetRPM * 0.00434;
+        if (averageHorizontalVelocity <= 0.0) {
+            return 0.0;
+        }
+        return distanceMeters / averageHorizontalVelocity;
     }
 }

@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Vertical Distance Test"
@@ -14,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Test",
   "choreoAuto": false
 }

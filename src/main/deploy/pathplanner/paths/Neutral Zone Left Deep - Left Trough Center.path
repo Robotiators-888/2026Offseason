@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.922126310889673,
-        "y": 4.008932753106071
+        "x": 7.95947218259629,
+        "y": 5.128316690442225
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Left Deep"
@@ -20,8 +20,8 @@
         "y": 7.293
       },
       "prevControl": {
-        "x": 5.6458210025825295,
-        "y": 7.652695542417243
+        "x": 6.600912981455064,
+        "y": 7.483152639087019
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,15 +33,15 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.0,
-    "maxAcceleration": 2.5,
-    "maxAngularVelocity": 180.0,
-    "maxAngularAcceleration": 180.0,
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 180.0
   },
   "reversed": false,

@@ -26,19 +26,20 @@ public final class Constants {
         // Back motors are negative is forward
 
         public static class Operator {
+                // Defines the Controller Ports for Driver1 and 2
                 public static final int kDriver1ControllerPort = 0;
                 public static final int kDriver2ControllerPort = 1;
-                public static final double kDriveDeadband = 0.05;
+                public static final double kDriveDeadband = 0.1;
         }
 
         public static final class Shooter {
                 public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 44;
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
-                public static final double kSHOOTER_FLYWHEEL_RPM = 500;
+                public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.127; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.145; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 2; //TODO: After testing SVA, test PID, default is 4.8
+                public static final double kSHOOTER_FLYWHEEL_kP = 0.3; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
@@ -47,7 +48,8 @@ public final class Constants {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kINTAKE_MOTOR_SPEED = 0.8;
+                public static final double kINTAKE_MOTOR_SPEED = 0.9;
+                public static final double kINTAKE_MOTOR_VOLTAGE = 14.0;
                 public static final double kINTAKE_ARM_MOTOR_SPEED = 0.1;
                 public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -209;
                 public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
@@ -57,8 +59,10 @@ public final class Constants {
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kINDEX_MOTOR_SPEED = 0.45;
-                public static final double kINDEX_METERING_MOTOR_SPEED = 0.9;
+                public static final double kINDEX_MOTOR_VOLTS = 5;
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0;
+                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); // Max RPM of NEO at 12V is 5676
+                
         }
 
         public static final class Climber {
@@ -72,8 +76,6 @@ public final class Constants {
                 // Gear ratio: 36:1
                 // 4.75 in per rotation
                 // Clockwise positive motor
-                // public static final double kCLIMBER_PIVOT_SPEED = 0.1;
-                // public static final double kCLIMBER_PIVOT_TOLERANCE = 5.0;
         }
 
         public static final class Field {
@@ -104,12 +106,12 @@ public final class Constants {
                                 Units.inchesToMeters(7.8), cameraRotation2);
 
 
-                // public static final String kCam3Name = "AprilTagHighCam";
-                // public static final Rotation3d cameraRotation3 = new Rotation3d(0,
-                //                  Units.degreesToRadians(0), Units.degreesToRadians(8));
-                // public static final Transform3d kRobotToCamera3 = new Transform3d(
-                //                  Units.inchesToMeters(-7+3.25), Units.inchesToMeters(-10),
-                //                  Units.inchesToMeters(23.5), cameraRotation);
+                public static final String kCam3Name = "HighCam";
+                public static final Rotation3d cameraRotation3 = new Rotation3d(Units.degreesToRadians(-7),
+                                 Units.degreesToRadians(0), Units.degreesToRadians(0));
+                public static final Transform3d kRobotToCamera3 = new Transform3d(
+                                 Units.inchesToMeters(0), Units.inchesToMeters(-13.75+10),
+                                 Units.inchesToMeters(20.5), cameraRotation3);
         }
 
         

@@ -44,7 +44,7 @@
 
 
 //     public void periodic() {
-//         SmartDashboard.putNumber("ClimberArmPositionInches", climberMotor.getEncoder().getPosition()*Constants.Climber.kCLIMBER_CONVERSION);
+//         SmartDashboard.putNumber("Climber/ClimberArmPositionInches", climberMotor.getEncoder().getPosition()*Constants.Climber.kCLIMBER_CONVERSION);
 //     }
 
 

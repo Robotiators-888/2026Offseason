@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.904493975903614,
+        "y": 0.9970963855421688
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.9688730385164046,
+        "y": 0.832681883024252
+      },
+      "isLocked": false,
+      "linkedName": "Shoot Trough Right"
+    },
+    {
+      "anchor": {
+        "x": 0.75,
+        "y": 0.66
+      },
+      "prevControl": {
+        "x": 1.5548359486447931,
+        "y": 0.7809272467902997
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Outpost"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": "Right Trough Path",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 67.0
+  },
+  "useDefaultConstraints": true
+}
