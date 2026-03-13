@@ -27,7 +27,6 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -56,10 +55,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
-
-
-
-
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
@@ -104,17 +99,17 @@ public class RobotContainer {
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
 
+        // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
         private PathPlannerPath pathRightToNeutral;
         private PathPlannerPath pathNeutralToRight;
         private boolean fieldRelative = true; 
 
-        // Replace with CommandPS4Controller or CommandJoystick if needed
+        // xBox Controllers for driver input
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
-
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
-
+        // Driving Swerve Requests
         private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
             .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
             .withDriveRequestType(DriveRequestType.Velocity); 
