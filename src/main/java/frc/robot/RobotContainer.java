@@ -103,9 +103,6 @@ public class RobotContainer {
         public int listIndex = 0;
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
-        // private final StructArrayPublisher<Pose3d> fuelPublisher = NetworkTableInstance.getDefault()
-        // .getStructArrayTopic("SmartDashboard/Vision/DetectedFuel", Pose3d.struct)
-        // .publish();
 
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -139,18 +136,17 @@ public class RobotContainer {
                 }
 
                 drivetrain.setDefaultCommand(            
-                        (fieldRelative) ? 
-                        drivetrain.applyRequest(() ->
-                                drive.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                                .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                                .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                        )
-                        :
-                        drivetrain.applyRequest(() ->
-                                driveRobot.withVelocityX(-Driver1.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                                .withVelocityY(-Driver1.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                                .withRotationalRate(-Driver1.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-                        )
+                        drivetrain.applyRequest(() -> {
+                                if (fieldRelative) {
+                                        return drive.withVelocityX(-Driver1.getLeftY()*MaxSpeed)
+                                                .withVelocityY(-Driver1.getLeftX()*MaxSpeed)
+                                                .withRotationalRate(-Driver1.getRightX()*MaxAngularRate);
+                                } else {
+                                        return driveRobot.withVelocityX(-Driver1.getLeftY()*MaxSpeed)
+                                                .withVelocityY(-Driver1.getLeftX()*MaxSpeed)
+                                                .withRotationalRate(-Driver1.getRightX()*MaxAngularRate);
+                                }
+                        })
                 );
 
                 intake.setDefaultCommand(new InstantCommand(() -> {
@@ -360,7 +356,6 @@ public class RobotContainer {
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-                // fuelPublisher.set(photonVision.getFieldFuelPoses(drivetrain.getPose()).toArray(new Pose3d[0]));
 
                 Pose2d currentPose = drivetrain.getPose();
                 
