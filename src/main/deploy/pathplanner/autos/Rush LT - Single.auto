@@ -1,0 +1,94 @@
+{
+    "version": "2025.0",
+    "command": {
+        "type": "sequential",
+        "data": {
+            "commands": [
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "DeployIntakeEncoder"
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Left Trough - Left Trough Center"
+                    }
+                },
+                {
+                    "type": "race",
+                    "data": {
+                        "commands": [
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "Intake"
+                                }
+                            },
+                            {
+                                "type": "sequential",
+                                "data": {
+                                    "commands": [
+                                        {
+                                            "type": "path",
+                                            "data": {
+                                                "pathName": "Left Trough Center - Neutral Zone Left"
+                                            }
+                                        },
+                                        {
+                                            "type": "path",
+                                            "data": {
+                                                "pathName": "Neutral Zone Left - Left Trough Center"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "StopIntake"
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Left Trough Center - Left Trough"
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Trough Left - Left Far Shoot"
+                    }
+                },
+                {
+                    "type": "race",
+                    "data": {
+                        "commands": [
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "ShootAutoAim"
+                                }
+                            },
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "Intake"
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "resetOdom": true,
+    "folder": "Fits 20s",
+    "choreoAuto": false
+}

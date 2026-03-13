@@ -1,62 +1,44 @@
 {
-  "version": "2025.0",
-  "command": {
-    "type": "sequential",
-    "data": {
-      "commands": [
-        {
-          "type": "named",
-          "data": {
-            "name": "DeployIntakeEncoder"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Center Trough - Shoot"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
+    "version": "2025.0",
+    "command": {
+        "type": "sequential",
+        "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "ShootDistance"
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "DeployIntakeEncoder"
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Center Trough - Shoot"
+                    }
+                },
+                {
+                    "type": "race",
+                    "data": {
+                        "commands": [
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "ShootAutoAim"
+                                }
+                            },
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "Intake"
+                                }
+                            }
+                        ]
+                    }
                 }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 5.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
         }
-      ]
-    }
-  },
-  "resetOdom": true,
-  "folder": "PreLoad",
-  "choreoAuto": false
+    },
+    "resetOdom": true,
+    "folder": "Fits 20s",
+    "choreoAuto": false
 }

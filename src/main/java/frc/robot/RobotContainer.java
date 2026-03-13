@@ -317,7 +317,7 @@ public class RobotContainer {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
-                }, intake, index, shooter));
+                }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->intake.intakeArmDown(),intake));
                 Driver2.povUp().onTrue(Commands.run(()->intake.intakeArmUp(),intake));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {

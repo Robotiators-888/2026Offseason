@@ -141,7 +141,7 @@ public class SUB_PhotonVision extends SubsystemBase {
       Alert.registerError("PhotonVision Camera 2 Disconnected");
     }
     if (!cam3.isConnected()) {
-      Alert.registerError("PhotonVision Camera 2 Disconnected");
+      Alert.registerError("PhotonVision Camera 3 Disconnected");
     }
   }
 }

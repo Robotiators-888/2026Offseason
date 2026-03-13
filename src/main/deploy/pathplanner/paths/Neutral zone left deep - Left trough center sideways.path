@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.78,
+        "y": 4.3
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.183152639087017,
+        "y": 5.949329529243937
+      },
+      "isLocked": false,
+      "linkedName": "Neutral Zone Left Deep"
+    },
+    {
+      "anchor": {
+        "x": 5.614566265060241,
+        "y": 7.5883614457831323
+      },
+      "prevControl": {
+        "x": 6.342139800285306,
+        "y": 7.68310984308131313
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Left Trough Center Sideways"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 2.0,
+    "rotation": -90.0
+  },
+  "reversed": false,
+  "folder": "Left Trough Path",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -90.0
+  },
+  "useDefaultConstraints": true
+}

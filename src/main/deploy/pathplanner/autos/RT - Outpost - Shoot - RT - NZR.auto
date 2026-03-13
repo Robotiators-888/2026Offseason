@@ -1,0 +1,118 @@
+{
+    "version": "2025.0",
+    "command": {
+        "type": "sequential",
+        "data": {
+            "commands": [
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "DeployIntakeEncoder"
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Right Trough - Outpost"
+                    }
+                },
+                {
+                    "type": "wait",
+                    "data": {
+                        "waitTime": 3.0
+                    }
+                },
+                {
+                    "type": "path",
+                    "data": {
+                        "pathName": "Outpost - Shoot"
+                    }
+                },
+                {
+                    "type": "race",
+                    "data": {
+                        "commands": [
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "ShootAutoAim"
+                                }
+                            },
+                            {
+                                "type": "wait",
+                                "data": {
+                                    "waitTime": 5.0
+                                }
+                            },
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "Intake"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "StopIntake"
+                    }
+                },
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "StopShooting"
+                    }
+                },
+                {
+                    "type": "race",
+                    "data": {
+                        "commands": [
+                            {
+                                "type": "sequential",
+                                "data": {
+                                    "commands": [
+                                        {
+                                            "type": "path",
+                                            "data": {
+                                                "pathName": "Shoot - Right Trough"
+                                            }
+                                        },
+                                        {
+                                            "type": "path",
+                                            "data": {
+                                                "pathName": "Right Trough - Right Trough Center"
+                                            }
+                                        },
+                                        {
+                                            "type": "path",
+                                            "data": {
+                                                "pathName": "Right Trough Center - Neutral Zone Right"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "named",
+                                "data": {
+                                    "name": "Intake"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "type": "named",
+                    "data": {
+                        "name": "StopIntake"
+                    }
+                }
+            ]
+        }
+    },
+    "resetOdom": true,
+    "folder": "Fits 20s",
+    "choreoAuto": false
+}

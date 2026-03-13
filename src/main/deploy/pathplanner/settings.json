@@ -12,18 +12,16 @@
     "Right Trough Path"
   ],
   "autoFolders": [
-    "Left Trough",
+    "Fits 20s",
+    "Too Long",
     "Orbit",
-    "No - Comp - Left",
-    "No Comp - Right",
-    "No Comp - Right - Too Slow",
-    "PreLoad",
-    "Right Trough"
+    "TO FIX",
+    "Test"
   ],
   "defaultMaxVel": 5.25,
   "defaultMaxAccel": 4.0,
-  "defaultMaxAngVel": 720.0,
-  "defaultMaxAngAccel": 1000.0,
+  "defaultMaxAngVel": 540.0,
+  "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
   "robotMass": 45.8128,
   "robotMOI": 7.98,
