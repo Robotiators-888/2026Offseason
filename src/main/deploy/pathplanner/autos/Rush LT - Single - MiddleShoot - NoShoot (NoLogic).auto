@@ -1,61 +1,61 @@
 {
-    "version": "2025.0",
-    "command": {
-        "type": "sequential",
-        "data": {
-            "commands": [
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "DeployIntakeEncoder"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Left Trough - Left Trough Center"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Left Trough Center - Neutral Zone Left"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Neutral Zone Left - Left Trough Center"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Left Trough Center - Left Trough"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Left Trough - Shoot"
-                    }
-                },
-                {
-                    "type": "wait",
-                    "data": {
-                        "waitTime": 5.0
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Shoot - Left Trough"
-                    }
-                }
-            ]
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough - Left Trough Center"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough Center - Neutral Zone Left"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Neutral Zone Left - Left Trough Center"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough Center - Left Trough"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Trough - Shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Shoot - Left Trough"
+          }
         }
-    },
-    "resetOdom": true,
-    "folder": "TO FIX",
-    "choreoAuto": false
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "TO FIX",
+  "choreoAuto": false
 }

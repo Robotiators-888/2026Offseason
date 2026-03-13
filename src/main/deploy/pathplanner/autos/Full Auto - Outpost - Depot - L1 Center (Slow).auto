@@ -1,106 +1,106 @@
 {
-    "version": "2025.0",
-    "command": {
-        "type": "sequential",
-        "data": {
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Center Trough - Outpost"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost - Shoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
             "commands": [
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "DeployIntakeEncoder"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Center Trough - Outpost"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Outpost - Shoot"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "ShootAutoAim"
-                                }
-                            },
-                            {
-                                "type": "wait",
-                                "data": {
-                                    "waitTime": 5.0
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopShooting"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "path",
-                                "data": {
-                                    "pathName": "Shoot - Depot Start"
-                                }
-                            },
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "Intake"
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Depot Start - Depot End"
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopIntake"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Depot End - Shoot"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "ShootAutoAim"
-                                }
-                            }
-                        ]
-                    }
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
                 }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Shoot - Depot Start"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot Start - Depot End"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot End - Shoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              }
+            ]
+          }
         }
-    },
-    "resetOdom": true,
-    "folder": "TO FIX",
-    "choreoAuto": false
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "TO FIX",
+  "choreoAuto": false
 }

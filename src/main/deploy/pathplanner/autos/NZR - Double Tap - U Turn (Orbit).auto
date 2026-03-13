@@ -1,175 +1,175 @@
 {
-    "version": "2025.0",
-    "command": {
-        "type": "sequential",
-        "data": {
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
             "commands": [
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "DeployIntakeEncoder"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "Intake"
-                                }
-                            },
-                            {
-                                "type": "sequential",
-                                "data": {
-                                    "commands": [
-                                        {
-                                            "type": "path",
-                                            "data": {
-                                                "pathName": "Right Trough - Right Trough Center"
-                                            }
-                                        },
-                                        {
-                                            "type": "path",
-                                            "data": {
-                                                "pathName": "Right Trough Center - Neutral Zone Right Deep"
-                                            }
-                                        },
-                                        {
-                                            "type": "path",
-                                            "data": {
-                                                "pathName": "Neutral zone right deep - Right trough center sideways"
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopIntake"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Right Trough Center Sideways - Right Trough Sideways"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "Intake"
-                                }
-                            },
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "ShootAutoAim"
-                                }
-                            },
-                            {
-                                "type": "wait",
-                                "data": {
-                                    "waitTime": 4.5
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopIntake"
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopShooting"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Right Trough Sideways - Right Trough Center Sideways"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "Intake"
-                                }
-                            },
-                            {
-                                "type": "sequential",
-                                "data": {
-                                    "commands": [
-                                        {
-                                            "type": "path",
-                                            "data": {
-                                                "pathName": "Right Trough Center Sideways - Neutral Zone Right Deep Orbit"
-                                            }
-                                        },
-                                        {
-                                            "type": "path",
-                                            "data": {
-                                                "pathName": "Neutral Zone Right Deep Orbit - Right Trough Center Sideways"
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                },
-                {
-                    "type": "named",
-                    "data": {
-                        "name": "StopIntake"
-                    }
-                },
-                {
-                    "type": "path",
-                    "data": {
-                        "pathName": "Right Trough Center Sideways - Right Trough Sideways"
-                    }
-                },
-                {
-                    "type": "race",
-                    "data": {
-                        "commands": [
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "Intake"
-                                }
-                            },
-                            {
-                                "type": "named",
-                                "data": {
-                                    "name": "ShootAutoAim"
-                                }
-                            }
-                        ]
-                    }
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
                 }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough - Right Trough Center"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough Center - Neutral Zone Right Deep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral zone right deep - Right trough center sideways"
+                      }
+                    }
+                  ]
+                }
+              }
             ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Trough Center Sideways - Right Trough Sideways"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 4.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Trough Sideways - Right Trough Center Sideways"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough Center Sideways - Neutral Zone Right Deep Orbit"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Right Deep Orbit - Right Trough Center Sideways"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Right Trough Center Sideways - Right Trough Sideways"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              }
+            ]
+          }
         }
-    },
-    "resetOdom": true,
-    "folder": "Orbit",
-    "choreoAuto": false
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Orbit",
+  "choreoAuto": false
 }
