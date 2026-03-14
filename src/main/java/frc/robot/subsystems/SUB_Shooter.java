@@ -44,7 +44,7 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
         distanceToRPM.put(2.49493587092, 1250.0);
         distanceToRPM.put(3.03308176613, 1375.0+15);
-        distanceToRPM.put(1.6346195276, 1075.0);
+        distanceToRPM.put(1.6346195276, 1075.0-25);
         distanceToRPM.put(4.10526503, 1575.0+25);
         distanceToRPM.put(5.34766117, 1750.0+40);
         distanceToRPM.put(10.5, 2400.0); //TODO:  VERY TEMPORARY< NEEDS  OTBE TESTED IRL
