@@ -176,7 +176,9 @@ public class RobotContainer {
                 // Intake
 
                 NamedCommands.registerCommand("Intake",
-                        new RunCommand(() -> intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE),intake)
+                        new RunCommand(() -> 
+                                intake.intakeArmAndRollers()
+                        ,intake)
                 );
 
 

@@ -146,4 +146,12 @@ public class SUB_Intake extends SubsystemBase {
     public boolean isArmUpReached() {
         return Math.abs(arm.getEncoder().getPosition() - Constants.Intake.kINTAKE_ARM_TOP_SETPOINT) < 3.0;
     }
+
+    public void intakeArmAndRollers() {
+        setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
+        if (!(isArmDownReached() || isForwardPressed())) {
+            intakeArmDown();
+        }
+        
+    }
 }
