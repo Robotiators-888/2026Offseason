@@ -95,6 +95,10 @@ public class SUB_Shooter extends SubsystemBase {
         setRPM(targetRPM);
     }
 
+    public double getDistanceRPM (double meters) {
+        return distanceToRPM.get(meters);
+    }
+
     public void stop() {
         this.desiredSpeed = 0;
         topFlywheel.setControl(voltageRequest.withOutput(0));
