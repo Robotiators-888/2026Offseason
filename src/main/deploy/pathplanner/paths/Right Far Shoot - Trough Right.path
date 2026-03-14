@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1033392857142856,
-        "y": 0.7147321428571434
+        "x": 3.117762072882158,
+        "y": 0.8666482394796418
       },
       "isLocked": false,
       "linkedName": "Shoot Trough Right"
@@ -20,8 +20,8 @@
         "y": 0.66
       },
       "prevControl": {
-        "x": 3.0223571428571425,
-        "y": 0.6013571428571425
+        "x": 3.0699043695457657,
+        "y": 0.5118758296270982
       },
       "nextControl": null,
       "isLocked": false,

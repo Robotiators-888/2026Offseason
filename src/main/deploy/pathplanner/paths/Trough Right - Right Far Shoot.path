@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2815,
-        "y": 0.7633214285714292
+        "x": 3.4897071635930375,
+        "y": 0.7881599470146113
       },
       "isLocked": false,
       "linkedName": "Right Trough Forward"
@@ -20,8 +20,8 @@
         "y": 0.9970963855421688
       },
       "prevControl": {
-        "x": 2.8441964285714283,
-        "y": 0.504178571428572
+        "x": 2.8721660194415626,
+        "y": 0.7491953907257145
       },
       "nextControl": null,
       "isLocked": false,
