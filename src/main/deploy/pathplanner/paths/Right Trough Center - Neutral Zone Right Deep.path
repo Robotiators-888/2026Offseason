@@ -47,7 +47,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1.1184257602862262,
-      "rotationDegrees": 90.80692945510242
+      "rotationDegrees": 95.0
     }
   ],
   "constraintZones": [],
@@ -62,8 +62,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 90.0
+    "velocity": 0.0,
+    "rotation": 95.0
   },
   "reversed": false,
   "folder": "Right Trough Path",

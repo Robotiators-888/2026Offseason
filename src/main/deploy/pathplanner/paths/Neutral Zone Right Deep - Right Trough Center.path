@@ -48,7 +48,7 @@
   "folder": "Right Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 95.0
   },
   "useDefaultConstraints": true
 }
