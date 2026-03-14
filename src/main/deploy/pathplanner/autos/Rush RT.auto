@@ -27,15 +27,22 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Right Trough Center - Neutral Zone Right"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Neutral Zone Right - Right Trough Center "
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough Center - Neutral Zone Right"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Right - Right Trough Center "
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -119,15 +126,22 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "Right Trough Center - Neutral Zone Right Deep"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Neutral Zone Right Deep - Right Trough Center"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Right Trough Center - Neutral Zone Right Deep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Neutral Zone Right Deep - Right Trough Center"
+                      }
+                    }
+                  ]
                 }
               }
             ]
