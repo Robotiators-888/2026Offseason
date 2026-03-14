@@ -59,6 +59,7 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
+import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
@@ -195,13 +196,11 @@ public class RobotContainer {
                 ));
 
                 NamedCommands.registerCommand("ShootAutoAim", 
-                        new CMD_AimBot(
+                        new CMD_AimBotAuto(
                                 drivetrain, 
                                 photonVision, 
                                 shooter, 
-                                index,
-                                () -> -(Driver1.getLeftY()),
-                                () -> -(Driver1.getLeftX()) 
+                                index
                         )
                 );
 

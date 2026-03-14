@@ -7,8 +7,6 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Optional;
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,7 +21,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
-import frc.robot.Constants.Operator;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
@@ -32,16 +29,13 @@ import frc.robot.subsystems.SUB_Shooter;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-public class CMD_AimBot extends RunCommand {
+public class CMD_AimBotAuto extends RunCommand {
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Pose2d targetPose = new Pose2d();
-  private final DoubleSupplier translationXSupplier;
-  private final DoubleSupplier translationYSupplier;
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
-  private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
   
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
@@ -54,20 +48,16 @@ public class CMD_AimBot extends RunCommand {
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
-    this.translationXSupplier = translationXSupplier;
-    this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
     addRequirements(drivetrain, shooter, index);
@@ -90,7 +80,6 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
-    isLocked = false;
     running = true;
   }
 
@@ -102,12 +91,12 @@ public class CMD_AimBot extends RunCommand {
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
-
     // 2. Calculate the angle directly from the SHOOTER to the target
     Rotation2d targetRotation = new Rotation2d(
         targetTranslation.getX() - shooterFieldPosition.getX(),
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
+    drivetrain.publisher2.set(new Pose2d(shooterFieldPosition,targetRotation));
     // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
@@ -121,7 +110,7 @@ public class CMD_AimBot extends RunCommand {
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
     double distance = drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
@@ -137,24 +126,13 @@ public class CMD_AimBot extends RunCommand {
     if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     }
-    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
-    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);
+    
 
-    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
-      isLocked = true;
-    }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
-      isLocked = false;
-    }
-
-    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
-        drivetrain.setControl(brakeRequest);
-    } else {
-        drivetrain.setControl(
-          drive.withVelocityX(xInput * MaxSpeed)
-          .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
-    }
+    
+    drivetrain.setControl(
+      drive.withVelocityX(0)
+      .withVelocityY(0)
+      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
   }
 
   @Override
