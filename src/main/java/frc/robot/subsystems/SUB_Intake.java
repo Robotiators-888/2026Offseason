@@ -24,6 +24,7 @@ public class SUB_Intake extends SubsystemBase {
     private boolean stickDown = false;
     private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
+    private boolean intakeArmAndRollersUntil = false;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Intake();
@@ -149,9 +150,12 @@ public class SUB_Intake extends SubsystemBase {
 
     public void intakeArmAndRollers() {
         setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
-        if (!(isArmDownReached() || isForwardPressed())) {
-            intakeArmDown();
+        if (!isArmDownReached() && !intakeArmAndRollersUntil) {
+            // intakeArmDown();
+            setArm(-.50);
+        } else {
+            setArm(-.1);
+            intakeArmAndRollersUntil = true;
         }
-        
     }
 }
