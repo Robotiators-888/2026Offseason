@@ -51,7 +51,7 @@ public class SUB_Index extends SubsystemBase {
         index.set(speed);
     }
     
-    public double intakeRPM(){
+    public double indexRPM(){
         return index.getEncoder().getVelocity();
     }
     
@@ -81,10 +81,10 @@ public class SUB_Index extends SubsystemBase {
     }
 
     public void periodic() {
-        SmartDashboard.putNumber("Index/indexRPM", intakeRPM());
-        SmartDashboard.putNumber("Index/meteringRPM", intakeMeteringRPM());
-        SmartDashboard.putNumber("Index/meteringTargetRPM", targetMeteringRPM);
-        SmartDashboard.putNumber("Index/meteringCurrent", meteringWheel.getOutputCurrent());
-
+        SmartDashboard.putNumber("Index/IndexRPM", indexRPM());
+        SmartDashboard.putNumber("Index/IndexCurrent", index.getOutputCurrent());
+        SmartDashboard.putNumber("Index/MeteringRPM", intakeMeteringRPM());
+        SmartDashboard.putNumber("Index/MeteringTargetRPM", targetMeteringRPM);
+        SmartDashboard.putNumber("Index/MeteringCurrent", meteringWheel.getOutputCurrent());
     }
 }

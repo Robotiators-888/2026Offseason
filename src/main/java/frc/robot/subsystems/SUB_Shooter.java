@@ -78,7 +78,7 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     public double flywheelRPM() {
-        return topFlywheel.getVelocity().getValue().in(RPM);
+        return (topFlywheel.getVelocity().getValue().in(RPM) + bottomFlywheel.getVelocity().getValue().in(RPM)) / 2;
     }
   
     public boolean atDesiredRPM() {
@@ -108,10 +108,17 @@ public class SUB_Shooter extends SubsystemBase {
         return topFlywheel.getStatorCurrent().getValueAsDouble();
     }
 
+    public double getCurrentDrawBottom () {
+        return bottomFlywheel.getStatorCurrent().getValueAsDouble();
+    }
+
     public void periodic() {
-      SmartDashboard.putNumber("Shooter/FlywheelRPM", flywheelRPM());
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM));
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
       SmartDashboard.putNumber("Shooter/Top Motor Amperage", getCurrentDrawTop());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Amperage", getCurrentDrawBottom());
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", getCurrentDrawBottom());
     }
     public double getExpectedTOF(double distanceMeters) {
         double targetRPM = distanceToRPM.get(distanceMeters);

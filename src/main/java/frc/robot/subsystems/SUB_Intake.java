@@ -76,7 +76,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     public void periodic() {
-        SmartDashboard.putNumber("Intake/intakeRPM", intakeRPM());
+        SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM());
         SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
         SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition());
