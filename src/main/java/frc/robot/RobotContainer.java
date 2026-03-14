@@ -34,6 +34,8 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NTSendableBuilder;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
@@ -99,6 +101,7 @@ public class RobotContainer {
         public int listIndex = 0;
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
+        Field2d field;
 
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
@@ -124,6 +127,7 @@ public class RobotContainer {
          * The container for the robot. Contains subsystems, OI devices, and commands.
          */
         public RobotContainer() {
+                field = new Field2d();
                 try {
                         pathLeftToNeutral = PathPlannerPath.fromPathFile("Left Trough - Left Trough Center");
                         pathNeutralToLeft = PathPlannerPath.fromPathFile("Left Trough Center - Left Trough");
@@ -355,6 +359,8 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
+                field.setRobotPose(drivetrain.getPose());
+                SmartDashboard.putData("Drivetrain/Field", field);
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
