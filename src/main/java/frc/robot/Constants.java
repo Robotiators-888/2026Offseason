@@ -108,7 +108,7 @@ public final class Constants {
 
                 public static final String kCam3Name = "HighCam";
                 public static final Rotation3d cameraRotation3 = new Rotation3d(Units.degreesToRadians(1),
-                                 Units.degreesToRadians(-2), Units.degreesToRadians(-8));
+                                 Units.degreesToRadians(-2), Units.degreesToRadians(-3));
                 public static final Transform3d kRobotToCamera3 = new Transform3d(
                                  Units.inchesToMeters(0), Units.inchesToMeters(-13.75+10),
                                  Units.inchesToMeters(20.5), cameraRotation3);

@@ -143,7 +143,7 @@ public class CMD_AimBot extends RunCommand {
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
       isLocked = true;
     }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
+    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(2)) {
       isLocked = false;
     }
 
