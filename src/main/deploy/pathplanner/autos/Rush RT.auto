@@ -31,6 +31,12 @@
                 "data": {
                   "pathName": "Right Trough Center - Neutral Zone Right"
                 }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Neutral Zone Right - Right Trough Center "
+                }
               }
             ]
           }
@@ -39,12 +45,6 @@
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Neutral Zone Right - Right Trough Center "
           }
         },
         {
@@ -123,6 +123,12 @@
                 "data": {
                   "pathName": "Right Trough Center - Neutral Zone Right Deep"
                 }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Neutral Zone Right Deep - Right Trough Center"
+                }
               }
             ]
           }
@@ -131,12 +137,6 @@
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Neutral Zone Right Deep - Right Trough Center"
           }
         },
         {
