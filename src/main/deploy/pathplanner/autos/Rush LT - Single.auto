@@ -33,13 +33,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Left Trough Center - Neutral Zone Left"
+                        "pathName": "Left Trough Center - Neutral Zone Left Deep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Neutral Zone Left - Left Trough Center"
+                        "pathName": "Neutral Zone Left Deep - Left Trough Center"
                       }
                     }
                   ]
