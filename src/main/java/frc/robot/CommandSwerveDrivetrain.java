@@ -314,8 +314,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
-        // Need to know how to log current
-        // SmartDashboard.putNumber("Drivetrain/Drivetrain Current", getModule(0).getCurrentState());
     }
 
     private void startSimThread() {

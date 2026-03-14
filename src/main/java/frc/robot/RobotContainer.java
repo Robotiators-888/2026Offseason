@@ -402,7 +402,16 @@ public class RobotContainer {
 
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
+                logDrivetrain();
+        }
 
+        public void logDrivetrain () {
+                for (int i = 0; i < drivetrain.getModules().length; i++) {
+                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " Current", drivetrain.getModule(i).getDriveMotor().getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Current", drivetrain.getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " Voltage", drivetrain.getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
+                }
         }
 
         public void autonomousInit() {
