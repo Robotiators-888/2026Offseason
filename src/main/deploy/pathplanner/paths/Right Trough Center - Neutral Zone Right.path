@@ -46,7 +46,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1,
+      "waypointRelativePos": 1.0,
       "rotationDegrees": 90.80692945510242
     }
   ],
@@ -68,7 +68,7 @@
   "reversed": false,
   "folder": "Right Trough Path",
   "idealStartingState": {
-    "velocity": 2.0,
+    "velocity": 3.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true

@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.349853240388043,
-        "y": 6.33987686490639
+        "x": 3.042781740370898,
+        "y": 6.4092439372325245
       },
       "isLocked": false,
       "linkedName": "Shoot Trough Left"
@@ -20,8 +20,8 @@
         "y": 7.293254504504505
       },
       "prevControl": {
-        "x": 2.795205049694945,
-        "y": 6.448427826969003
+        "x": 3.029843081312411,
+        "y": 7.094992867332382
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 2.0,
     "rotation": 180.0
   },
   "reversed": false,

@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.9313093207990173,
-        "y": 6.536221035864446
+        "x": 3.042781740370898,
+        "y": 7.0820542082738935
       },
       "isLocked": false,
       "linkedName": "Left Trough Forward"
@@ -20,8 +20,8 @@
         "y": 5.814065620542083
       },
       "prevControl": {
-        "x": 3.5161754643673166,
-        "y": 6.45809715685575
+        "x": 3.107475035663337,
+        "y": 6.525691868758916
       },
       "nextControl": null,
       "isLocked": false,
@@ -47,7 +47,7 @@
   "reversed": false,
   "folder": "Left Trough Path",
   "idealStartingState": {
-    "velocity": 1.0,
+    "velocity": 2.0,
     "rotation": 180.0
   },
   "useDefaultConstraints": true
