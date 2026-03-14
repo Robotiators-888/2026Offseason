@@ -50,6 +50,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
@@ -104,7 +105,9 @@ public class RobotContainer {
         private PathPlannerPath pathNeutralToLeft;
         private PathPlannerPath pathRightToNeutral;
         private PathPlannerPath pathNeutralToRight;
-        private boolean fieldRelative = true; 
+        private boolean fieldRelative = true;
+        private Command trenchAlign = Commands.none();
+        private boolean trenchAligning = false;
 
         // xBox Controllers for driver input
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -250,6 +253,7 @@ public class RobotContainer {
                 // DRIVER 1
                 // =========================================================
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
+                        trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
                         
                         Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
@@ -276,11 +280,14 @@ public class RobotContainer {
                         try {
                                 PathConstraints constraints = new PathConstraints(4.0, 4.0,
                                                 Units.degreesToRadians(360), Units.degreesToRadians(540));
-                                AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).schedule();
+                                trenchAlign = AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).until(()->{
+                                        return !trenchAligning;
+                                });
+                                trenchAlign.schedule();
                         } catch (Exception e) {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
-                }));
+                })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
                 }, intake));
