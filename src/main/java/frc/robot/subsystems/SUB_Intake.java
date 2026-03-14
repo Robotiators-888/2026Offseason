@@ -154,7 +154,7 @@ public class SUB_Intake extends SubsystemBase {
             // intakeArmDown();
             setArm(-.50);
         } else {
-            setArm(-.1);
+            arm.set(-.1);
             intakeArmAndRollersUntil = true;
         }
     }
