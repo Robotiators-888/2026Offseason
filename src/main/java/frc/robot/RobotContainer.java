@@ -407,12 +407,12 @@ public class RobotContainer {
 
         public void logDrivetrain () {
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
-                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " Current", drivetrain.getModule(i).getDriveMotor().getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Current", drivetrain.getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " Voltage", drivetrain.getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " RPM", drivetrain.getModule(i).getDriveMotor().getVelocity().getValue().baseUnitMagnitude());
-                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " RPM", drivetrain.getModule(i).getSteerMotor().getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor " + i + " Current", drivetrain.getModule(i).getDriveMotor().getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor " + i + " Current", drivetrain.getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor " + i + " Voltage", drivetrain.getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor " + i + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor " + i + " RPM", drivetrain.getModule(i).getDriveMotor().getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor " + i + " RPM", drivetrain.getModule(i).getSteerMotor().getVelocity().getValue().baseUnitMagnitude());
                 }
         }
 
