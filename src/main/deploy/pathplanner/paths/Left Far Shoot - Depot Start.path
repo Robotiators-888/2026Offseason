@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.904,
-        "y": 7.003
+        "x": 3.055720399429386,
+        "y": 5.814065620542083
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 2.151720399429386,
+        "y": 5.811065620542083
       },
       "isLocked": false,
       "linkedName": "Shoot Trough Left"
@@ -48,7 +48,7 @@
   "folder": "Left Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -67.0
+    "rotation": -55.0
   },
   "useDefaultConstraints": true
 }

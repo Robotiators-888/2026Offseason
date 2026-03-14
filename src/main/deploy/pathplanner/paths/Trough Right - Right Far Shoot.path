@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.4897071635930375,
-        "y": 0.7881599470146113
+        "x": 2.9372205078940183,
+        "y": 1.1389134717292029
       },
       "isLocked": false,
       "linkedName": "Right Trough Forward"
     },
     {
       "anchor": {
-        "x": 2.904493975903614,
-        "y": 0.9970963855421688
+        "x": 3.0039657631954344,
+        "y": 1.8160199714693293
       },
       "prevControl": {
-        "x": 2.8721660194415626,
-        "y": 0.7491953907257145
+        "x": 3.2599948618486567,
+        "y": 1.2330613410755995
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 67.0
+    "rotation": 55.0
   },
   "reversed": false,
   "folder": "Right Trough Path",

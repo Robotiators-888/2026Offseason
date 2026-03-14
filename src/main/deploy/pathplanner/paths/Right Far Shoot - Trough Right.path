@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.904493975903614,
-        "y": 0.9970963855421688
+        "x": 3.0039657631954344,
+        "y": 1.8160199714693293
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.117762072882158,
-        "y": 0.8666482394796418
+        "x": 3.0868920933950603,
+        "y": 1.5801742088200448
       },
       "isLocked": false,
       "linkedName": "Shoot Trough Right"
@@ -20,8 +20,8 @@
         "y": 0.66
       },
       "prevControl": {
-        "x": 3.0699043695457657,
-        "y": 0.5118758296270982
+        "x": 2.7097119052512135,
+        "y": 1.0393236335731915
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "Right Trough Path",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 67.0
+    "rotation": 55.0
   },
   "useDefaultConstraints": true
 }

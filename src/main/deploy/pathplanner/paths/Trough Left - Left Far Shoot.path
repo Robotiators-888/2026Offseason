@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.753069388805046,
-        "y": 7.138601119777103
+        "x": 2.9313093207990173,
+        "y": 6.536221035864446
       },
       "isLocked": false,
       "linkedName": "Left Trough Forward"
     },
     {
       "anchor": {
-        "x": 2.904,
-        "y": 7.003
+        "x": 3.055720399429386,
+        "y": 5.814065620542083
       },
       "prevControl": {
-        "x": 3.2492729743905624,
-        "y": 7.327550848692244
+        "x": 3.5161754643673166,
+        "y": 6.45809715685575
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -67.0
+    "rotation": -55.0
   },
   "reversed": false,
   "folder": "Left Trough Path",
