@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 7.78,
-        "y": 3.3
+        "y": 3.75
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.183152639087017,
-        "y": 1.6506704707560629
+        "y": 2.100670470756063
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Right Deep"

@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 7.8,
-        "y": 4.75
+        "y": 4.25
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.95947218259629,
-        "y": 5.628316690442225
+        "y": 5.128316690442225
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Left Deep"
