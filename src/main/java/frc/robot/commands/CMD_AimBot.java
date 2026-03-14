@@ -43,6 +43,7 @@ public class CMD_AimBot extends RunCommand {
   private final SUB_Index index;
   private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
       RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
@@ -83,7 +84,6 @@ public class CMD_AimBot extends RunCommand {
     double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
     Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
     
-    // Save as targetPose for visualization (Rotation doesn't matter yet, it gets calculated in execute)
     targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
     robotAngleController.reset(
@@ -98,15 +98,16 @@ public class CMD_AimBot extends RunCommand {
   public void execute() {
     Pose2d currentPose = drivetrain.getPose();
 
-    // 2. Calculate the angle required for the robot to face the hub center.
-    // Since we are now rotating AROUND the shooter, the robot's center-to-target 
-    // angle (with the rotation offset applied) will align the shooter with the target.
     Translation2d targetTranslation = targetPose.getTranslation();
-    Rotation2d targetRotation = new Rotation2d(
-        targetTranslation.getX() - currentPose.getX(),
-        targetTranslation.getY() - currentPose.getY()
+    Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
+        shooterOffset.rotateBy(currentPose.getRotation())
     );
 
+    // 2. Calculate the angle directly from the SHOOTER to the target
+    Rotation2d targetRotation = new Rotation2d(
+        targetTranslation.getX() - shooterFieldPosition.getX(),
+        targetTranslation.getY() - shooterFieldPosition.getY()
+    );
     // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
