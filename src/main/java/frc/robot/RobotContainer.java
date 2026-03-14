@@ -344,6 +344,7 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
+                Driver2.leftStick().onTrue(new InstantCommand(() -> targetRPM = 1000));
 
                 
         }
