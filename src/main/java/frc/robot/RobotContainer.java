@@ -411,6 +411,8 @@ public class RobotContainer {
                         SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Current", drivetrain.getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " Voltage", drivetrain.getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Drive Motor " + i + " RPM", drivetrain.getModule(i).getDriveMotor().getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Steer Motor " + i + " RPM", drivetrain.getModule(i).getSteerMotor().getVelocity().getValue().baseUnitMagnitude());
                 }
         }
 
