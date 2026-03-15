@@ -25,8 +25,6 @@ public class SUB_Intake extends SubsystemBase {
     private int periodicCountFault = 0;
     private static SUB_Intake INSTANCE = null;
     private boolean intakeArmAndRollersUntil = false;
-    private int shakeyCounter = 0;
-    private boolean isShakey = false;
     public static SUB_Intake getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Intake();
@@ -156,20 +154,5 @@ public class SUB_Intake extends SubsystemBase {
             arm.set(-.025);
             intakeArmAndRollersUntil = true;
         }
-    }
-
-    public void shakeArm() {
-        shakeyCounter++;
-        if (shakeyCounter > 20) {
-            isShakey = !isShakey;
-            shakeyCounter = 0;
-        }
-        // double targetSetpoint = isShakey ? Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT+10 : Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT + 40;
-        setArm(isShakey ? -.1 : .1);
-
-    }
-    public void intakeWiggle() {
-        setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE); 
-        shakeArm();
     }
 }
