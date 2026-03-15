@@ -131,14 +131,11 @@ public class SUB_Intake extends SubsystemBase {
         return extended;
     }
 
-    // Make sure to incorperate the is_Pressed limit for saftey
     public void intakeArmDown() {
-        // This is a one liner for the sake of memory efficiency
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)); 
     }
 
     public void intakeArmUp() {
-        // This is also a one liner for the sake of memory efficiency
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
     }
 
@@ -172,7 +169,7 @@ public class SUB_Intake extends SubsystemBase {
 
     }
     public void intakeWiggle() {
-        setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE); // Run the rollers
-        shakeArm(); // Shake the pivot
+        setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE); 
+        shakeArm(); 
     }
 }
