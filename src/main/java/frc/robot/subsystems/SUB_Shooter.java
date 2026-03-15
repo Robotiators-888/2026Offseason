@@ -122,7 +122,7 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/Top Motor Amperage", getCurrentDrawTop());
       SmartDashboard.putNumber("Shooter/Bottom Motor Amperage", getCurrentDrawBottom());
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", getCurrentDrawBottom());
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
     }
     public double getExpectedTOF(double distanceMeters) {
         double targetRPM = distanceToRPM.get(distanceMeters);
