@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.8,
-        "y": 5.25
+        "x": 7.868901569186875,
+        "y": 5.296519258202568
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.75,
-        "y": 5.6
+        "x": 7.818901569186874,
+        "y": 5.646519258202567
       },
       "isLocked": false,
       "linkedName": "Neutral Zone Left"
