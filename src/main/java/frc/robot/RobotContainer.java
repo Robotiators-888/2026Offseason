@@ -433,8 +433,8 @@ public class RobotContainer {
                         SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " RPM", drivetrain.getModule(i).getDriveMotor().getVelocity().getValue().baseUnitMagnitude());
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " RPM", drivetrain.getModule(i).getSteerMotor().getVelocity().getValue().baseUnitMagnitude());
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getDriveMotor().getPosition().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getSteerMotor().getPosition().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getDriveMotor().getPosition().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getSteerMotor().getPosition().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
                 }
         }
