@@ -4,28 +4,28 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.293
+        "y": 7.393
       },
       "prevControl": null,
       "nextControl": {
         "x": 6.390433734939759,
-        "y": 7.3023855421686745
+        "y": 7.402385542168674
       },
       "isLocked": false,
       "linkedName": "Left Trough Center"
     },
     {
       "anchor": {
-        "x": 6.062602409638554,
-        "y": 6.329819277108434
+        "x": 5.9927960057061345,
+        "y": 5.594108416547789
       },
       "prevControl": {
-        "x": 6.104123730035688,
-        "y": 6.863664825071584
+        "x": 5.8504707560627685,
+        "y": 6.253980028530671
       },
       "nextControl": {
-        "x": 5.986108433734939,
-        "y": 5.3463253012048195
+        "x": 6.172944624680542,
+        "y": 4.758873910393711
       },
       "isLocked": false,
       "linkedName": null
@@ -62,8 +62,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
-    "rotation": 50.964487101253106
+    "velocity": 3.0,
+    "rotation": 50.96448710125311
   },
   "reversed": false,
   "folder": "Left Trough Path",

@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.293
+        "y": 7.393
       },
       "prevControl": {
         "x": 6.543421686746988,
-        "y": 7.105686746987953
+        "y": 7.205686746987952
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "Left Trough Path",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": 50.964487101253106
+    "rotation": 50.96448710125311
   },
   "useDefaultConstraints": true
 }

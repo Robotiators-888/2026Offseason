@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.293
+        "y": 7.393
       },
       "prevControl": null,
       "nextControl": {
         "x": 6.051674698795181,
-        "y": 7.291457831325301
+        "y": 7.391457831325301
       },
       "isLocked": false,
       "linkedName": "Left Trough Center"
