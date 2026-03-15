@@ -213,7 +213,7 @@ public class RobotContainer {
                 //         , intake)
                 // );
                 
-                NamedCommands.registerCommand("IntakeWiggle",
+                NamedCommands.registerCommand("IntakeAgitate",
                         getShakeyCommand()
                 );
 
@@ -355,7 +355,7 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
-                Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeWiggle"));
+                Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
         public void robotInit() {
