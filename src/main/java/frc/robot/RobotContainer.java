@@ -603,8 +603,8 @@ public class RobotContainer {
                 Command c = new ParallelCommandGroup(
                                 new RunCommand(()->intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE)),
                                 new SequentialCommandGroup(
-                                        new RunCommand(()->intake.setArm(.1)).withTimeout(.4),
-                                        new RunCommand(()->intake.setArm(-.07)).withTimeout(.4)
+                                        new RunCommand(()->intake.setArm(.15)).withTimeout(.4),
+                                        new RunCommand(()->intake.setArm(-.1)).withTimeout(.4)
                                 ).repeatedly()
                         );
                 c.addRequirements(intake);
