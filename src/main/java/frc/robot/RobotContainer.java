@@ -18,6 +18,7 @@ import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -427,14 +428,18 @@ public class RobotContainer {
         public void logDrivetrain () {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " Current", drivetrain.getModule(i).getDriveMotor().getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Current", drivetrain.getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " Voltage", drivetrain.getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Voltage", drivetrain.getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " RPM", drivetrain.getModule(i).getDriveMotor().getVelocity().getValue().baseUnitMagnitude());
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " RPM", drivetrain.getModule(i).getSteerMotor().getVelocity().getValue().baseUnitMagnitude());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + drivetrain.getModule(i).getDriveMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getDriveMotor().getPosition().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + drivetrain.getModule(i).getSteerMotor().getDeviceID() + " Encoder Pos", drivetrain.getModule(i).getSteerMotor().getPosition().getValueAsDouble());
+                        TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
+                        TalonFX steerMotor = drivetrain.getModule(i).getDriveMotor();
+                        int driveMotorId = driveMotor.getDeviceID();
+                        int steerMotorId = steerMotor.getDeviceID();
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Current", driveMotor.getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Current", steerMotor.getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Voltage", driveMotor.getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Voltage", steerMotor.getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + driveMotorId + " RPM", driveMotor.getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + steerMotorId + " RPM", steerMotor.getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Encoder Pos", driveMotor.getPosition().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Encoder Pos", steerMotor.getPosition().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
                 }
         }
