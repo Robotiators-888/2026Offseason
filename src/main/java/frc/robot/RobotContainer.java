@@ -50,6 +50,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
@@ -206,12 +207,16 @@ public class RobotContainer {
                         )
                 );
 
-                NamedCommands.registerCommand("IntakeWiggle",
-                        new RunCommand(() -> 
-                                intake.intakeWiggle()
-                        , intake)
-                );
+                // NamedCommands.registerCommand("IntakeWiggle",
+                //         new RunCommand(() -> 
+                //                 intake.intakeWiggle()
+                //         , intake)
+                // );
                 
+                NamedCommands.registerCommand("IntakeWiggle",
+                        getShakeyCommand()
+                );
+
                 NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
                                         Commands.run(()->{
                                                 double distance = drivetrain.getPose().getTranslation().getDistance(
@@ -350,9 +355,7 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
-                Driver2.leftStick().onTrue(new InstantCommand(() -> targetRPM = 1000));
-
-                
+                Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeWiggle"));
         }
 
         public void robotInit() {
@@ -590,6 +593,18 @@ public class RobotContainer {
                                 
                         }
                 }
+        }
+
+        private Command getShakeyCommand () {
+                Command c = new ParallelCommandGroup(
+                                new RunCommand(()->intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE)),
+                                new SequentialCommandGroup(
+                                        new RunCommand(()->intake.setArm(.1)).withTimeout(.4),
+                                        new RunCommand(()->intake.setArm(-.07)).withTimeout(.4)
+                                ).repeatedly()
+                        );
+                c.addRequirements(intake);
+                return c;
         }
 
 }

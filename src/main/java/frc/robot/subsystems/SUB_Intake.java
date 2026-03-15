@@ -153,7 +153,7 @@ public class SUB_Intake extends SubsystemBase {
             // intakeArmDown();
             setArm(-.50);
         } else {
-            arm.set(-.01);
+            arm.set(-.025);
             intakeArmAndRollersUntil = true;
         }
     }
@@ -164,12 +164,12 @@ public class SUB_Intake extends SubsystemBase {
             isShakey = !isShakey;
             shakeyCounter = 0;
         }
-        double targetSetpoint = isShakey ? Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT+5 : Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT + 35;
-        setArm(controller.calculate(arm.getEncoder().getPosition(), targetSetpoint));
+        // double targetSetpoint = isShakey ? Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT+10 : Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT + 40;
+        setArm(isShakey ? -.1 : .1);
 
     }
     public void intakeWiggle() {
         setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE); 
-        shakeArm(); 
+        shakeArm();
     }
 }
