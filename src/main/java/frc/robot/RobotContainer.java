@@ -206,6 +206,12 @@ public class RobotContainer {
                         )
                 );
 
+                NamedCommands.registerCommand("IntakeWiggle",
+                        new RunCommand(() -> 
+                                intake.intakeWiggle()
+                        , intake)
+                );
+                
                 NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
                                         Commands.run(()->{
                                                 double distance = drivetrain.getPose().getTranslation().getDistance(
