@@ -140,10 +140,10 @@ public class CMD_AimBot extends RunCommand {
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);
 
-    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
+    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
       isLocked = true;
     }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(2)) {
+    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
       isLocked = false;
     }
 
