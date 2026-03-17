@@ -33,6 +33,7 @@ public class SUB_Shooter extends SubsystemBase {
           return INSTANCE;
     }
     private SUB_Shooter(){
+        //Defines flywheel motors with their IDs
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
         // Metering wheel speed at .3
@@ -42,6 +43,7 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
         // distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
         // distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
+        //sets RPMs based on meter distance
         distanceToRPM.put(2.49493587092, 1250.0);
         distanceToRPM.put(3.03308176613, 1375.0+15);
         distanceToRPM.put(1.6346195276, 1075.0-25);
@@ -52,41 +54,49 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     private void configFlywheel() {
-        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 70; 
-        shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //Enables current limit
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 70;  //sets Supply Current limit to 70 amps
+        shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //Sets flywheel to coast when not running (wont immediatly stop)
+        shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; //Positive motor will make motor spin clockwise
+        //Sets PID values
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
         shooterConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
         shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
         shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
         shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
+        //applies configs to the two shooter motors
         topFlywheel.getConfigurator().apply(shooterConfig);
         bottomFlywheel.getConfigurator().apply(shooterConfig);
         bottomFlywheel.setControl(new Follower(topFlywheel.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
+    
     @Deprecated
+    //Creates method to set flywheel speeds
     public void set(double speed){
         topFlywheel.set(speed);
     }
 
+    //Creates method to set RPM
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
         topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
+    //returns flywheel RPM
     public double flywheelRPM() {
         return (topFlywheel.getVelocity().getValue().in(RPM) + bottomFlywheel.getVelocity().getValue().in(RPM)) / 2;
     }
   
+    //Returns if the motor is at the needed RPM
     public boolean atDesiredRPM() {
         // return true;
         return Math.abs(flywheelRPM() - desiredSpeed) < 75; // Allow a tolerance of 50 RPM
         // This logic makes absolutely now sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
+    //Sets RPM based on distance
     public void shootMeters(double meters) {
         // query the map for the RPM associated with this distance
         double targetRPM = distanceToRPM.get(meters);
@@ -95,15 +105,18 @@ public class SUB_Shooter extends SubsystemBase {
         setRPM(targetRPM);
     }
 
+    //returns RPM needed based on distance
     public double getDistanceRPM (double meters) {
         return distanceToRPM.get(meters);
     }
 
+    //Sets motor speed to 0
     public void stop() {
         this.desiredSpeed = 0;
         topFlywheel.setControl(voltageRequest.withOutput(0));
     }
 
+    //Sets motor volts to what is inputed
     public void setVolts(double volts) {
         topFlywheel.setControl(voltageRequest.withOutput(volts));
     }

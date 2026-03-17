@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
+    //Initiliazes values and objects used in subsystem
     public static boolean extended;
     private PIDController controller = new PIDController(0.001, 0, 0);
     private TalonFX intake;
@@ -33,6 +34,7 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     private SUB_Intake () {
+        //Defines motors with IDs and what controller
         intake = new TalonFX(Constants.Intake.kINTAKE_MOTOR_CANID);
         arm = new SparkMax(Constants.Intake.kARM_MOTOR_CANID, MotorType.kBrushless);
         armFollower = new SparkMax(Constants.Intake.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
@@ -40,62 +42,56 @@ public class SUB_Intake extends SubsystemBase {
     }
 
     private void configureMotors(){
+        //Creates config for motors
         SparkMaxConfig config = new SparkMaxConfig();
         config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees, Thrifty bot cycloial gearbox 23:1
         config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
-        config.smartCurrentLimit(35);
-        config.inverted(true);
-        arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        SparkMaxConfig followerConfig = new SparkMaxConfig();
-        followerConfig.follow(arm, true);
-        followerConfig.smartCurrentLimit(35);
-        armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        TalonFXConfiguration talonConfig = new TalonFXConfiguration();
-        talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        talonConfig.CurrentLimits.SupplyCurrentLimit = 40;
-        talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        intake.getConfigurator().apply(talonConfig);
+        config.smartCurrentLimit(35); //Sets stall limit for motor in amps
+        config.inverted(true); //Inverts motor
+        arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); //Sets persist parameters
+        SparkMaxConfig followerConfig = new SparkMaxConfig(); //Creates follower spark max config
+        followerConfig.follow(arm, true); // Makes follower opposite compared to leader
+        followerConfig.smartCurrentLimit(35);//Sets stall limit for motor in amps
+        armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);  //Sets persist parameters
+        TalonFXConfiguration talonConfig = new TalonFXConfiguration(); //Creates new TalonFX Config
+        talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //enables supply current limit which is how much goes to motor controller
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 40; //Sets supply current limit in amps
+        talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Makes it so positive values make the motor spin CC
+        intake.getConfigurator().apply(talonConfig); //Applies Config to the intake roller
     }
 
-    
+    //Returns if motor arm is down T/F
     public boolean isForwardPressed() {
         return stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)<10;
     }
 
+    //Returns if motor arm is up T/F
     public boolean isReversePressed() {
         return stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)<10;
     }
 
+    //Sets voltage of intake roller
     public void setVolts(double speed){
         intake.setVoltage(speed);
     }
+
+    //Sets speed of intake roller
     public void set(double speed){
         intake.set(speed);
     }
+    //Returns RPM of intake roller
     public double intakeRPM(){
         return intake.getVelocity().getValue().baseUnitMagnitude();
     }
 
     public void periodic() {
-        SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM());
-
-        SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed());
-        SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
-
-        SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition());
-        SmartDashboard.putNumber("Intake/Intake Encoder Pos", intake.getPosition().getValueAsDouble());
-
-        SmartDashboard.putNumber("Intake/Arm Output Current", arm.getOutputCurrent());
-
-        SmartDashboard.putNumber("Intake/Intake Stator Current", intake.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Intake/Intake Supply Current", intake.getSupplyCurrent().getValueAsDouble());
-
-        SmartDashboard.putNumber("Intake/Arm Bus Voltage", arm.getBusVoltage());
-
-        SmartDashboard.putNumber("Intake/Intake Motor Voltage", intake.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Intake/Intake Supply Voltage", intake.getSupplyCurrent().getValueAsDouble());
-
-        SmartDashboard.putBoolean("Intake/Stick Up", stickUp);
+        SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM()); //puts Intake motor RPM into Smart Dashboard
+        SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed()); //Returns if the intake arm is down
+        SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed()); //Returns if the intake arm is up
+        SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
+        SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
+        SmartDashboard.putNumber("Intake/Intake Output Amps", intake.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
+        SmartDashboard.putBoolean("Intake/Stick Up", stickUp); 
         SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {
             periodicCountFault--;
