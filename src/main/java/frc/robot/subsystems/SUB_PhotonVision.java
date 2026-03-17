@@ -19,8 +19,10 @@ import frc.robot.Constants.PhotonVision;
 import frc.robot.utils.Alert;
 
 public class SUB_PhotonVision extends SubsystemBase {
+  // Set up singleton
   private static SUB_PhotonVision INSTANCE = null;
 
+  // Create cameras and targets
   private final PhotonCamera cam1 = new PhotonCamera(PhotonVision.kCamName1);
   private final PhotonCamera cam2 = new PhotonCamera(PhotonVision.kCam2Name);
   private final PhotonCamera cam3 = new PhotonCamera(PhotonVision.kCam3Name);
@@ -32,6 +34,7 @@ public class SUB_PhotonVision extends SubsystemBase {
   private final PhotonPoseEstimator poseEstimator3;
   public AprilTagFieldLayout at_field;
 
+  // Function to get singleton
   public static SUB_PhotonVision getInstance() {
     if (INSTANCE == null) {
       INSTANCE = new SUB_PhotonVision();
@@ -40,8 +43,10 @@ public class SUB_PhotonVision extends SubsystemBase {
   }
 
   private SUB_PhotonVision() {
+    // Load the correct field
     at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark); // TODO: Change for diff events
 
+    // Set up cameras and pose estimators
     cam1.setPipelineIndex(0);
     cam2.setPipelineIndex(0);
     cam3.setPipelineIndex(0);
@@ -52,11 +57,13 @@ public class SUB_PhotonVision extends SubsystemBase {
          PhotonVision.kRobotToCamera2); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
     poseEstimator3 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
          PhotonVision.kRobotToCamera3); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
+    // Make sure Multi Tag is enabled
     poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
+  // Functions to get camera poses
   public Optional<EstimatedRobotPose> getCam1Pose() {
     List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
   
@@ -105,6 +112,7 @@ public class SUB_PhotonVision extends SubsystemBase {
     return finalPose3;
   }
 
+  // Get best camera targets
   public PhotonTrackedTarget getCam1BestTarget() {
     return cam1BestTarget;
   }
@@ -116,6 +124,7 @@ public class SUB_PhotonVision extends SubsystemBase {
     return cam3BestTarget;
   }
 
+  // Get target Yaw Pich or Area
   public double getTargetYaw(PhotonTrackedTarget target) {
     return target.getYaw();
   }
@@ -128,10 +137,12 @@ public class SUB_PhotonVision extends SubsystemBase {
     return target.getArea();
   }
 
+  // Get the id of a photon target
   public int getId(PhotonTrackedTarget target) {
     return target.getFiducialId();
   }
 
+  // Alert if cameras are disconnected
   @Override
   public void periodic() {
    if (!cam1.isConnected()) {

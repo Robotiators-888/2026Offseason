@@ -33,6 +33,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class CMD_AimBot extends RunCommand {
+  // Holds constructor arguments and sets up variables
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Pose2d targetPose = new Pose2d();
@@ -62,6 +63,7 @@ public class CMD_AimBot extends RunCommand {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+    // Hold constructor arguments
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
@@ -70,11 +72,13 @@ public class CMD_AimBot extends RunCommand {
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
+    // Require subsystems
     addRequirements(drivetrain, shooter, index);
   }
 
   @Override
   public void initialize() {
+    // Gets hub and tag positions
     robotAngleController.setTolerance(Units.degreesToRadians(0.0));
     
     Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
@@ -96,6 +100,7 @@ public class CMD_AimBot extends RunCommand {
 
   @Override
   public void execute() {
+    // Set up poses
     Pose2d currentPose = drivetrain.getPose();
 
     Translation2d targetTranslation = targetPose.getTranslation();
@@ -140,6 +145,7 @@ public class CMD_AimBot extends RunCommand {
     double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
     double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);
 
+    // Wheel locking logic
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
       isLocked = true;
     }
@@ -147,6 +153,7 @@ public class CMD_AimBot extends RunCommand {
       isLocked = false;
     }
 
+    // Lock wheels or drive
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
         drivetrain.setControl(brakeRequest);
     } else {
