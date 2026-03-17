@@ -108,19 +108,25 @@ public class SUB_Shooter extends SubsystemBase {
         topFlywheel.setControl(voltageRequest.withOutput(volts));
     }
 
-    public double getCurrentDrawTop () {
-        return topFlywheel.getStatorCurrent().getValueAsDouble();
-    }
-
-    public double getCurrentDrawBottom () {
-        return bottomFlywheel.getStatorCurrent().getValueAsDouble();
-    }
-
     public void periodic() {
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM));
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
-      SmartDashboard.putNumber("Shooter/Top Motor Amperage", getCurrentDrawTop());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Amperage", getCurrentDrawBottom());
+      
+      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", bottomFlywheel.getStatorCurrent().getValueAsDouble());
+      
+      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", topFlywheel.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", bottomFlywheel.getSupplyCurrent().getValueAsDouble());
+      
+      SmartDashboard.putNumber("Shooter/Top Motor Stator Voltage", topFlywheel.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Voltage", bottomFlywheel.getSupplyCurrent().getValueAsDouble());
+      
+      SmartDashboard.putNumber("Shooter/Top Motor Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Motor Voltage", bottomFlywheel.getSupplyCurrent().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", topFlywheel.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble());
+      
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM));
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM));
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
     }

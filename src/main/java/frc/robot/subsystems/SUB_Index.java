@@ -81,10 +81,18 @@ public class SUB_Index extends SubsystemBase {
     }
 
     public void periodic() {
-        SmartDashboard.putNumber("Index/IndexRPM", indexRPM());
-        SmartDashboard.putNumber("Index/IndexCurrent", index.getOutputCurrent());
-        SmartDashboard.putNumber("Index/MeteringRPM", intakeMeteringRPM());
-        SmartDashboard.putNumber("Index/MeteringTargetRPM", targetMeteringRPM);
-        SmartDashboard.putNumber("Index/MeteringCurrent", meteringWheel.getOutputCurrent());
+        SmartDashboard.putNumber("Index/Index RPM", indexRPM());
+        
+        SmartDashboard.putNumber("Index/Index Output Current", index.getOutputCurrent());
+        SmartDashboard.putNumber("Index/Metering Output Current", meteringWheel.getOutputCurrent());
+        
+        SmartDashboard.putNumber("Index/Metering RPM", intakeMeteringRPM());
+        SmartDashboard.putNumber("Index/Metering Target RPM", targetMeteringRPM);
+        
+        SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage());
+        SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage());
+
+        SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
+        SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition());
     }
 }

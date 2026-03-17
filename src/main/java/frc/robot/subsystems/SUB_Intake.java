@@ -78,11 +78,23 @@ public class SUB_Intake extends SubsystemBase {
 
     public void periodic() {
         SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM());
+
         SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed());
         SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed());
+
         SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition());
-        SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent());
-        SmartDashboard.putNumber("Intake/Intake Output Amps", intake.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Intake/Intake Encoder Pos", intake.getPosition().getValueAsDouble());
+
+        SmartDashboard.putNumber("Intake/Arm Output Current", arm.getOutputCurrent());
+
+        SmartDashboard.putNumber("Intake/Intake Stator Current", intake.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Intake/Intake Supply Current", intake.getSupplyCurrent().getValueAsDouble());
+
+        SmartDashboard.putNumber("Intake/Arm Bus Voltage", arm.getBusVoltage());
+
+        SmartDashboard.putNumber("Intake/Intake Motor Voltage", intake.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Intake/Intake Supply Voltage", intake.getSupplyCurrent().getValueAsDouble());
+
         SmartDashboard.putBoolean("Intake/Stick Up", stickUp);
         SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {

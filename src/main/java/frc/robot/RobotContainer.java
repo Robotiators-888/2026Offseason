@@ -432,14 +432,26 @@ public class RobotContainer {
                         TalonFX steerMotor = drivetrain.getModule(i).getDriveMotor();
                         int driveMotorId = driveMotor.getDeviceID();
                         int steerMotorId = steerMotor.getDeviceID();
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Current", driveMotor.getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Current", steerMotor.getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Voltage", driveMotor.getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Voltage", steerMotor.getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Stator Current", steerMotor.getStatorCurrent().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Supply Current", driveMotor.getSupplyCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Supply Current", steerMotor.getSupplyCurrent().getValueAsDouble());
+                        
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Motor Voltage", driveMotor.getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Motor Voltage", steerMotor.getMotorVoltage().getValueAsDouble());
+                        
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Supply Voltage", driveMotor.getSupplyVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Supply Voltage", steerMotor.getSupplyVoltage().getValueAsDouble());
+                        
+                        
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + driveMotorId + " RPM", driveMotor.getVelocity().getValue().baseUnitMagnitude());
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + steerMotorId + " RPM", steerMotor.getVelocity().getValue().baseUnitMagnitude());
+                        
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Encoder Pos", driveMotor.getPosition().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Encoder Pos", steerMotor.getPosition().getValueAsDouble());
+                        
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
                 }
         }
