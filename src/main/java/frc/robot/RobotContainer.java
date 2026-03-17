@@ -578,9 +578,9 @@ public class RobotContainer {
         }
 
         public void photonPoseUpdate() {
-                processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
-                processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
-                processCameraPose(photonVision.getCam3Pose(), drivetrain.publisher5);
+                processCameraPose(photonVision.getCamPose(0), drivetrain.publisher3);
+                processCameraPose(photonVision.getCamPose(1), drivetrain.publisher4);
+                processCameraPose(photonVision.getCamPose(2), drivetrain.publisher5);
         }
 
         private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
