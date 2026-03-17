@@ -65,11 +65,11 @@ public class SUB_PhotonVision extends SubsystemBase {
 
   // Functions to get camera poses
   public Optional<EstimatedRobotPose> getCamPose(int index) {
-    List<PhotonPipelineResult> results1 = cams.get(index).getAllUnreadResults();
+    List<PhotonPipelineResult> results = cams.get(index).getAllUnreadResults();
   
     Optional<EstimatedRobotPose> finalPose = Optional.empty();
     // Process results in reverse order to find the latest  result
-    java.util.ListIterator<PhotonPipelineResult> iterator = results1.listIterator(results1.size());
+    java.util.ListIterator<PhotonPipelineResult> iterator = results.listIterator(results.size());
     while (iterator.hasPrevious()) {
       PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
