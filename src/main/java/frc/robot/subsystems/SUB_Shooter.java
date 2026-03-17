@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Shooter extends SubsystemBase {
+    // Sets up the Singleton Instance
     private static SUB_Shooter INSTANCE = null;
+    // Set up variables for the subsystem
     private TalonFX topFlywheel;
     private TalonFX bottomFlywheel;
     private final VoltageOut voltageRequest = new VoltageOut(0);
@@ -25,6 +27,7 @@ public class SUB_Shooter extends SubsystemBase {
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
+    // Set up singleton
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
@@ -32,8 +35,8 @@ public class SUB_Shooter extends SubsystemBase {
       
           return INSTANCE;
     }
-    private SUB_Shooter(){
-        //Defines flywheel motors with their IDs
+    private SUB_Shooter() {
+        // Defines flywheel motors with their IDs
         topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
         bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
         // Metering wheel speed at .3
@@ -43,7 +46,7 @@ public class SUB_Shooter extends SubsystemBase {
         // distanceToRPM.put(Units.inchesToMeters(164), 1450.0);
         // distanceToRPM.put(Units.inchesToMeters(107), 1275.0);
         // distanceToRPM.put(Units.inchesToMeters(86.61), 1245.0);
-        //sets RPMs based on meter distance
+        // Creates a map to do distance to rpm math/interpolation
         distanceToRPM.put(2.49493587092, 1250.0);
         distanceToRPM.put(3.03308176613, 1375.0+15);
         distanceToRPM.put(1.6346195276, 1075.0-25);
@@ -53,6 +56,7 @@ public class SUB_Shooter extends SubsystemBase {
         configFlywheel();
     }
 
+    // Configures the motors
     private void configFlywheel() {
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //Enables current limit
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 70;  //sets Supply Current limit to 70 amps
@@ -73,27 +77,27 @@ public class SUB_Shooter extends SubsystemBase {
 
     
     @Deprecated
-    //Creates method to set flywheel speeds
-    public void set(double speed){
+    // Creates method to set flywheel speeds
+    public void set(double speed) {
         topFlywheel.set(speed);
     }
 
-    //Creates method to set RPM
+    // Creates method to set RPM
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
         topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
     }
 
-    //returns flywheel RPM
+    // Returns flywheel RPM
     public double flywheelRPM() {
         return (topFlywheel.getVelocity().getValue().in(RPM) + bottomFlywheel.getVelocity().getValue().in(RPM)) / 2;
     }
   
-    //Returns if the motor is at the needed RPM
+    // Returns if the motor is at the needed RPM
     public boolean atDesiredRPM() {
         // return true;
         return Math.abs(flywheelRPM() - desiredSpeed) < 75; // Allow a tolerance of 50 RPM
-        // This logic makes absolutely now sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
+        // This logic makes absolutely no sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
     }
 
     //Sets RPM based on distance
@@ -121,6 +125,7 @@ public class SUB_Shooter extends SubsystemBase {
         topFlywheel.setControl(voltageRequest.withOutput(volts));
     }
 
+    // Logs everything every periodic
     public void periodic() {
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed); //Puts desired RPM into smart dashboard
       
@@ -143,6 +148,8 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
     }
+
+    // Gets the time of flight of the fuel for shoot on the move
     public double getExpectedTOF(double distanceMeters) {
         double targetRPM = distanceToRPM.get(distanceMeters);
         // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
@@ -152,6 +159,8 @@ public class SUB_Shooter extends SubsystemBase {
         }
         return distanceMeters / averageHorizontalVelocity;
     }
+
+    // Gets the time of flight of the fuel for shoot on the move
     public static double getExpectedTOFStatic(double distanceMeters) {
         double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
         // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)

@@ -11,13 +11,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Index extends SubsystemBase {
-    // Initializes subsystems
+    // Initializes variables in the subsystem
     private SparkMax index;
     private SparkMax meteringWheel;
     private SparkClosedLoopController meteringController;
     
     private double targetMeteringRPM = 0;
 
+    // Sets up singleton
     private static SUB_Index INSTANCE = null;
     public static SUB_Index getInstance () {
         if (INSTANCE == null) {
@@ -93,6 +94,7 @@ public class SUB_Index extends SubsystemBase {
         meteringWheel.set(0);
     }
 
+    // Logs everything every periodic
     public void periodic() {
         SmartDashboard.putNumber("Index/Index RPM", indexRPM()); //Puts Index RPM into the dashboard
         

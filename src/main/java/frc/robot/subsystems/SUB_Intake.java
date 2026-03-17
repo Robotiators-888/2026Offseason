@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Intake extends SubsystemBase {
-    //Initiliazes values and objects used in subsystem
+    // Initiliazes values and objects used in subsystem
     public static boolean extended;
     private PIDController controller = new PIDController(0.001, 0, 0);
     private TalonFX intake;
@@ -84,6 +84,7 @@ public class SUB_Intake extends SubsystemBase {
         return intake.getVelocity().getValue().baseUnitMagnitude();
     }
 
+    // Logs everything every periodic
     public void periodic() {
         SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM()); //puts Intake motor RPM into Smart Dashboard
 
@@ -94,7 +95,7 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putNumber("Intake/Intake Encoder Pos", intake.getPosition().getValueAsDouble());
 
         SmartDashboard.putNumber("Intake/Arm Output Current", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
-        
+
         SmartDashboard.putNumber("Intake/Intake Stator Current", intake.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
         SmartDashboard.putNumber("Intake/Intake Supply Current", intake.getSupplyCurrent().getValueAsDouble());
 

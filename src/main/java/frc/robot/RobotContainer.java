@@ -425,6 +425,7 @@ public class RobotContainer {
                 logDrivetrain();
         }
 
+        // Logs everything about the drivetrain
         public void logDrivetrain () {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
@@ -445,7 +446,7 @@ public class RobotContainer {
                         SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Supply Voltage", driveMotor.getSupplyVoltage().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Supply Voltage", steerMotor.getSupplyVoltage().getValueAsDouble());
                         
-                        
+
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + driveMotorId + " RPM", driveMotor.getVelocity().getValue().baseUnitMagnitude());
                         SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + steerMotorId + " RPM", steerMotor.getVelocity().getValue().baseUnitMagnitude());
                         
