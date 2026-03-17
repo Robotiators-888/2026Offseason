@@ -102,8 +102,8 @@ public class SUB_Index extends SubsystemBase {
         SmartDashboard.putNumber("Index/Metering RPM", intakeMeteringRPM()); //Inputs metering wheel RPM
         SmartDashboard.putNumber("Index/Metering Target RPM", targetMeteringRPM); //Inputs metering wheel target RPM
         
-        SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage());
-        SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage());
+        SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage()); //Returns volatge going into metering wheel Talon FX
+        SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage()); //Returns voltage going into Indexing sparkmax
 
         SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
         SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition()); //Inputs how many amps are going from controller to motor

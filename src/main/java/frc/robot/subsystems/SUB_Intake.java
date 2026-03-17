@@ -91,22 +91,25 @@ public class SUB_Intake extends SubsystemBase {
         SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
         SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
         SmartDashboard.putNumber("Intake/Intake Output Amps", intake.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
-        SmartDashboard.putBoolean("Intake/Stick Up", stickUp); 
+        SmartDashboard.putBoolean("Intake/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }
     }
 
+    //sets arm to speed put in method
     public void setArm(double speed) {
         if (arm.getOutputCurrent() > Constants.Intake.kIntake_ARM_FAULT_AMPS) {
             periodicCountFault+=2;
         }
         if (periodicCountFault > 12) {
+            //if speed is going up when faults are high the arm is up
             if (speed > 0) {
                 stickUp = true;
                 stickDown = false;
                 arm.getEncoder().setPosition(Constants.Intake.kINTAKE_ARM_TOP_SETPOINT);
+            //If speed is negative when faults are high the arm is down
             } else if (speed < 0) {
                 stickUp = false;
                 stickDown = true;
@@ -114,6 +117,7 @@ public class SUB_Intake extends SubsystemBase {
             }
             speed = 0;
         }
+        //if arm is up and it moves down then it is set to no longer being up
         if (stickUp) {
             if (speed < 0) {
                 stickUp = false;
@@ -121,6 +125,7 @@ public class SUB_Intake extends SubsystemBase {
                 speed = 0;
             }
         }
+        //if arm is down and it moves up then it is set to being no longer down.
         if (stickDown) {
             if (speed > 0) {
                 stickDown = false;
@@ -128,31 +133,37 @@ public class SUB_Intake extends SubsystemBase {
                 speed = 0;
             }
         }
+        //sets speed of arm motor
         arm.set(speed);
         
     }
 
-
+    //Retuns if arm is extended
     public boolean isExtended() {
         return extended;
     }
 
+    //Makes arm go down based on PID
     public void intakeArmDown() {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)); 
     }
 
+    //Makes arm go up based on PID
     public void intakeArmUp() {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_TOP_SETPOINT)); 
     }
 
+    //Returns if arm is down
     public boolean isArmDownReached() {
         return Math.abs(arm.getEncoder().getPosition() - Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT) < 3.0;
     }
 
+    //Returns if arm is up
     public boolean isArmUpReached() {
         return Math.abs(arm.getEncoder().getPosition() - Constants.Intake.kINTAKE_ARM_TOP_SETPOINT) < 3.0;
     }
 
+    //Puts intake down and then activates rollers
     public void intakeArmAndRollers() {
         setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
         if (!isArmDownReached() && !intakeArmAndRollersUntil) {
