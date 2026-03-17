@@ -86,11 +86,23 @@ public class SUB_Intake extends SubsystemBase {
 
     public void periodic() {
         SmartDashboard.putNumber("Intake/IntakeRPM", intakeRPM()); //puts Intake motor RPM into Smart Dashboard
+
         SmartDashboard.putBoolean("Intake/Arm Forward Limit", isForwardPressed()); //Returns if the intake arm is down
         SmartDashboard.putBoolean("Intake/Arm Reverse Limit", isReversePressed()); //Returns if the intake arm is up
+        
         SmartDashboard.putNumber("Intake/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
-        SmartDashboard.putNumber("Intake/Arm Output Amps", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
-        SmartDashboard.putNumber("Intake/Intake Output Amps", intake.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
+        SmartDashboard.putNumber("Intake/Intake Encoder Pos", intake.getPosition().getValueAsDouble());
+
+        SmartDashboard.putNumber("Intake/Arm Output Current", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
+        
+        SmartDashboard.putNumber("Intake/Intake Stator Current", intake.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
+        SmartDashboard.putNumber("Intake/Intake Supply Current", intake.getSupplyCurrent().getValueAsDouble());
+
+        SmartDashboard.putNumber("Intake/Intake Supply Voltage", intake.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Intake/Intake Motor Voltage", intake.getMotorVoltage().getValueAsDouble());
+
+        SmartDashboard.putNumber("Intake/Arm Bus Voltage", arm.getBusVoltage());
+
         SmartDashboard.putBoolean("Intake/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Intake/Stick Down", stickDown);
         if (periodicCountFault > 0) {
