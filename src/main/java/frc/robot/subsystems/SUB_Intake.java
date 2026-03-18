@@ -55,7 +55,9 @@ public class SUB_Intake extends SubsystemBase {
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);  //Sets persist parameters
         TalonFXConfiguration talonConfig = new TalonFXConfiguration(); //Creates new TalonFX Config
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //enables supply current limit which is how much goes to motor controller
-        talonConfig.CurrentLimits.SupplyCurrentLimit = 40; //Sets supply current limit in amps
+        talonConfig.CurrentLimits.SupplyCurrentLimit = 80; //Sets high supply current limit in amps
+        talonConfig.CurrentLimits.SupplyCurrentLowerLimit = 40; //Sets low supply current limit in amps
+        talonConfig.CurrentLimits.SupplyCurrentLowerTime = 0.5; //Sets how long current has to be above limit before it is considered a fault in seconds
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // Makes it so positive values make the motor spin CC
         intake.getConfigurator().apply(talonConfig); //Applies Config to the intake roller
     }

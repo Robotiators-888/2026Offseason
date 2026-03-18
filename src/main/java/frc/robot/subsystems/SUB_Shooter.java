@@ -52,14 +52,18 @@ public class SUB_Shooter extends SubsystemBase {
         distanceToRPM.put(1.6346195276, 1075.0-25);
         distanceToRPM.put(4.10526503, 1575.0+25);
         distanceToRPM.put(5.34766117, 1750.0+40);
-        distanceToRPM.put(10.5, 2400.0); //TODO:  VERY TEMPORARY< NEEDS  OTBE TESTED IRL
+        distanceToRPM.put(10.5, 2400.0); //TODO:  VERY TEMPORARY NEEDS  TO BE TESTED IRL
         configFlywheel();
     }
 
     // Configures the motors
     private void configFlywheel() {
-        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //Enables current limit
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 70;  //sets Supply Current limit to 70 amps
+        shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true; //Enables current limit
+        shooterConfig.CurrentLimits.StatorCurrentLimit = 70;  //sets stator Current limit to 70 amps
+        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //Enables supply current limit
+        shooterConfig.CurrentLimits.SupplyCurrentLimit = 60; //sets supply current limit to 40 amps
+        shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 30; //sets supply current lower limit to 20 amps
+        shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 0.3; //sets how long current has to be above limit before it is considered a fault in seconds
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //Sets flywheel to coast when not running (wont immediatly stop)
         shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; //Positive motor will make motor spin clockwise
         //Sets PID values
@@ -95,9 +99,7 @@ public class SUB_Shooter extends SubsystemBase {
   
     // Returns if the motor is at the needed RPM
     public boolean atDesiredRPM() {
-        // return true;
-        return Math.abs(flywheelRPM() - desiredSpeed) < 75; // Allow a tolerance of 50 RPM
-        // This logic makes absolutely no sense?: return topFlywheel.getMotionMagicIsRunning().getValue(); //TODO: Is this correct for flywheel rpm speed?
+        return Math.abs(flywheelRPM() - desiredSpeed) < 75; // Allow a tolerance of 75 RPM
     }
 
     //Sets RPM based on distance
