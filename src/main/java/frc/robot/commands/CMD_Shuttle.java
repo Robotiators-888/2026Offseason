@@ -107,6 +107,8 @@ public class CMD_Shuttle extends RunCommand{
         boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
         if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+        } else if (!isThetaErrorCorrect) {
+            index.setVolts(0);
         }
         double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
         double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);

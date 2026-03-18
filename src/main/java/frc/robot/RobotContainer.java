@@ -444,7 +444,7 @@ public class RobotContainer {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
                         TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
-                        TalonFX steerMotor = drivetrain.getModule(i).getDriveMotor();
+                        TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();
                         int driveMotorId = driveMotor.getDeviceID();
                         int steerMotorId = steerMotor.getDeviceID();
                         SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
