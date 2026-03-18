@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot - Left Trough"
+            "pathName": "Shoot-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough - Left Trough Center"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -39,13 +39,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Left Trough Center - Neutral Zone Left"
+                        "pathName": "LeftTroughCenter-RushLT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Neutral Zone Left - Left Trough Center"
+                        "pathName": "RushLT-LeftTroughCenter"
                       }
                     }
                   ]
@@ -63,13 +63,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough Center - Left Trough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Left - Left Far Shoot"
+            "pathName": "TroughLeft-LeftFarShoot"
           }
         },
         {
@@ -95,6 +95,8 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+
+

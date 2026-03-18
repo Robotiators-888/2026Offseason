@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Left - Left Far Shoot"
+            "pathName": "TroughLeft-LeftFarShoot"
           }
         },
         {
@@ -39,6 +39,7 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+

@@ -1,0 +1,55 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.854746987951808,
+        "y": 4.734373493975904
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.887530120481928,
+        "y": 5.24797590361446
+      },
+      "isLocked": false,
+      "linkedName": "RushLT-Improved"
+    },
+    {
+      "anchor": {
+        "x": 5.68661934338953,
+        "y": 7.393
+      },
+      "prevControl": {
+        "x": 6.543421686746988,
+        "y": 7.205686746987952
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "LeftTroughCenter"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 3.0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": "LeftTroughPath",
+  "idealStartingState": {
+    "velocity": 2.0,
+    "rotation": 50.96448710125311
+  },
+  "useDefaultConstraints": true
+}
+

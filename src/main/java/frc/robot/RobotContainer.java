@@ -307,6 +307,7 @@ public class RobotContainer {
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
                         intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
+                        intake.intakeArmTest();
                 }, intake));
                 Driver1.rightTrigger().whileTrue(
                         new CMD_AimBot(

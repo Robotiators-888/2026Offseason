@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough - Depot Start"
+            "pathName": "LeftTrough-DepotStart"
           }
         },
         {
@@ -23,7 +23,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Depot Start - Depot End"
+                  "pathName": "DepotStart-DepotEnd"
                 }
               },
               {
@@ -44,7 +44,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Depot End - Shoot"
+            "pathName": "DepotEnd-Shoot"
           }
         },
         {
@@ -70,6 +70,7 @@
     }
   },
   "resetOdom": true,
-  "folder": "TO FIX",
+  "folder": "TOFIX",
   "choreoAuto": false
 }
+

@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Shoot"
+            "pathName": "RightTrough-Shoot"
           }
         },
         {
@@ -39,6 +39,7 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+

@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Outpost"
+            "pathName": "RightTrough-Outpost"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost - Shoot"
+            "pathName": "Outpost-Shoot"
           }
         },
         {
@@ -76,19 +76,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Shoot - Right Trough"
+                        "pathName": "Shoot-RightTrough"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Right Trough - Right Trough Center"
+                        "pathName": "RightTrough-RightTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Right Trough Center - Neutral Zone Right"
+                        "pathName": "RightTroughCenter-RushRT"
                       }
                     }
                   ]
@@ -113,6 +113,8 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+
+

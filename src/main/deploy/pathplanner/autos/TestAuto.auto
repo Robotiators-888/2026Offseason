@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Right Trough Center"
+            "pathName": "RightTrough-RightTroughCenter"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough Center - Right Trough"
+            "pathName": "RightTroughCenter-RightTrough"
           }
         }
       ]

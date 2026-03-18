@@ -160,6 +160,9 @@ public class SUB_Intake extends SubsystemBase {
     public void intakeArmDown() {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Intake.kINTAKE_ARM_BOTTOM_SETPOINT)); 
     }
+    public void intakeArmTest() {
+        arm.set(-.15);
+    }
 
     //Makes arm go up based on PID
     public void intakeArmUp() {

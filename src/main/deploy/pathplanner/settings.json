@@ -3,19 +3,19 @@
   "robotLength": 0.7747,
   "holonomicMode": true,
   "pathFolders": [
-    "Center Trough Path",
+    "CenterTroughPath",
     "Climb",
     "Depot",
-    "Left Trough Path",
-    "Neutral zone",
+    "LeftTroughPath",
+    "Neutralzone",
     "Outpost",
-    "Right Trough Path"
+    "RightTroughPath"
   ],
   "autoFolders": [
-    "Fits 20s",
-    "Too Long",
+    "Fits20s",
+    "TooLong",
     "Orbit",
-    "TO FIX",
+    "TOFIX",
     "Test"
   ],
   "defaultMaxVel": 5.25,

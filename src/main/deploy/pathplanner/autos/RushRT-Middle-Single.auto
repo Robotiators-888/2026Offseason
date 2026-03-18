@@ -13,19 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center Trough - Shoot"
+            "pathName": "CenterTrough-Shoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Shoot - Right Trough"
+            "pathName": "Shoot-RightTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough - Right Trough Center"
+            "pathName": "RightTrough-RightTroughCenter"
           }
         },
         {
@@ -41,7 +41,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Right Trough Center - Neutral Zone Right"
+                  "pathName": "RightTroughCenter-RushRT"
                 }
               }
             ]
@@ -50,19 +50,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Neutral Zone Right - Right Trough Center "
+            "pathName": "RushRT-RightTroughCenter"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Right Trough Center - Right Trough"
+            "pathName": "RightTroughCenter-RightTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Right - Right Far Shoot"
+            "pathName": "TroughRight-RightFarShoot"
           }
         },
         {
@@ -88,6 +88,8 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+
+

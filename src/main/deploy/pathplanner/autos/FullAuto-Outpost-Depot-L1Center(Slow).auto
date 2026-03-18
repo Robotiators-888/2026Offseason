@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center Trough - Outpost"
+            "pathName": "CenterTrough-Outpost"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost - Shoot"
+            "pathName": "Outpost-Shoot"
           }
         },
         {
@@ -54,7 +54,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Shoot - Depot Start"
+                  "pathName": "Shoot-DepotStart"
                 }
               },
               {
@@ -69,7 +69,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Depot Start - Depot End"
+            "pathName": "DepotStart-DepotEnd"
           }
         },
         {
@@ -81,7 +81,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Depot End - Shoot"
+            "pathName": "DepotEnd-Shoot"
           }
         },
         {
@@ -101,6 +101,7 @@
     }
   },
   "resetOdom": true,
-  "folder": "TO FIX",
+  "folder": "TOFIX",
   "choreoAuto": false
 }
+

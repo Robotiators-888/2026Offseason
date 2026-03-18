@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough - Left Trough Center"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -33,13 +33,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Left Trough Center - Neutral Zone Left"
+                        "pathName": "LeftTroughCenter-RushLT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Neutral Zone Left - Left Trough Center"
+                        "pathName": "RushLT-LeftTroughCenter"
                       }
                     }
                   ]
@@ -57,13 +57,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough Center - Left Trough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Left - Left Far Shoot"
+            "pathName": "TroughLeft-LeftFarShoot"
           }
         },
         {
@@ -106,13 +106,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Far Shoot - Trough Left"
+            "pathName": "LeftFarShoot-TroughLeft"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough - Left Trough Center"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -132,13 +132,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Left Trough Center - Neutral Zone Left Deep"
+                        "pathName": "LeftTroughCenter-RushLTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Neutral Zone Left Deep - Left Trough Center"
+                        "pathName": "RushLTDeep-LeftTroughCenter"
                       }
                     }
                   ]
@@ -156,13 +156,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Trough Center - Left Trough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Trough Left - Left Far Shoot"
+            "pathName": "TroughLeft-LeftFarShoot"
           }
         },
         {
@@ -188,6 +188,8 @@
     }
   },
   "resetOdom": true,
-  "folder": "Fits 20s",
+  "folder": "Fits20s",
   "choreoAuto": false
 }
+
+
