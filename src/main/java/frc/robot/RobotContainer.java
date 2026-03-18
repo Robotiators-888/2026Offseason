@@ -64,10 +64,11 @@ import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SUB_Arm;
 import frc.robot.subsystems.SUB_Index;
-import frc.robot.subsystems.SUB_Intake;
 import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
 import frc.robot.utils.AllianceFlipUtil;
@@ -94,7 +95,8 @@ public class RobotContainer {
         private final SendableChooser<Command> autoChooser;
         public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
-        public static final SUB_Intake intake = SUB_Intake.getInstance();
+        public static final SUB_Roller roller = SUB_Roller.getInstance();
+        public static final SUB_Arm arm = SUB_Arm.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         private static String autoName, newAutoName;
@@ -154,10 +156,13 @@ public class RobotContainer {
                         })
                 );
 
-                intake.setDefaultCommand(new InstantCommand(() -> {
-                        intake.set(0);
-                        intake.setArm(0);
-                }, intake));
+                roller.setDefaultCommand(new RunCommand(() -> {
+                        roller.set(0);
+                }, roller));
+
+                arm.setDefaultCommand(new RunCommand(() -> {
+                        arm.setArm(0);
+                }, arm));
                 shooter.setDefaultCommand(new RunCommand(() -> {
                         shooter.stop();
                 }, shooter));
@@ -178,16 +183,23 @@ public class RobotContainer {
                 // Intake
 
                 NamedCommands.registerCommand("Intake",
-                        new RunCommand(() -> 
-                                intake.intakeArmAndRollers()
-                        ,intake)
+                        new RunCommand(() -> {
+                                arm.intakeArmTest();
+                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                        }
+                                
+                        ,arm,roller)
                 );
 
 
                 NamedCommands.registerCommand("StopIntake",
-                                new InstantCommand(() -> intake.set(0), intake));
+                                Commands.parallel(
+                                        new InstantCommand(() -> roller.set(0), roller),
+                                        new InstantCommand(() -> arm.setArm(0), arm)
+                                )
+                );
 
-                NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> intake.intakeArmDown(), intake).until(() -> intake.isArmDownReached() || intake.isForwardPressed()));
+                NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> arm.intakeArmDown(), arm).until(() -> arm.isArmDownReached() || arm.isForwardPressed()));
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ManualShoot", Commands.sequence(
@@ -306,9 +318,9 @@ public class RobotContainer {
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(new RunCommand(() -> {
-                        intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE);
-                        intake.intakeArmTest();
-                }, intake));
+                        roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                        arm.intakeArmTest();
+                }, roller, arm));
                 Driver1.rightTrigger().whileTrue(
                         new CMD_AimBot(
                                 drivetrain, 
@@ -338,11 +350,12 @@ public class RobotContainer {
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, index, shooter));
-                Driver2.povDown().onTrue(Commands.run(()->intake.intakeArmDown(),intake));
-                Driver2.povUp().onTrue(Commands.run(()->intake.intakeArmUp(),intake));
+                Driver2.povDown().onTrue(Commands.run(()->arm.intakeArmDown(),arm));
+                Driver2.povUp().onTrue(Commands.run(()->arm.intakeArmUp(),arm));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                        intake.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Intake.kINTAKE_ARM_MOTOR_SPEED);
-                }, intake));
+                        arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
+                }, arm));
+
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
                                 () -> -(Driver1.getLeftY()),
@@ -620,13 +633,12 @@ public class RobotContainer {
 
         private Command getShakeyCommand () {
                 Command c = new ParallelCommandGroup(
-                                new RunCommand(()->intake.setVolts(Constants.Intake.kINTAKE_MOTOR_VOLTAGE)),
+                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                                 new SequentialCommandGroup(
-                                        new RunCommand(()->intake.setArm(.15)).withTimeout(.4),
-                                        new RunCommand(()->intake.setArm(-.1)).withTimeout(.4)
+                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
+                                        new RunCommand(()->arm.setArm(-.1), arm).withTimeout(.4)
                                 ).repeatedly()
                         );
-                c.addRequirements(intake);
                 return c;
         }
 

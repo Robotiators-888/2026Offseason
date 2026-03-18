@@ -44,16 +44,19 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
 
-        public static final class Intake {
+        public static final class Roller {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
+                public static final double kROLLER_MOTOR_SPEED = 0.9;
+                public static final double kROLLER_MOTOR_VOLTAGE = 12.0;
+        }
+
+        public static final class Arm {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kINTAKE_MOTOR_SPEED = 0.9;
-                public static final double kINTAKE_MOTOR_VOLTAGE = 12.0;
-                public static final double kINTAKE_ARM_MOTOR_SPEED = 0.1;
-                public static final double kINTAKE_ARM_BOTTOM_SETPOINT = -209;
-                public static final double kINTAKE_ARM_TOP_SETPOINT = 0;
-                public static final double kIntake_ARM_FAULT_AMPS = 30;
+                public static final double kARM_MOTOR_SPEED = 0.1;
+                public static final double kARM_BOTTOM_SETPOINT = -209;
+                public static final double kARM_TOP_SETPOINT = 0;
+                public static final double kARM_FAULT_AMPS = 30;
         }
         
         public static final class Index {
