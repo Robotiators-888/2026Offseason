@@ -65,7 +65,7 @@ public class CMD_AimBot extends RunCommand {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, SUB_Roller roller, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     // Hold constructor arguments
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
