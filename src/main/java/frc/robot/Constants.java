@@ -114,7 +114,7 @@ public final class Constants {
                                  Units.degreesToRadians(-2), Units.degreesToRadians(-3));
                 public static final Transform3d kRobotToCamera3 = new Transform3d(
                                  Units.inchesToMeters(0), Units.inchesToMeters(-13.75+10),
-                                 Units.inchesToMeters(20.5), cameraRotation3);
+                                 Units.inchesToMeters(20.5+0.5), cameraRotation3);
         }
 
         
