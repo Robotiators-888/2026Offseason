@@ -111,6 +111,8 @@ public class RobotContainer {
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        private boolean isTeleop = false;
+        private boolean isShaking = false; 
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -321,7 +323,7 @@ public class RobotContainer {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
-                Driver1.rightBumper().whileFalse(new RunCommand(() -> {
+                Driver1.rightBumper().and(()->(isTeleop&&!isShaking)).whileFalse(new RunCommand(() -> {
                         if (arm.isArmDownReached()) {
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                                 arm.intakeArmTest();
@@ -329,7 +331,7 @@ public class RobotContainer {
                                 roller.setVolts(0);
                                 arm.setArm(0);
                         }
-                }, roller, arm)); //No while true, default command?
+                }, roller, arm));
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_AimBot(
@@ -364,9 +366,9 @@ public class RobotContainer {
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->arm.intakeArmDown(),arm));
                 Driver2.povUp().onTrue(Commands.run(()->arm.intakeArmUp(),arm));
-                Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                        arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
-                }, arm));
+                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
+                //         arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
+                // }, arm));
 
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
@@ -521,6 +523,7 @@ public class RobotContainer {
         }
 
         public void autonomousPeriodic() {
+                isTeleop = false;
                 photonPoseUpdate();
         }
 
@@ -529,6 +532,7 @@ public class RobotContainer {
         }
 
         public void testPeriodic() {
+                isTeleop = false;
                 photonPoseUpdate();
         }
 
@@ -541,6 +545,7 @@ public class RobotContainer {
         }
 
         public void teleopPeriodic() {
+                isTeleop = true;
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
                 SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
@@ -573,6 +578,7 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
+                isTeleop = false;
                 newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
                 if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
@@ -662,13 +668,15 @@ public class RobotContainer {
         }
 
         private Command getShakeyCommand () {
+                
                 Command c = new ParallelCommandGroup(
+                                new InstantCommand(()->{isShaking=true;}),
                                 new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                                 new SequentialCommandGroup(
                                         new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                         new RunCommand(()->arm.setArm(-.1), arm).withTimeout(.4)
                                 ).repeatedly()
-                        );
+                        ).finallyDo(()->{isShaking=false;});
                 return c;
         }
 
