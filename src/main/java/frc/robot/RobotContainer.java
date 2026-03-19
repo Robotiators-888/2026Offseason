@@ -446,6 +446,7 @@ public class RobotContainer {
         // Logs everything about the drivetrain
         public void logDrivetrain () {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
+                drivetrain.desiredSwerveModuleStatesPublisher.set(drivetrain.getState().ModuleTargets);
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
                         TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
                         TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();

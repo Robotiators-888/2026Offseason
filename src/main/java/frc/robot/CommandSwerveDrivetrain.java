@@ -153,6 +153,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public final StructArrayPublisher<SwerveModuleState> swerveModuleStatesPublisher = NetworkTableInstance.getDefault()
     .getStructArrayTopic("SmartDashboard/Drivetrain/SwerveModuleStates", SwerveModuleState.struct).publish();
+    public final StructArrayPublisher<SwerveModuleState> desiredSwerveModuleStatesPublisher = NetworkTableInstance.getDefault()
+    .getStructArrayTopic("SmartDashboard/Drivetrain/Desired SwerveModuleStates", SwerveModuleState.struct).publish();
 
         
     /**
