@@ -110,5 +110,8 @@ public class SUB_Index extends SubsystemBase {
 
         SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
         SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition()); //Inputs how many amps are going from controller to motor
+    
+        SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
+        SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
     }
 }
