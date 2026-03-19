@@ -327,6 +327,7 @@ public class RobotContainer {
                                 photonVision, 
                                 shooter, 
                                 index,
+                                roller,
                                 () -> -(Driver1.getLeftY()),
                                 () -> -(Driver1.getLeftX()) 
                         )

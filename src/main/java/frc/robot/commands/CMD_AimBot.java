@@ -27,6 +27,7 @@ import frc.robot.Constants.Operator;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -42,6 +43,7 @@ public class CMD_AimBot extends RunCommand {
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
+  private final SUB_Roller roller;
   private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
   
@@ -62,18 +64,19 @@ public class CMD_AimBot extends RunCommand {
             .withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, SUB_Roller roller, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     // Hold constructor arguments
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
+    this.roller = roller;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
     // Require subsystems
-    addRequirements(drivetrain, shooter, index);
+    addRequirements(drivetrain, shooter, index,roller);
   }
 
   @Override
@@ -137,6 +140,7 @@ public class CMD_AimBot extends RunCommand {
     shooter.shootMeters(distance);
     
     index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
+    roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
     boolean isShooterReady = shooter.atDesiredRPM();
     boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
     if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
