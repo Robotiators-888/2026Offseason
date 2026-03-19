@@ -115,7 +115,7 @@ public final class Constants {
                 // Was -3, advantagescope showed -87 ish so we changed it to -5 and now its a bit above -90
                 public static final Transform3d kRobotToCamera3 = new Transform3d(
                                  Units.inchesToMeters(0), Units.inchesToMeters(-13.75+10),
-                                 Units.inchesToMeters(20.5), cameraRotation3);
+                                 Units.inchesToMeters(20.5+0.5), cameraRotation3);
         }
 
         

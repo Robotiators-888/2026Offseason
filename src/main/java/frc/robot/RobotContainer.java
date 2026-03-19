@@ -321,18 +321,26 @@ public class RobotContainer {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
-                Driver1.rightBumper().whileTrue(new RunCommand(() -> {
-                        roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        arm.intakeArmTest();
-                }, roller, arm));
+                Driver1.rightBumper().whileFalse(new RunCommand(() -> {
+                        if (arm.isArmDownReached()) {
+                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                                arm.intakeArmTest();
+                        } else {
+                                roller.setVolts(0);
+                                arm.setArm(0);
+                        }
+                }, roller, arm)); //No while true, default command?
                 Driver1.rightTrigger().whileTrue(
-                        new CMD_AimBot(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index,
-                                () -> -(Driver1.getLeftY()),
-                                () -> -(Driver1.getLeftX()) 
+                        new ParallelCommandGroup(
+                                new CMD_AimBot(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
+                                ),
+                                NamedCommands.getCommand("IntakeAgitate")
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
