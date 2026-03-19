@@ -113,6 +113,7 @@ public class Alert {
     registerColor();
   }
 
+  // Alerts every fault a kraken could have in just about the worst way possible, but there is no better way
   public static void alertKraken (TalonFX kraken) {
     int krakenId = kraken.getDeviceID();
     if (!kraken.isAlive())

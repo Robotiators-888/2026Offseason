@@ -162,6 +162,7 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+      
       Alert.alertKraken(topFlywheel);
       Alert.alertKraken(bottomFlywheel);
     }
