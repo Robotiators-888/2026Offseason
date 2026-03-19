@@ -63,6 +63,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
+import frc.robot.commands.CMD_AimBotMove;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
@@ -323,7 +324,7 @@ public class RobotContainer {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
-                Driver1.rightBumper().and(()->(isTeleop&&!isShaking)).whileFalse(new RunCommand(() -> {
+                Driver1.rightBumper().toggleOnTrue(Commands.run(() -> {
                         if (arm.isArmDownReached()) {
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                                 arm.intakeArmTest();
@@ -331,16 +332,14 @@ public class RobotContainer {
                                 roller.setVolts(0);
                                 arm.setArm(0);
                         }
-                }, roller, arm));
+                }, roller, arm).repeatedly());
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
-                                new CMD_AimBot(
+                                new CMD_AimBotMove(
                                         drivetrain, 
                                         photonVision, 
                                         shooter, 
-                                        index,
-                                        () -> -(Driver1.getLeftY()),
-                                        () -> -(Driver1.getLeftX()) 
+                                        index
                                 ),
                                 NamedCommands.getCommand("IntakeAgitate")
                         )

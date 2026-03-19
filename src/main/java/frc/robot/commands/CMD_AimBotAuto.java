@@ -37,6 +37,7 @@ public class CMD_AimBotAuto extends RunCommand {
   private final SUB_Shooter shooter;
   private final SUB_Index index;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  private double lastDistance = 0;
   
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
@@ -80,6 +81,13 @@ public class CMD_AimBotAuto extends RunCommand {
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
+    lastDistance = drivetrain.getPose().getTranslation().getDistance(
+            SUB_PhotonVision.getInstance().at_field.getTagPose(
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+            ).map(pose -> pose.toPose2d().getTranslation().plus(
+                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+            )).orElse(drivetrain.getPose().getTranslation())
+    );
     running = true;
   }
 
@@ -118,7 +126,8 @@ public class CMD_AimBotAuto extends RunCommand {
                     new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
             )).orElse(drivetrain.getPose().getTranslation())
     );
-    shooter.shootMeters(distance);
+    shooter.shootMeters((Math.abs(lastDistance - distance) > .1) ? distance : (lastDistance > distance) ? distance-10 : distance+10);
+    lastDistance = distance;
     
     index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
