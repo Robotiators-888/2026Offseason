@@ -135,10 +135,10 @@ public class RobotContainer {
         public RobotContainer() {
                 field = new Field2d();
                 try {
-                        pathLeftToNeutral = PathPlannerPath.fromPathFile("Left Trough - Left Trough Center");
-                        pathNeutralToLeft = PathPlannerPath.fromPathFile("Left Trough Center - Left Trough");
-                        pathRightToNeutral = PathPlannerPath.fromPathFile("Right Trough - Right Trough Center");
-                        pathNeutralToRight = PathPlannerPath.fromPathFile("Right Trough Center - Right Trough");
+                        pathLeftToNeutral = PathPlannerPath.fromPathFile("LeftTrough-LeftTroughCenter");
+                        pathNeutralToLeft = PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTrough");
+                        pathRightToNeutral = PathPlannerPath.fromPathFile("RightTrough-RightTroughCenter");
+                        pathNeutralToRight = PathPlannerPath.fromPathFile("RightTroughCenter-RightTrough");
                 } catch (Exception e) {
                         Alert.registerError("Failed to load trench paths: " + e.getMessage());
                 }
