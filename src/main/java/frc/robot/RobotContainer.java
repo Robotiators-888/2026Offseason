@@ -30,6 +30,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -107,7 +108,9 @@ public class RobotContainer {
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         Field2d field;
-
+        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -122,10 +125,8 @@ public class RobotContainer {
         private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
         // Driving Swerve Requests
         private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
             .withDriveRequestType(DriveRequestType.Velocity); 
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * Operator.kDriveDeadband).withRotationalDeadband(MaxAngularRate * Operator.kDriveDeadband) 
             .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
 
         /**
@@ -144,14 +145,17 @@ public class RobotContainer {
 
                 drivetrain.setDefaultCommand(            
                         drivetrain.applyRequest(() -> {
+                                double xInput = xLimiter.calculate(MathUtil.applyDeadband(-Driver1.getLeftY(), Operator.kDriveDeadband));
+                                double yInput = yLimiter.calculate(MathUtil.applyDeadband(-Driver1.getLeftX(), Operator.kDriveDeadband));
+                                double rotInput = rotLimiter.calculate(MathUtil.applyDeadband(-Driver1.getRightX(), Operator.kDriveDeadband));
                                 if (fieldRelative) {
-                                        return drive.withVelocityX(-Driver1.getLeftY()*MaxSpeed)
-                                                .withVelocityY(-Driver1.getLeftX()*MaxSpeed)
-                                                .withRotationalRate(-Driver1.getRightX()*MaxAngularRate);
+                                        return drive.withVelocityX(xInput*MaxSpeed)
+                                                .withVelocityY(yInput*MaxSpeed)
+                                                .withRotationalRate(rotInput*MaxAngularRate);
                                 } else {
-                                        return driveRobot.withVelocityX(-Driver1.getLeftY()*MaxSpeed)
-                                                .withVelocityY(-Driver1.getLeftX()*MaxSpeed)
-                                                .withRotationalRate(-Driver1.getRightX()*MaxAngularRate);
+                                        return driveRobot.withVelocityX(xInput*MaxSpeed)
+                                                .withVelocityY(yInput*MaxSpeed)
+                                                .withRotationalRate(rotInput*MaxAngularRate);
                                 }
                         })
                 );
