@@ -3,16 +3,10 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.revrobotics.spark.SparkLimitSwitch;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.LimitSwitchConfig.Type;
-import com.revrobotics.spark.config.SparkMaxConfig;
-
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.Alert;
 
 public class SUB_Roller extends SubsystemBase {
     // Initiliazes values and objects used in subsystem
@@ -71,7 +65,7 @@ public class SUB_Roller extends SubsystemBase {
         SmartDashboard.putNumber("Roller/Roller Supply Voltage", roller.getSupplyVoltage().getValueAsDouble());
         SmartDashboard.putNumber("Roller/Roller Motor Voltage", roller.getMotorVoltage().getValueAsDouble());
 
-
+        Alert.alertKraken(roller);
     }
 
     

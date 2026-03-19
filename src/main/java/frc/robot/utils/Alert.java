@@ -2,6 +2,8 @@ package frc.robot.utils;
 
 import java.util.HashMap;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -16,6 +18,7 @@ public class Alert {
   private static HashMap<String, Integer> warningMap = new HashMap<String, Integer>();
   private static HashMap<String, Integer> infoMap = new HashMap<String, Integer>();
   private static Color alertColor = new Color(0, 255, 0); // Green
+  private static final double connectedTimeout = .5;
 
   public Alert() {
   }
@@ -108,5 +111,61 @@ public class Alert {
     SmartDashboard.putStringArray("Alert/warnings", warning.toArray());
     SmartDashboard.putStringArray("Alert/info", info.toArray());
     registerColor();
+  }
+
+  public static void alertKraken (TalonFX kraken) {
+    int krakenId = kraken.getDeviceID();
+    if (!kraken.isAlive())
+      registerError("Motor " + krakenId + " is not alive");
+    if (!kraken.isConnected(connectedTimeout))
+      registerError("Motor " + krakenId + " has been disconnected for " + connectedTimeout + " sec");
+    if (kraken.getFault_BootDuringEnable().getValue())
+      registerError("Motor " + krakenId + " Fault_BootDuringEnable");
+    if (kraken.getFault_BridgeBrownout().getValue())
+      registerError("Motor " + krakenId + " Fault_BridgeBrownout");
+    if (kraken.getFault_DeviceTemp().getValue())
+      registerError("Motor " + krakenId + " Fault_DeviceTemp");
+    if (kraken.getFault_ForwardHardLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_ForwardHardLimit");
+    if (kraken.getFault_ForwardSoftLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_ForwardSoftLimit");
+    if (kraken.getFault_FusedSensorOutOfSync().getValue())
+      registerError("Motor " + krakenId + " Fault_FusedSensorOutOfSync");
+    if (kraken.getFault_Hardware().getValue())
+      registerError("Motor " + krakenId + " Fault_Hardware");
+    if (kraken.getFault_MissingDifferentialFX().getValue())
+      registerError("Motor " + krakenId + " Fault_MissingDifferentialFX");
+    if (kraken.getFault_MissingHardLimitRemote().getValue())
+      registerError("Motor " + krakenId + " Fault_MissingHardLimitRemote");
+    if (kraken.getFault_MissingSoftLimitRemote().getValue())
+      registerError("Motor " + krakenId + " Fault_MissingSoftLimitRemote");
+    if (kraken.getFault_OverSupplyV().getValue())
+      registerError("Motor " + krakenId + " Fault_OverSupplyV");
+    if (kraken.getFault_ProcTemp().getValue())
+      registerError("Motor " + krakenId + " Fault_ProcTemp");
+    if (kraken.getFault_RemoteSensorDataInvalid().getValue())
+      registerError("Motor " + krakenId + " Fault_RemoteSensorDataInvalid");
+    if (kraken.getFault_RemoteSensorPosOverflow().getValue())
+      registerError("Motor " + krakenId + " Fault_RemoteSensorPosOverflow");
+    if (kraken.getFault_RemoteSensorReset().getValue())
+      registerError("Motor " + krakenId + " Fault_RemoteSensorReset");
+    if (kraken.getFault_ReverseHardLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_ReverseHardLimit");
+    if (kraken.getFault_ReverseSoftLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_ReverseSoftLimit");
+    if (kraken.getFault_StaticBrakeDisabled().getValue())
+      registerError("Motor " + krakenId + " Fault_StaticBrakeDisabled");
+    if (kraken.getFault_StatorCurrLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_StatorCurrLimit");
+    if (kraken.getFault_SupplyCurrLimit().getValue())
+      registerError("Motor " + krakenId + " Fault_SupplyCurrLimit");
+    if (kraken.getFault_Undervoltage().getValue())
+      registerError("Motor " + krakenId + " Fault_Undervoltage");
+    if (kraken.getFault_UnlicensedFeatureInUse().getValue())
+      registerError("Motor " + krakenId + " Fault_UnlicensedFeatureInUse");
+    if (kraken.getFault_UnstableSupplyV().getValue())
+      registerError("Motor " + krakenId + " Fault_UnstableSupplyV");
+    if (kraken.getFault_UsingFusedCANcoderWhileUnlicensed().getValue())
+      registerError("Motor " + krakenId + " Fault_UsingFusedCANcoderWhileUnlicensed");
   }
 }

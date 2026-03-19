@@ -478,6 +478,9 @@ public class RobotContainer {
 
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Device Temp", driveMotor.getDeviceTemp().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Device Temp", steerMotor.getDeviceTemp().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Processor Temp", driveMotor.getProcessorTemp().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Processor Temp", steerMotor.getProcessorTemp().getValueAsDouble());
                         
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
                 }
@@ -485,12 +488,8 @@ public class RobotContainer {
 
         private void checkAlerts () {
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
-                        TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
-                        TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();
-                        int driveMotorId = driveMotor.getDeviceID();
-                        int steerMotorId = steerMotor.getDeviceID();
-                        driveMotor.isAlive();
-                        driveMotor.isConnected(2);
+                        Alert.alertKraken(drivetrain.getModule(i).getDriveMotor());
+                        Alert.alertKraken(drivetrain.getModule(i).getSteerMotor());
                 }
         }
 

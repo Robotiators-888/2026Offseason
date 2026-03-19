@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.Alert;
 
 public class SUB_Shooter extends SubsystemBase {
     // Sets up the Singleton Instance
@@ -149,6 +150,8 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+      Alert.alertKraken(topFlywheel);
+      Alert.alertKraken(bottomFlywheel);
     }
 
     // Gets the time of flight of the fuel for shoot on the move
