@@ -135,10 +135,10 @@ public class RobotContainer {
         public RobotContainer() {
                 field = new Field2d();
                 try {
-                        pathLeftToNeutral = PathPlannerPath.fromPathFile("Left Trough - Left Trough Center");
-                        pathNeutralToLeft = PathPlannerPath.fromPathFile("Left Trough Center - Left Trough");
-                        pathRightToNeutral = PathPlannerPath.fromPathFile("Right Trough - Right Trough Center");
-                        pathNeutralToRight = PathPlannerPath.fromPathFile("Right Trough Center - Right Trough");
+                        pathLeftToNeutral = PathPlannerPath.fromPathFile("LeftTrough-LeftTroughCenter");
+                        pathNeutralToLeft = PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTrough");
+                        pathRightToNeutral = PathPlannerPath.fromPathFile("RightTrough-RightTroughCenter");
+                        pathNeutralToRight = PathPlannerPath.fromPathFile("RightTroughCenter-RightTrough");
                 } catch (Exception e) {
                         Alert.registerError("Failed to load trench paths: " + e.getMessage());
                 }
@@ -321,18 +321,26 @@ public class RobotContainer {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
-                Driver1.rightBumper().whileTrue(new RunCommand(() -> {
-                        roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        arm.intakeArmTest();
-                }, roller, arm));
+                Driver1.rightBumper().whileFalse(new RunCommand(() -> {
+                        if (arm.isArmDownReached()) {
+                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                                arm.intakeArmTest();
+                        } else {
+                                roller.setVolts(0);
+                                arm.setArm(0);
+                        }
+                }, roller, arm)); //No while true, default command?
                 Driver1.rightTrigger().whileTrue(
-                        new CMD_AimBot(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index,
-                                () -> -(Driver1.getLeftY()),
-                                () -> -(Driver1.getLeftX()) 
+                        new ParallelCommandGroup(
+                                new CMD_AimBot(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
+                                ),
+                                NamedCommands.getCommand("IntakeAgitate")
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {

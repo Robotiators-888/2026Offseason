@@ -76,6 +76,8 @@ public class SUB_Arm extends SubsystemBase {
 
         SmartDashboard.putNumber("Arm/Arm Bus Voltage", arm.getBusVoltage());
 
+        SmartDashboard.putNumber("Arm/Arm Motor Temp", arm.getMotorTemperature());
+
         SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
         if (periodicCountFault > 0) {

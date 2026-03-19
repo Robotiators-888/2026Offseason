@@ -141,15 +141,28 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", topFlywheel.getSupplyVoltage().getValueAsDouble());  //puts motor supply voltage into table
       SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", bottomFlywheel.getSupplyVoltage().getValueAsDouble());
       
-      SmartDashboard.putNumber("Shooter/Top Motor Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble()); //puts motor voltage into table
-      SmartDashboard.putNumber("Shooter/Bottom Motor Motor Voltage", bottomFlywheel.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble()); //puts motor voltage into table
+      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", bottomFlywheel.getMotorVoltage().getValueAsDouble());
 
       SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", topFlywheel.getPosition().getValueAsDouble()); //puts angle of top flywheel into table
-      SmartDashboard.putNumber("Shooter/Bottom Motor Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble()); //puts angle of bottom table
+      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble()); //puts angle of bottom table
+
+      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
       
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+      
       Alert.alertKraken(topFlywheel);
       Alert.alertKraken(bottomFlywheel);
     }
