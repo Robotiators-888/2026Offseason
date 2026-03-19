@@ -44,7 +44,6 @@ public class CMD_AimBot extends RunCommand {
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
-  private final SUB_Roller roller;
   private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
   
@@ -65,19 +64,18 @@ public class CMD_AimBot extends RunCommand {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, SUB_Roller roller, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     // Hold constructor arguments
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
-    this.roller = roller;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
     // Require subsystems
-    addRequirements(drivetrain, shooter, index,roller);
+    addRequirements(drivetrain, shooter, index);
   }
 
   @Override
@@ -141,7 +139,6 @@ public class CMD_AimBot extends RunCommand {
     shooter.shootMeters(distance);
     
     index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
-    roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
     boolean isShooterReady = shooter.atDesiredRPM();
     boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
     if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {

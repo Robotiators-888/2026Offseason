@@ -331,7 +331,6 @@ public class RobotContainer {
                                 photonVision, 
                                 shooter, 
                                 index,
-                                roller,
                                 () -> -(Driver1.getLeftY()),
                                 () -> -(Driver1.getLeftX()) 
                         )
@@ -442,6 +441,7 @@ public class RobotContainer {
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
                 logDrivetrain();
+                checkAlerts();
         }
 
         // Logs everything about the drivetrain
@@ -472,8 +472,25 @@ public class RobotContainer {
                         
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Encoder Pos", driveMotor.getPosition().getValueAsDouble());
                         SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Encoder Pos", steerMotor.getPosition().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Torque Current", driveMotor.getTorqueCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Torque Current", steerMotor.getTorqueCurrent().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Device Temp", driveMotor.getDeviceTemp().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Device Temp", steerMotor.getDeviceTemp().getValueAsDouble());
                         
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
+                }
+        }
+
+        private void checkAlerts () {
+                for (int i = 0; i < drivetrain.getModules().length; i++) {
+                        TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
+                        TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();
+                        int driveMotorId = driveMotor.getDeviceID();
+                        int steerMotorId = steerMotor.getDeviceID();
+                        driveMotor.isAlive();
+                        driveMotor.isConnected(2);
                 }
         }
 
