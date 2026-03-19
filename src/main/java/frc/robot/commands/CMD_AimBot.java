@@ -129,7 +129,7 @@ public class CMD_AimBot extends RunCommand {
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
-    SmartDashboard.getBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
+    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
     double distance = drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
@@ -139,11 +139,11 @@ public class CMD_AimBot extends RunCommand {
     );
     shooter.shootMeters(distance);
     
-    index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
+     // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
-    boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
-    if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
-        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+    if (isThetaErrorCorrect && isShooterReady) {
+      index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+      index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
     }
