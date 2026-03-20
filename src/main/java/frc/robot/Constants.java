@@ -46,33 +46,33 @@ public final class Constants {
 
         public static final class Roller {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
-                public static final double kROLLER_MOTOR_SPEED = 0.9;
-                public static final double kROLLER_MOTOR_VOLTAGE = 12.0;
+                public static final double kROLLER_MOTOR_SPEED = 0.9; // Percentage of max voltage to run the roller at
+                public static final double kROLLER_MOTOR_VOLTAGE = 12.0; //Volts
         }
 
         public static final class Arm {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kARM_MOTOR_SPEED = 0.1;
-                public static final double kARM_BOTTOM_SETPOINT = -209;
-                public static final double kARM_TOP_SETPOINT = 0;
-                public static final double kARM_FAULT_AMPS = 30;
+                public static final double kARM_MOTOR_SPEED = 0.1; // Percentage of max voltage to run the arm at
+                public static final double kARM_BOTTOM_SETPOINT = -209; // Degrees 
+                public static final double kARM_TOP_SETPOINT = 0; // Degrees
+                public static final double kARM_FAULT_AMPS = 30; // Amps
         }
         
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kINDEX_MOTOR_VOLTS = 5;
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0;
+                public static final double kINDEX_MOTOR_VOLTS = 5; // Volts to run the index motor at when feeding balls into the shooter, can be tested and tuned in testing
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; // Volts to run the metering wheel at when feeding balls into the shooter, can be tested and tuned in testing
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); // Max RPM of NEO at 12V is 5676
                 
         }
 
         public static final class Climber {
                 public static final int kCLIMBER_MOTOR_CANID = 50; 
-                public static final double kCLIMBER_MOTOR_SPEED = 0.1;
-                public static final double kCLIMBER_SETPOINT = (9.0/4.75) * 36;
-                public static final double kCLIMBER_CONVERSION = (1.0/4.75) * 36;
+                public static final double kCLIMBER_MOTOR_SPEED = 0.1; // Percentage of max voltage to run the climber at, can be tested and tuned in testing
+                public static final double kCLIMBER_SETPOINT = (9.0/4.75) * 36; // Inches, converted to rotations in the motor config, can be tested and tuned in testing
+                public static final double kCLIMBER_CONVERSION = (1.0/4.75) * 36; // Inches per rotation, converted to rotations per inch in the motor config
                 public static final double kCLIMBER_TOLERANCE = 0.25; //Inches
                 // 9 / 4.75 * 36
                 // 9 inches target
@@ -82,8 +82,8 @@ public final class Constants {
         }
 
         public static final class Field {
-                public static final double fieldLength = 1653.2 / 100.0;
-                public static final double fieldWidth = 800.1 / 100.0;
+                public static final double fieldLength = 1653.2 / 100.0; // Meters
+                public static final double fieldWidth = 800.1 / 100.0; // Meters
         }
 
         public static final class PhotonVision {
