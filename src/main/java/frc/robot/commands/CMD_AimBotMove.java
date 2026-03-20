@@ -135,7 +135,7 @@ public class CMD_AimBotMove extends RunCommand {
 
     
     drivetrain.setControl(
-      drive.withVelocityX((isThetaErrorCorrect&&distance<2) ? xInput:0)
+      drive.withVelocityX((!isThetaErrorCorrect||distance<2) ? 0:xInput)
       .withVelocityY(0)
       .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
 
