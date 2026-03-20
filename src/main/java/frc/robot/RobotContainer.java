@@ -288,6 +288,16 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
+                Driver1.leftTrigger().whileTrue(
+                        new ParallelCommandGroup(
+                                new CMD_AimBotAuto(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index
+                                )
+                        )
+                );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
@@ -324,22 +334,19 @@ public class RobotContainer {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
-                Driver1.rightBumper().toggleOnTrue(Commands.run(() -> {
-                        if (arm.isArmDownReached()) {
-                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                                arm.intakeArmTest();
-                        } else {
-                                roller.setVolts(0);
-                                arm.setArm(0);
-                        }
-                }, roller, arm).repeatedly());
+                Driver1.rightBumper().whileTrue(Commands.run(() -> {
+                        roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                        arm.intakeArmTest();
+                }, roller, arm));
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
-                                new CMD_AimBotMove(
+                                new CMD_AimBot(
                                         drivetrain, 
                                         photonVision, 
                                         shooter, 
-                                        index
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
                                 ),
                                 NamedCommands.getCommand("IntakeAgitate")
                         )
@@ -365,9 +372,9 @@ public class RobotContainer {
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->arm.intakeArmDown(),arm));
                 Driver2.povUp().onTrue(Commands.run(()->arm.intakeArmUp(),arm));
-                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                //         arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
-                // }, arm));
+                Driver2.rightBumper().whileTrue(new RunCommand(() -> {
+                        arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
+                }, arm));
 
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
