@@ -11,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -44,7 +45,8 @@ public class CMD_Shuttle extends RunCommand{
         RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
         RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
     );
-
+    private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
+    private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
     private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
         5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
         thetaConstraints
@@ -107,9 +109,11 @@ public class CMD_Shuttle extends RunCommand{
         boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
         if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+        } else if (!isThetaErrorCorrect) {
+            index.setVolts(0);
         }
-        double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);
-        double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);
+        double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
+        double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
         drivetrain.setControl(
         drive.withVelocityX(xInput * MaxSpeed)
         .withVelocityY(yInput * MaxSpeed)

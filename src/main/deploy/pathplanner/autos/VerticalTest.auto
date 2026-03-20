@@ -1,0 +1,25 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "DeployIntakeEncoder"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "VerticalDistanceTest"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Test",
+  "choreoAuto": false
+}
