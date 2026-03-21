@@ -60,7 +60,7 @@ public class TunerConstants {
             new CurrentLimitsConfigs()
                 .withStatorCurrentLimit(Amps.of(90)) //Calculated Slip Current
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(60))
+                .withSupplyCurrentLimit(Amps.of(50))
                 .withSupplyCurrentLimitEnable(true)
         );
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()

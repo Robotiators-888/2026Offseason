@@ -18,7 +18,7 @@ public class Alert {
   private static HashMap<String, Integer> warningMap = new HashMap<String, Integer>();
   private static HashMap<String, Integer> infoMap = new HashMap<String, Integer>();
   private static Color alertColor = new Color(0, 255, 0); // Green
-  private static final double connectedTimeout = .5;
+  private static final double connectedTimeout = .5; // Seconds
 
   public Alert() {
   }
