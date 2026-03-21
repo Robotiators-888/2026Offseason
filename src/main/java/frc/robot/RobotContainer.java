@@ -288,16 +288,16 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                Driver1.leftTrigger().whileTrue(
-                        new ParallelCommandGroup(
-                                new CMD_AimBotAuto(
-                                        drivetrain, 
-                                        photonVision, 
-                                        shooter, 
-                                        index
-                                )
-                        )
-                );
+                // Driver1.leftTrigger().whileTrue(
+                //         new ParallelCommandGroup(
+                //                 new CMD_AimBotAuto(
+                //                         drivetrain, 
+                //                         photonVision, 
+                //                         shooter, 
+                //                         index
+                //                 )
+                //         )
+                // );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
