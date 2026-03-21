@@ -42,13 +42,14 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.3; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
-                // Ideal roller voltage: 10.91276304645254
         }
 
         public static final class Roller {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final double kROLLER_MOTOR_SPEED = 0.9; // Percentage of max voltage to run the roller at
-                public static final double kROLLER_MOTOR_VOLTAGE = 12*1.0; //Volts
+                // public static final double kROLLER_MOTOR_VOLTAGE = 12*1.0; //Volts
+                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; // Volts
+                // Ideal roller voltage: 10.91276304645254
         }
 
         public static final class Arm {
