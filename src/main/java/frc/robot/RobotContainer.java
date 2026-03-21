@@ -348,7 +348,9 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                NamedCommands.getCommand("IntakeAgitate")
+                                Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                                        
+                                
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
@@ -390,7 +392,7 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
-                Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
+                // Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
         public void robotInit() {
