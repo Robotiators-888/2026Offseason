@@ -680,7 +680,7 @@ public class RobotContainer {
                                 new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                                 new SequentialCommandGroup(
                                         new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.1), arm).withTimeout(.4)
+                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
                                 ).repeatedly()
                         ).finallyDo(()->{isShaking=false;});
                 return c;

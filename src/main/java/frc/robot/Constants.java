@@ -48,7 +48,7 @@ public final class Constants {
         public static final class Roller {
                 public static final int kINTAKE_MOTOR_CANID = 30; // Roller
                 public static final double kROLLER_MOTOR_SPEED = 0.9; // Percentage of max voltage to run the roller at
-                public static final double kROLLER_MOTOR_VOLTAGE = 12*0.5; //Volts
+                public static final double kROLLER_MOTOR_VOLTAGE = 12*1.0; //Volts
         }
 
         public static final class Arm {
