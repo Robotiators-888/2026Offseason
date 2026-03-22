@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 7.1444457831325305,
-        "y": 5.3809638554216874
+        "y": 5.380963855421688
       },
       "isLocked": false,
       "linkedName": "RushLTDeepBackwards"
@@ -17,15 +17,15 @@
     {
       "anchor": {
         "x": 7.1335180722891565,
-        "y": 6.7141445783132531
+        "y": 6.714144578313253
       },
       "prevControl": {
         "x": 7.259216316375316,
-        "y": 6.4706042303963202
+        "y": 6.4706042303963205
       },
       "nextControl": {
         "x": 6.95867469879518,
-        "y": 7.0529036144578312
+        "y": 7.052903614457831
       },
       "isLocked": false,
       "linkedName": null
@@ -33,11 +33,11 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 7.5883614457831323
+        "y": 7.588361445783132
       },
       "prevControl": {
         "x": 6.532493975903614,
-        "y": 7.6539277108433726
+        "y": 7.653927710843373
       },
       "nextControl": null,
       "isLocked": false,
@@ -59,7 +59,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 4.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -77,4 +77,3 @@
   },
   "useDefaultConstraints": true
 }
-

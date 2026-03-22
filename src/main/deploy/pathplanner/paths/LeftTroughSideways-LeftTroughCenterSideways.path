@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 4.270457831325301,
-        "y": 7.5883614457831323
+        "y": 7.588361445783132
       },
       "prevControl": null,
       "nextControl": {
         "x": 4.5204578217660965,
-        "y": 7.58843058045320646
+        "y": 7.588430580453206
       },
       "isLocked": false,
       "linkedName": "LefttroughSideways"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 7.5883614457831323
+        "y": 7.588361445783132
       },
       "prevControl": {
         "x": 5.364566288286179,
-        "y": 7.5882536823009016
+        "y": 7.588253682300902
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 4.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
