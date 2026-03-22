@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import org.json.simple.parser.ParseException;
@@ -349,7 +350,8 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftX()) 
                                 ),
                                 Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
-                                        
+                                // Commands.either would cause the command to not start even if the button was released
+                                // getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
                                 
                         )
                 );
@@ -684,6 +686,18 @@ public class RobotContainer {
                                         new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                         new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
                                 ).repeatedly()
+                        ).finallyDo(()->{isShaking=false;});
+                return c;
+        }
+
+        private Command getCancellableShakeyCommand (BooleanSupplier condition) {
+                Command c = new ParallelCommandGroup(
+                                new InstantCommand(()->{isShaking=true;}),
+                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                                new SequentialCommandGroup(
+                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
+                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
+                                ).until(condition).repeatedly()
                         ).finallyDo(()->{isShaking=false;});
                 return c;
         }
