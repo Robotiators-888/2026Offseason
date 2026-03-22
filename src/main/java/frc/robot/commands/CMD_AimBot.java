@@ -45,6 +45,7 @@ public class CMD_AimBot extends RunCommand {
   private final SUB_Index index;
   private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
   
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
@@ -114,6 +115,9 @@ public class CMD_AimBot extends RunCommand {
         targetTranslation.getX() - shooterFieldPosition.getX(),
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
+
+    targetRotation = targetRotation.plus(shooterThetaOffset);
+
     // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 

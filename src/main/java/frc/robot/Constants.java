@@ -113,7 +113,7 @@ public final class Constants {
 
                 public static final String kCam3Name = "HighCam";
                 public static final Rotation3d cameraRotation3 = new Rotation3d(Units.degreesToRadians(-5),
-                                 Units.degreesToRadians(0), Units.degreesToRadians(-3.5));
+                                 Units.degreesToRadians(0), Units.degreesToRadians(-3.5+4.0));
                 // Was -3, advantagescope showed -87 ish so we changed it to -5 and now its a bit above -90
                 public static final Transform3d kRobotToCamera3 = new Transform3d(
                                  Units.inchesToMeters(0), Units.inchesToMeters(-13.5+10),
