@@ -31,10 +31,20 @@ public class Alert {
     // Makes sure there are no duplicates using the hashmap
     if (!errorMap.containsKey(alert)) {
       errorMap.put(alert, 0);
-      error.add(alert);
+      error.add(alert + " 0");
       notifyError(alert);
       updateSmartDashboard();
       // triggerStop();
+    }
+    else {
+      // Stores the value at the hashmap of the alert
+      Integer mapVal = errorMap.get(alert);
+      // Updates the hashmap value
+      errorMap.put(alert, mapVal+1);
+      // Finds the alert in the vector and then updates it
+      error.set(error.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
+      // Doesn't notify elastic as this would spam notifications
+      updateSmartDashboard();
     }
   }
 
@@ -42,8 +52,18 @@ public class Alert {
     // Makes sure there are no duplicates using the hashmap
     if (!warningMap.containsKey(alert)) {
       warningMap.put(alert, 0);
-      warning.add(alert);
+      warning.add(alert + " 0");
       notifyWarning(alert);
+      updateSmartDashboard();
+    }
+    else {
+      // Stores the value at the hashmap of the alert
+      Integer mapVal = warningMap.get(alert);
+      // Updates the hashmap value
+      warningMap.put(alert, mapVal+1);
+      // Finds the alert in the vector and then updates it
+      warning.set(warning.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
+      // Doesn't notify elastic as this would spam notifications
       updateSmartDashboard();
     }
   }
@@ -52,8 +72,18 @@ public class Alert {
     // Makes sure there are no duplicates using the hashmap
     if (!infoMap.containsKey(alert)) {
       infoMap.put(alert, 0);
-      info.add(alert);
+      info.add(alert + " 0");
       notifyInfo(alert);
+      updateSmartDashboard();
+    }
+    else {
+      // Stores the value at the hashmap of the alert
+      Integer mapVal = infoMap.get(alert);
+      // Updates the hashmap value
+      infoMap.put(alert, mapVal+1);
+      // Finds the alert in the vector and then updates it
+      info.set(info.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
+      // Doesn't notify elastic as this would spam notifications
       updateSmartDashboard();
     }
   }
