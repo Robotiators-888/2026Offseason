@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class SUB_Arm extends SubsystemBase {
-    // Initiliazes values and objects used in subsystem
+    /** Subsystem state and configuration constants */
     public static boolean extended;
     private PIDController controller = new PIDController(0.001, 0, 0);
     private SparkMax arm;
@@ -19,7 +19,10 @@ public class SUB_Arm extends SubsystemBase {
     private boolean stickDown = false;
     private int periodicCountFault = 0;
     private static SUB_Arm INSTANCE = null;
-    private boolean intakeArmAndRollersUntil = false;
+
+    /**
+     * @return Single instance of the SUB_Arm subsystem
+     */
     public static SUB_Arm getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Arm();
@@ -28,70 +31,72 @@ public class SUB_Arm extends SubsystemBase {
     }
 
     private SUB_Arm () {
-        //Defines motors with IDs and what controller
+        // Defines motors with IDs and motor type
         arm = new SparkMax(Constants.Arm.kARM_MOTOR_CANID, MotorType.kBrushless);
         armFollower = new SparkMax(Constants.Arm.kARM_FOLLOWER_MOTOR_CANID, MotorType.kBrushless);
         configureMotors();
     }
 
     private void configureMotors(){
-        //Creates config for motors
+        // Creates config for motor and encoder (23:1 cycloidal gearbox)
         SparkMaxConfig config = new SparkMaxConfig();
-        config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees, Thrifty bot cycloial gearbox 23:1
+        config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees
         config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
-        config.smartCurrentLimit(35); //Sets stall limit for motor in amps
-        config.inverted(true); //Inverts motor
-        arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); //Sets persist parameters
-        SparkMaxConfig followerConfig = new SparkMaxConfig(); //Creates follower spark max config
-        followerConfig.follow(arm, true); // Makes follower opposite compared to leader
-        followerConfig.smartCurrentLimit(35);//Sets stall limit for motor in amps
-        armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);  //Sets persist parameters
+        config.smartCurrentLimit(35); // Sets stall limit in amps
+        config.inverted(true);
+        arm.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        
+        // Configure follower motor
+        SparkMaxConfig followerConfig = new SparkMaxConfig();
+        followerConfig.follow(arm, true); // Opposite direction compared to leader
+        followerConfig.smartCurrentLimit(35);
+        armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
 
-    //Returns if motor arm is down T/F
+    /** @return true if the arm has reached the top setpoint or is stuck up */
     public boolean isForwardPressed() {
         return stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Arm.kARM_TOP_SETPOINT)<10;
     }
 
-    //Returns if motor arm is up T/F
+    /** @return true if the arm has reached the bottom setpoint or is stuck down */
     public boolean isReversePressed() {
         return stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Arm.kARM_BOTTOM_SETPOINT)<10;
     }
 
 
-    // Logs everything every periodic
+    @Override
     public void periodic() {
-
-        SmartDashboard.putBoolean("Arm/Arm Forward Limit", isForwardPressed()); //Returns if the intake arm is down
-        SmartDashboard.putBoolean("Arm/Arm Reverse Limit", isReversePressed()); //Returns if the intake arm is up
-        
-        SmartDashboard.putNumber("Arm/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
-
-        SmartDashboard.putNumber("Arm/Arm Output Current", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
-
+        // Telemetry logging for dashboard
+        SmartDashboard.putBoolean("Arm/Arm Forward Limit", isForwardPressed());
+        SmartDashboard.putBoolean("Arm/Arm Reverse Limit", isReversePressed());
+        SmartDashboard.putNumber("Arm/Arm Encoder Pos", arm.getEncoder().getPosition());
+        SmartDashboard.putNumber("Arm/Arm Output Current", arm.getOutputCurrent());
         SmartDashboard.putNumber("Arm/Arm Bus Voltage", arm.getBusVoltage());
-
         SmartDashboard.putNumber("Arm/Arm Motor Temp", arm.getMotorTemperature());
-
         SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
+
+        // Decay the fault counter over time
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }
     }
 
-    //sets arm to speed put in method
+    /**
+     * Sets the arm motor speed with stall detection and limit protection.
+     * @param speed Motor percent output [-1.0, 1.0]
+     */
     public void setArm(double speed) {
         if (arm.getOutputCurrent() > Constants.Arm.kARM_FAULT_AMPS) {
             periodicCountFault+=2;
         }
+
+        // Logic to redefine zero position upon physical stall (soft limit calibration)
         if (periodicCountFault > 12) {
-            //if speed is going up when faults are high the arm is up
             if (speed > 0) {
                 stickUp = true;
                 stickDown = false;
                 arm.getEncoder().setPosition(Constants.Arm.kARM_TOP_SETPOINT);
-            //If speed is negative when faults are high the arm is down
             } else if (speed < 0) {
                 stickUp = false;
                 stickDown = true;
@@ -99,7 +104,8 @@ public class SUB_Arm extends SubsystemBase {
             }
             speed = 0;
         }
-        //if arm is up and it moves down then it is set to no longer being up
+
+        // Prevent movement beyond soft limits
         if (stickUp) {
             if (speed < 0) {
                 stickUp = false;
@@ -107,7 +113,6 @@ public class SUB_Arm extends SubsystemBase {
                 speed = 0;
             }
         }
-        //if arm is down and it moves up then it is set to being no longer down.
         if (stickDown) {
             if (speed > 0) {
                 stickDown = false;
@@ -115,35 +120,32 @@ public class SUB_Arm extends SubsystemBase {
                 speed = 0;
             }
         }
-        //sets speed of arm motor
         arm.set(speed);
-        
     }
 
-    //Retuns if arm is extended
     public boolean isExtended() {
         return extended;
     }
 
-    //Makes arm go down based on PID
+    /** Drives the arm to the bottom setpoint using PID */
     public void intakeArmDown() {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); 
     }
+
+    /** Manual test drive for the arm */
     public void intakeArmTest() {
         arm.set(-.6);
     }
 
-    //Makes arm go up based on PID
+    /** Drives the arm to the top setpoint using PID */
     public void intakeArmUp() {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_TOP_SETPOINT)); 
     }
 
-    //Returns if arm is down
     public boolean isArmDownReached() {
         return Math.abs(arm.getEncoder().getPosition() - Constants.Arm.kARM_BOTTOM_SETPOINT) < 3.0;
     }
 
-    //Returns if arm is up
     public boolean isArmUpReached() {
         return Math.abs(arm.getEncoder().getPosition() - Constants.Arm.kARM_TOP_SETPOINT) < 3.0;
     }

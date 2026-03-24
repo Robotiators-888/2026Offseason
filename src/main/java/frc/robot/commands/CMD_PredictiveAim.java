@@ -1,7 +1,7 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-// Thanks Omar for the name AimBot, it is a very good name for this command
+
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.*;
@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,11 +34,16 @@ import frc.robot.subsystems.SUB_Shooter;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-public class CMD_AimBot extends RunCommand {
-  /** Subsystems and state variables used for targeting and control */
+/**
+ * Advanced targeting command that compensates for robot movement using time-of-flight prediction.
+ * Instead of reacting to error, it calculates a "virtual target" based on where the hub 
+ * will be relative to the robot when the ball arrives.
+ */
+public class CMD_PredictiveAim extends RunCommand {
+  /** Subsystems and state variables for predictive targeting */
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
-  private Pose2d targetPose = new Pose2d();
+  private Pose2d staticTargetPose = new Pose2d();
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
@@ -47,52 +53,56 @@ public class CMD_AimBot extends RunCommand {
 
   /** Physical offsets for targeting calibration */
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
-  Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
   
   /** Motion profiling constraints for rotation */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-      RotationsPerSecond.of(1.8).in(RadiansPerSecond), 
-      RotationsPerSecond.of(12).in(RadiansPerSecond)   
+      RotationsPerSecond.of(2.5).in(RadiansPerSecond), 
+      RotationsPerSecond.of(15).in(RadiansPerSecond)   
   );
 
-  /** PID controller for robot heading alignment */
+  /** 
+   * PID controller for robot heading alignment.
+   * In predictive mode, this handles fine stability while feed-forward handles the bulk of the "lead".
+   */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+      6.0, 0, 0.2, 
       thetaConstraints
   );
+  
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
+  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.3; // Limit max speed to 30% for better control while aiming
+  private double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
-  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
-  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
+  
+  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(1.0, -1.0, 0.0);
+  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(1.0, -1.0, 0.0);
   
   /**
-   * Constructs a new AimBot command.
+   * Constructs a new PredictiveAim command.
    * @param drivetrain The swerve drivetrain subsystem
-   * @param photonVision The vision subsystem for target tracking
+   * @param photonVision The vision subsystem
    * @param shooter The shooter subsystem
    * @param index The indexer subsystem
    * @param translationXSupplier Supplier for X translation input
    * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_PredictiveAim(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    
+    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
-    robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
+    robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     addRequirements(drivetrain, shooter, index);
   }
 
   @Override
   public void initialize() {
-    // Determine the correct target tag based on the current alliance
     robotAngleController.setTolerance(Units.degreesToRadians(0.0));
     
     Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
@@ -102,9 +112,8 @@ public class CMD_AimBot extends RunCommand {
     double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
     Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
     
-    targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
+    staticTargetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
-    // Reset the PID controller to the current state of the robot
     robotAngleController.reset(
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
@@ -115,73 +124,89 @@ public class CMD_AimBot extends RunCommand {
 
   @Override
   public void execute() {
-    // Set up poses
     Pose2d currentPose = drivetrain.getPose();
+    
+    // Convert robot-centric speeds to field-centric for accurate target shifting
+    ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+        drivetrain.getCurrentRobotChassisSpeeds(), 
+        currentPose.getRotation()
+    );
 
-    Translation2d targetTranslation = targetPose.getTranslation();
+    // 1. Calculate base distance and initial Time of Flight (TOF)
+    double distanceToHub = currentPose.getTranslation().getDistance(staticTargetPose.getTranslation());
+    double tof = shooter.getExpectedTOF(distanceToHub);
+
+    // 2. Calculate Virtual Target: PhysicalTarget - (RobotVelocity * TOF)
+    // Moving towards the goal (positive velocity) makes the virtual target closer.
+    Translation2d virtualTargetTranslation = new Translation2d(
+        staticTargetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
+        staticTargetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
+    );
+
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
 
-    // 2. Calculate the angle directly from the SHOOTER to the target
+    // 3. Calculate target rotation toward the virtual target
     Rotation2d targetRotation = new Rotation2d(
-        targetTranslation.getX() - shooterFieldPosition.getX(),
-        targetTranslation.getY() - shooterFieldPosition.getY()
+        virtualTargetTranslation.getX() - shooterFieldPosition.getX(),
+        virtualTargetTranslation.getY() - shooterFieldPosition.getY()
     );
 
-    targetRotation = targetRotation.plus(shooterThetaOffset);
+    // Telemetry: Show both physical and virtual targets
+    drivetrain.publisher1.set(new Pose2d(staticTargetPose.getTranslation(), targetRotation)); // Physical
+    drivetrain.publisher2.set(new Pose2d(virtualTargetTranslation, targetRotation)); // Virtual
 
-    // Update telemetry
-    drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
-
-    // 3. Calculate rotational velocity (omega) using the PID controller
+    // 4. Calculate rotation velocity
+    // Primary rotation comes from PID toward the predictive target
     double omegaSpeed = robotAngleController.calculate(
         currentPose.getRotation().getRadians(),
         targetRotation.getRadians()
     );
 
-    // Calculate error for deadband checking
+    // Alignment checking for firing (Removed angular velocity check)
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
-    SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
+    SmartDashboard.putNumber("PredictiveAim/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
-    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
-    double distance = drivetrain.getPose().getTranslation().getDistance(
-            SUB_PhotonVision.getInstance().at_field.getTagPose(
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-            ).map(pose -> pose.toPose2d().getTranslation().plus(
-                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-            )).orElse(drivetrain.getPose().getTranslation())
-    );
-    shooter.shootMeters(distance);
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5);
+    boolean isReadyToShoot = isThetaErrorCorrect && shooter.atDesiredRPM();
     
-     // Keep metering wheel spinning
-    boolean isShooterReady = shooter.atDesiredRPM();
-    if (isThetaErrorCorrect && isShooterReady) {
+    SmartDashboard.putBoolean("PredictiveAim/isThetaErrorCorrect", isThetaErrorCorrect);
+    SmartDashboard.putBoolean("PredictiveAim/ReadyToShoot", isReadyToShoot);
+
+    // 5. Update shooter RPM based on predicted virtual distance
+    double predictiveDistance = shooterFieldPosition.getDistance(virtualTargetTranslation);
+    shooter.shootMeters(predictiveDistance);
+    
+    // Automatic indexing when ready
+    if (isReadyToShoot) {
       index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-    } else if (!isThetaErrorCorrect) {
+    } else {
         index.setVolts(0);
     }
+
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
 
-    // Wheel locking logic
+    // Dynamic wheel locking
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
       isLocked = true;
-    }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
+    } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
       isLocked = false;
     }
 
-    // Lock wheels or drive
+    // Apply swerve drive request
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
         drivetrain.setControl(brakeRequest);
     } else {
+        // We add a small constant "kick" to overcome friction when moving proactively
+        double rotationOutput = omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed);
+        
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); // TODO: Comment
+          .withRotationalRate(rotationOutput));
     }
   }
 

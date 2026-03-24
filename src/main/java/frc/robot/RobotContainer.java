@@ -65,11 +65,11 @@ import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.commands.CMD_AimBotMove;
+import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
 import frc.robot.subsystems.SUB_Index;
-import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
@@ -96,7 +96,6 @@ public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         private final SendableChooser<Command> autoChooser;
-        public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Arm arm = SUB_Arm.getInstance();
@@ -178,7 +177,6 @@ public class RobotContainer {
                         index.set(0);
                         index.setMeteringSpeed(0);
                 }, index));
-                leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
@@ -341,7 +339,7 @@ public class RobotContainer {
                 }, roller, arm));
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
-                                new CMD_AimBot(
+                                new CMD_PredictiveAim(
                                         drivetrain, 
                                         photonVision, 
                                         shooter, 
@@ -350,9 +348,6 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftX()) 
                                 ),
                                 Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
-                                // Commands.either would cause the command to not start even if the button was released
-                                // getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
-                                
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
@@ -409,6 +404,18 @@ public class RobotContainer {
          */
         public Command getAutonomousCommand() {
                 return autoChooser.getSelected();
+        }
+
+        /** @return Predictive aiming command for Test mode (uses Driver1 translation input) */
+        public Command getPredictiveAimCommand() {
+                return new CMD_PredictiveAim(
+                        drivetrain, 
+                        photonVision, 
+                        shooter, 
+                        index,
+                        () -> -(Driver1.getLeftY()), 
+                        () -> -(Driver1.getLeftX())
+                );
         }
 
         public void robotPeriodic() {
