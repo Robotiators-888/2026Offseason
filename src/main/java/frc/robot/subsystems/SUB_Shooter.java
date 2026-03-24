@@ -169,7 +169,7 @@ public class SUB_Shooter extends SubsystemBase {
     public double getExpectedTOF(double distanceMeters) {
         double targetRPM = distanceToRPM.get(distanceMeters);
         // 0.00434: experimental conversion from RPM to horizontal velocity (m/s)
-        double averageHorizontalVelocity = targetRPM * 0.00434;
+        double averageHorizontalVelocity = targetRPM * 0.0027290387063203815;
         if (averageHorizontalVelocity <= 0.0) {
             return 0.0;
         }
@@ -179,7 +179,7 @@ public class SUB_Shooter extends SubsystemBase {
     /** Static variant of TOF calculation */
     public static double getExpectedTOFStatic(double distanceMeters) {
         double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
-        double averageHorizontalVelocity = targetRPM * 0.00434;
+        double averageHorizontalVelocity = targetRPM * 0.00434 * 0.75;
         if (averageHorizontalVelocity <= 0.0) {
             return 0.0;
         }

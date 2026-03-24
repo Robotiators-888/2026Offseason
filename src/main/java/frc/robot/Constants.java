@@ -35,7 +35,7 @@ public final class Constants {
                 
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.145; 
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.152; 
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 
                 // PID constants

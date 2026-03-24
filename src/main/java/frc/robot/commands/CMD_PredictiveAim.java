@@ -57,7 +57,7 @@ public class CMD_PredictiveAim extends RunCommand {
   /** Motion profiling constraints for rotation */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
-      RotationsPerSecond.of(15).in(RadiansPerSecond)   
+      RotationsPerSecond.of(5).in(RadiansPerSecond)   
   );
 
   /** 
@@ -65,19 +65,19 @@ public class CMD_PredictiveAim extends RunCommand {
    * In predictive mode, this handles fine stability while feed-forward handles the bulk of the "lead".
    */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      6.0, 0, 0.2, 
+      1.5, 0, 0.0, 
       thetaConstraints
   );
   
   public static boolean isThetaErrorCorrect = false;
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.3; // Limit max speed to 30% for better control while aiming
+  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.10; // Limit max speed to 30% for better control while aiming
   private double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   
-  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(1.0, -1.0, 0.0);
-  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(1.0, -1.0, 0.0);
+  // private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
+  // private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
   
   /**
    * Constructs a new PredictiveAim command.
@@ -186,28 +186,20 @@ public class CMD_PredictiveAim extends RunCommand {
         index.setVolts(0);
     }
 
-    double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
-
-    // Dynamic wheel locking
-    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
-      isLocked = true;
-    } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
-      isLocked = false;
+    double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double yInput = Math.copySign(1.0,MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband) );//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    if (MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband)==0) {
+      yInput=0.0;
     }
 
-    // Apply swerve drive request
-    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
-        drivetrain.setControl(brakeRequest);
-    } else {
-        // We add a small constant "kick" to overcome friction when moving proactively
-        double rotationOutput = omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed);
-        
-        drivetrain.setControl(
-          drive.withVelocityX(xInput * MaxSpeed)
-          .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(rotationOutput));
-    }
+    
+    // We add a small constant "kick" to overcome friction when moving proactively
+    double rotationOutput = omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed);
+    
+    drivetrain.setControl(
+      drive.withVelocityX(xInput * MaxSpeed)
+      .withVelocityY(yInput * MaxSpeed)
+      .withRotationalRate(rotationOutput));
   }
 
   @Override
