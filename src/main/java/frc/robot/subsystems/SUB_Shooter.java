@@ -60,7 +60,7 @@ public class SUB_Shooter extends SubsystemBase {
     // Configures the motors
     private void configFlywheel() {
         shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true; //Enables current limit
-        shooterConfig.CurrentLimits.StatorCurrentLimit = 70;  //sets stator Current limit to 70 amps
+        shooterConfig.CurrentLimits.StatorCurrentLimit = 100;  //sets stator Current limit to 100 amps
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true; //Enables supply current limit
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 60; //sets supply current limit to 40 amps
         shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 30; //sets supply current lower limit to 20 amps

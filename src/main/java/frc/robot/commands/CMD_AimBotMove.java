@@ -122,7 +122,7 @@ public class CMD_AimBotMove extends RunCommand {
             )).orElse(drivetrain.getPose().getTranslation())
     );
     shooter.shootMeters(distance-(drivetrain.getState().Speeds.vxMetersPerSecond*shooter.getExpectedTOF(distance)));
-    
+    SmartDashboard.putNumber("CMD_AimBot/TOF", distance-(drivetrain.getState().Speeds.vxMetersPerSecond*shooter.getExpectedTOF(distance)));
      // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
     if (isThetaErrorCorrect && isShooterReady) {
@@ -131,11 +131,11 @@ public class CMD_AimBotMove extends RunCommand {
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
     }
-    double xInput = 1.0;
+    double xInput = 1.3;
 
     
     drivetrain.setControl(
-      drive.withVelocityX((isThetaErrorCorrect&&distance<2) ? xInput:0)
+      drive.withVelocityX((!isThetaErrorCorrect||distance<1.5) ? 0:xInput)
       .withVelocityY(0)
       .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
 

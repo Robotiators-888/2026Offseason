@@ -130,7 +130,7 @@ public class SUB_Arm extends SubsystemBase {
         setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); 
     }
     public void intakeArmTest() {
-        arm.set(-.15);
+        arm.set(-.6);
     }
 
     //Makes arm go up based on PID
