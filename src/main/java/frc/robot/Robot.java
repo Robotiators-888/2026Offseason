@@ -22,7 +22,6 @@ import frc.robot.utils.Alert;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
-  private Command m_testCommand;
 
   private final RobotContainer m_robotContainer;
 
@@ -98,9 +97,6 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-    if (m_testCommand != null) {
-      m_testCommand.cancel();
-    }
     m_robotContainer.teleopInit();
   }
   
@@ -115,12 +111,6 @@ public class Robot extends LoggedRobot {
   public void testInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
-    
-    m_testCommand = m_robotContainer.getPredictiveAimCommand();
-    if (m_testCommand != null) {
-      m_testCommand.schedule();
-    }
-    
     m_robotContainer.testInit();
   }
 

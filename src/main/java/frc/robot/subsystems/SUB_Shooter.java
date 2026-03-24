@@ -62,8 +62,8 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.CurrentLimits.StatorCurrentLimit = 100;
         shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         shooterConfig.CurrentLimits.SupplyCurrentLimit = 60;
-        shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 30;
-        shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 0.3;
+        shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 

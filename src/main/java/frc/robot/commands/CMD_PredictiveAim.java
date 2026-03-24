@@ -56,7 +56,7 @@ public class CMD_PredictiveAim extends RunCommand {
   
   /** Motion profiling constraints for rotation */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-      RotationsPerSecond.of(2.5).in(RadiansPerSecond), 
+      RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
       RotationsPerSecond.of(15).in(RadiansPerSecond)   
   );
 

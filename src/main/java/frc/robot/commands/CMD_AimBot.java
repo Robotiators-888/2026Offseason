@@ -51,7 +51,7 @@ public class CMD_AimBot extends RunCommand {
   
   /** Motion profiling constraints for rotation */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-      RotationsPerSecond.of(1.8).in(RadiansPerSecond), 
+      RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
       RotationsPerSecond.of(12).in(RadiansPerSecond)   
   );
 

@@ -337,9 +337,22 @@ public class RobotContainer {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         arm.intakeArmTest();
                 }, roller, arm));
-                Driver1.rightTrigger().whileTrue(
+                Driver1.leftTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_PredictiveAim(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
+                                ),
+                                Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                        )
+                );
+                Driver1.rightTrigger().whileTrue(
+                        new ParallelCommandGroup(
+                                new CMD_AimBot(
                                         drivetrain, 
                                         photonVision, 
                                         shooter, 
@@ -404,18 +417,6 @@ public class RobotContainer {
          */
         public Command getAutonomousCommand() {
                 return autoChooser.getSelected();
-        }
-
-        /** @return Predictive aiming command for Test mode (uses Driver1 translation input) */
-        public Command getPredictiveAimCommand() {
-                return new CMD_PredictiveAim(
-                        drivetrain, 
-                        photonVision, 
-                        shooter, 
-                        index,
-                        () -> -(Driver1.getLeftY()), 
-                        () -> -(Driver1.getLeftX())
-                );
         }
 
         public void robotPeriodic() {
