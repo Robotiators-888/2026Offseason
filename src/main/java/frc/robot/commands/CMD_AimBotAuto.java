@@ -42,13 +42,13 @@ public class CMD_AimBotAuto extends RunCommand {
   
   /** Motion profiling constraints for rotation (narrower for auto) */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-      RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
-      RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
+      RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
+      RotationsPerSecond.of(12).in(RadiansPerSecond)   
   );
 
   /** PID controller for robot heading alignment during autonomous */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      5.0, 0, 0.2,
+      5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;

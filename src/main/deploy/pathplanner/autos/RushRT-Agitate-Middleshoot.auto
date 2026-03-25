@@ -51,7 +51,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "TroughRight-RightFarShoot"
+                        "pathName": "RightTrough-MiddleShoot"
                       }
                     }
                   ]
@@ -120,7 +120,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightFarShoot-TroughRight"
+                        "pathName": "MiddleShoot-RightTrough"
                       }
                     },
                     {
@@ -150,7 +150,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "TroughRight-RightFarShoot"
+                        "pathName": "RightTrough-MiddleShoot"
                       }
                     }
                   ]
