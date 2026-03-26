@@ -57,12 +57,6 @@
                 "data": {
                   "name": "ShootAutoAim"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeAgitate"
-                }
               }
             ]
           }
@@ -103,36 +97,12 @@
           "data": {
             "commands": [
               {
-                "type": "wait",
-                "data": {
-                  "waitTime": 4.0
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "ShootAutoAim"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeAgitate"
-                }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShooting"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
           }
         }
       ]
