@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "CenterStart-Shoot-Forward"
+                  "pathName": "Center-NZ-Center-CounterClockwise-StartTrench"
                 }
               },
               {
@@ -47,25 +47,6 @@
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "Center-NZ-Center-Clockwise-StartTrench"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
                 "type": "named",
                 "data": {
                   "name": "ShootAutoAim"
@@ -87,7 +68,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Center-NZ-Center-CounterClockwise-StartTrench"
+                  "pathName": "Center-NZ-Center-Clockwise-StartTrench"
                 }
               },
               {
