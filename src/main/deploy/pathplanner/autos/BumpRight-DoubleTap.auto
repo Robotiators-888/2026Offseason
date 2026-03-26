@@ -62,12 +62,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -89,20 +83,7 @@
         {
           "type": "named",
           "data": {
-            "name": "StopShooting"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "ShootAutoAim"
-                }
-              }
-            ]
+            "name": "ShootAutoAim"
           }
         }
       ]
