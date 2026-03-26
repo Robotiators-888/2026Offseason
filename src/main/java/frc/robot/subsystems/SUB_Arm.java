@@ -73,6 +73,12 @@ public class SUB_Arm extends SubsystemBase {
         SmartDashboard.putNumber("Arm/Arm Output Current", arm.getOutputCurrent());
         SmartDashboard.putNumber("Arm/Arm Bus Voltage", arm.getBusVoltage());
         SmartDashboard.putNumber("Arm/Arm Motor Temp", arm.getMotorTemperature());
+
+        SmartDashboard.putNumber("Arm/Arm Follower Encoder Pos", armFollower.getEncoder().getPosition());
+        SmartDashboard.putNumber("Arm/Arm Follower Output Current", armFollower.getOutputCurrent());
+        SmartDashboard.putNumber("Arm/Arm Follower Bus Voltage", armFollower.getBusVoltage());
+        SmartDashboard.putNumber("Arm/Arm Follower Motor Temp", armFollower.getMotorTemperature());
+
         SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
 

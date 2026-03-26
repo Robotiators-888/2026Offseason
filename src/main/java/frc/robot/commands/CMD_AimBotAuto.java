@@ -48,7 +48,7 @@ public class CMD_AimBotAuto extends RunCommand {
 
   /** PID controller for robot heading alignment during autonomous */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+      3.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
