@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.393
+        "y": 7.293
       },
       "prevControl": null,
       "nextControl": {
         "x": 6.5620970042796,
-        "y": 7.2890727532097
+        "y": 7.1890727532097
       },
       "isLocked": false,
       "linkedName": "LeftTroughCenter"
