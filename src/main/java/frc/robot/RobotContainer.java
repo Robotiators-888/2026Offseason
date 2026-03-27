@@ -422,6 +422,8 @@ public class RobotContainer {
         public void robotPeriodic() {
 
                 SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
+                if (powerDistribution.getVoltage() < 6.3)
+                        Alert.registerError("Battery Brownout!!");
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());

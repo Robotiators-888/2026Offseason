@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.Alert;
 
 public class SUB_Arm extends SubsystemBase {
     /** Subsystem state and configuration constants */
@@ -86,6 +87,11 @@ public class SUB_Arm extends SubsystemBase {
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }
+
+        Alert.alertNeoFaults(arm);
+        Alert.alertNeoWarnings(arm);
+        Alert.alertNeoFaults(armFollower);
+        Alert.alertNeoWarnings(armFollower);
     }
 
     /**
