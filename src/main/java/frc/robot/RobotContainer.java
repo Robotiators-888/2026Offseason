@@ -361,7 +361,7 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftX()) 
                                 ),
                                 // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
-                                Commands.either(Commands.none(), getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean()), ()->Driver2.leftStick().getAsBoolean())
+                                getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean())
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
