@@ -769,7 +769,7 @@ public class RobotContainer {
                         new SequentialCommandGroup(
                                 new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                 new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                        ).until(condition).repeatedly()
+                        ).repeatedly()
                 ).finallyDo(()->{isShaking=false;});
                 return c;
         }
