@@ -360,7 +360,8 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                                // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                                Commands.either(Commands.none(), getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean()), ()->Driver2.leftStick().getAsBoolean())
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
@@ -751,25 +752,25 @@ public class RobotContainer {
         private Command getShakeyCommand () {
                 
                 Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                                new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                                ).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
+                        new InstantCommand(()->{isShaking=true;}),
+                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                        new SequentialCommandGroup(
+                                new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
+                                new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
+                        ).repeatedly()
+                ).finallyDo(()->{isShaking=false;});
                 return c;
         }
 
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
                 Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                                new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                                ).until(condition).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
+                        new InstantCommand(()->{isShaking=true;}),
+                        Commands.either(new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller), Commands.none(), condition),
+                        new SequentialCommandGroup(
+                                new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
+                                new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
+                        ).until(condition).repeatedly()
+                ).finallyDo(()->{isShaking=false;});
                 return c;
         }
 
