@@ -9,6 +9,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.Alert;
 
 public class SUB_Index extends SubsystemBase {
     /** Subsystem hardware components */
@@ -115,5 +116,10 @@ public class SUB_Index extends SubsystemBase {
         SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition());
         SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
         SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
+
+        Alert.alertNeoFaults(index);
+        Alert.alertNeoWarnings(index);
+        Alert.alertNeoFaults(meteringWheel);
+        Alert.alertNeoWarnings(meteringWheel);
     }
 }
