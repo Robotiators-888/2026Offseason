@@ -767,8 +767,8 @@ public class RobotContainer {
                         new InstantCommand(()->{isShaking=true;}),
                         new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                         new SequentialCommandGroup(
-                                Commands.either(Commands.none(), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
-                                Commands.either(Commands.none(), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)
                         ).repeatedly()
                 ).finallyDo(()->{isShaking=false;});
                 return c;
