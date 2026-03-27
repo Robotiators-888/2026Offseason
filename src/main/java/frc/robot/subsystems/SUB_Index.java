@@ -36,7 +36,7 @@ public class SUB_Index extends SubsystemBase {
         
         // Configure main indexer motor
         SparkMaxConfig indexConfig = new SparkMaxConfig();
-        indexConfig.smartCurrentLimit(80);
+        indexConfig.smartCurrentLimit(60);
         indexConfig.inverted(true);
         index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         
