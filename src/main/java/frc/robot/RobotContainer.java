@@ -765,10 +765,10 @@ public class RobotContainer {
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
                 Command c = new ParallelCommandGroup(
                         new InstantCommand(()->{isShaking=true;}),
-                        Commands.either(new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller), Commands.none(), condition),
+                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                         new SequentialCommandGroup(
-                                new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
+                                Commands.either(new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), Commands.none(), condition),
+                                Commands.either(new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), Commands.none(), condition)
                         ).repeatedly()
                 ).finallyDo(()->{isShaking=false;});
                 return c;
