@@ -420,10 +420,6 @@ public class RobotContainer {
         }
 
         public void robotPeriodic() {
-
-                SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
-                if (powerDistribution.getVoltage() < 6.3)
-                        Alert.registerError("Battery Brownout!!");
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
@@ -514,6 +510,71 @@ public class RobotContainer {
                         
                         SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
                 }
+        }
+
+        public void logPDH () {
+                SmartDashboard.putNumber("PDH/Battery Voltage", powerDistribution.getVoltage());
+                SmartDashboard.putNumberArray("PDH/All Currents Amps", powerDistribution.getAllCurrents());
+                SmartDashboard.putNumber("PDH/Tempurature Celsius", powerDistribution.getTemperature());
+                SmartDashboard.putNumber("PDH/Total Current Amps", powerDistribution.getTotalCurrent());
+                SmartDashboard.putNumber("PDH/Total Energy Joules", powerDistribution.getTotalEnergy());
+                SmartDashboard.putNumber("PDH/Voltage V", powerDistribution.getVoltage());
+                // Not supported on PDH
+                // SmartDashboard.putNumber("PDH/Total Watts", powerDistribution.getTotalPower());
+                if (powerDistribution.getFaults().Brownout)
+                        Alert.registerError("PDH Brownout!!");
+                if (powerDistribution.getFaults().CanWarning)
+                        Alert.registerWarning("PDH CanWarning");
+                if (powerDistribution.getFaults().HardwareFault)
+                        Alert.registerError("PDH HardwareFault");
+                if (powerDistribution.getFaults().Channel0BreakerFault)
+                        Alert.registerError("PDH Channel0BreakerFault");
+                if (powerDistribution.getFaults().Channel10BreakerFault)
+                        Alert.registerError("PDH Channel10BreakerFault");
+                if (powerDistribution.getFaults().Channel11BreakerFault)
+                        Alert.registerError("PDH Channel11BreakerFault");
+                if (powerDistribution.getFaults().Channel12BreakerFault)
+                        Alert.registerError("PDH Channel12BreakerFault");
+                if (powerDistribution.getFaults().Channel13BreakerFault)
+                        Alert.registerError("PDH Channel13BreakerFault");
+                if (powerDistribution.getFaults().Channel14BreakerFault)
+                        Alert.registerError("PDH Channel14BreakerFault");
+                if (powerDistribution.getFaults().Channel15BreakerFault)
+                        Alert.registerError("PDH Channel15BreakerFault");
+                if (powerDistribution.getFaults().Channel16BreakerFault)
+                        Alert.registerError("PDH Channel16BreakerFault");
+                if (powerDistribution.getFaults().Channel17BreakerFault)
+                        Alert.registerError("PDH Channel17BreakerFault");
+                if (powerDistribution.getFaults().Channel18BreakerFault)
+                        Alert.registerError("PDH Channel18BreakerFault");
+                if (powerDistribution.getFaults().Channel19BreakerFault)
+                        Alert.registerError("PDH Channel19BreakerFault");
+                if (powerDistribution.getFaults().Channel1BreakerFault)
+                        Alert.registerError("PDH Channel1BreakerFault");
+                if (powerDistribution.getFaults().Channel20BreakerFault)
+                        Alert.registerError("PDH Channel20BreakerFault");
+                if (powerDistribution.getFaults().Channel21BreakerFault)
+                        Alert.registerError("PDH Channel21BreakerFault");
+                if (powerDistribution.getFaults().Channel22BreakerFault)
+                        Alert.registerError("PDH Channel22BreakerFault");
+                if (powerDistribution.getFaults().Channel23BreakerFault)
+                        Alert.registerError("PDH Channel23BreakerFault");
+                if (powerDistribution.getFaults().Channel2BreakerFault)
+                        Alert.registerError("PDH Channel2BreakerFault");
+                if (powerDistribution.getFaults().Channel3BreakerFault)
+                        Alert.registerError("PDH Channel3BreakerFault");
+                if (powerDistribution.getFaults().Channel4BreakerFault)
+                        Alert.registerError("PDH Channel4BreakerFault");
+                if (powerDistribution.getFaults().Channel5BreakerFault)
+                        Alert.registerError("PDH Channel5BreakerFault");
+                if (powerDistribution.getFaults().Channel6BreakerFault)
+                        Alert.registerError("PDH Channel6BreakerFault");
+                if (powerDistribution.getFaults().Channel7BreakerFault)
+                        Alert.registerError("PDH Channel7BreakerFault");
+                if (powerDistribution.getFaults().Channel18BreakerFault)
+                        Alert.registerError("PDH Channel18BreakerFault");
+                if (powerDistribution.getFaults().Channel9BreakerFault)
+                        Alert.registerError("PDH Channel19BreakerFault");
         }
 
         private void checkAlerts () {
