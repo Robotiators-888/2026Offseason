@@ -187,22 +187,17 @@ public class CMD_PredictiveAim extends RunCommand {
     }
 
     // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double yInput = Math.copySign(1.0,MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband) );//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
-    if (MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband)==0) {
-      yInput=0.0;
-    }
-    double xInput = Math.copySign(1.0,MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband) );//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
-    if (MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband)==0) {
-      xInput=0.0;
-    }
-
+    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double magnitude = Math.sqrt(Math.pow(xInput,2)+Math.pow(yInput,2));
+    
     
     // We add a small constant "kick" to overcome friction when moving proactively
     double rotationOutput = omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed);
     
     drivetrain.setControl(
-      drive.withVelocityX(xInput * MaxSpeed)
-      .withVelocityY(yInput * MaxSpeed)
+      drive.withVelocityX(xInput * MaxSpeed * (1/magnitude))
+      .withVelocityY(yInput * MaxSpeed * (1/magnitude))
       .withRotationalRate(rotationOutput));
   }
 
