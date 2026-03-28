@@ -8,39 +8,39 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3450609593062812,
-        "y": 2.102871725759453
+        "x": 3.81910128388017,
+        "y": 2.3335663338088444
       },
       "isLocked": false,
       "linkedName": "BumpRightShoot"
     },
     {
       "anchor": {
-        "x": 5.436433666191155,
-        "y": 2.463
+        "x": 6.160998573466475,
+        "y": 2.462952924393724
       },
       "prevControl": {
-        "x": 5.153738276727593,
-        "y": 2.3597937467037795
+        "x": 5.878303184002914,
+        "y": 2.3597466710975032
       },
       "nextControl": {
-        "x": 6.251569186875892,
-        "y": 2.760589158345221
+        "x": 6.976134094151212,
+        "y": 2.7605420827389446
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.966918687589158,
+        "x": 6.160998573466475,
         "y": 5.4
       },
       "prevControl": {
-        "x": 6.610075021126243,
+        "x": 6.804154907003561,
         "y": 4.85579079469939
       },
       "nextControl": {
-        "x": 5.776072116246879,
+        "x": 5.9701520021241965,
         "y": 5.561485560366544
       },
       "isLocked": false,
@@ -68,8 +68,8 @@
         "y": 5.18
       },
       "prevControl": {
-        "x": 3.1300540489817648,
-        "y": 5.416532773656746
+        "x": 3.392125534950071,
+        "y": 5.374151212553495
       },
       "nextControl": null,
       "isLocked": false,
@@ -87,7 +87,7 @@
     },
     {
       "waypointRelativePos": 3.0,
-      "rotationDegrees": -45.0
+      "rotationDegrees": 135.0
     }
   ],
   "constraintZones": [],
@@ -109,7 +109,7 @@
   "folder": "Neutralzone",
   "idealStartingState": {
     "velocity": 0.0,
-    "rotation": 45.0
+    "rotation": 57.5
   },
   "useDefaultConstraints": true
 }
