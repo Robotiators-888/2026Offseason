@@ -520,7 +520,6 @@ public class RobotContainer {
                 SmartDashboard.putNumber("PDH/Tempurature Celsius", powerDistribution.getTemperature());
                 SmartDashboard.putNumber("PDH/Total Current Amps", powerDistribution.getTotalCurrent());
                 SmartDashboard.putNumber("PDH/Total Energy Joules", powerDistribution.getTotalEnergy());
-                SmartDashboard.putNumber("PDH/Voltage V", powerDistribution.getVoltage());
                 // Not supported on PDH
                 // SmartDashboard.putNumber("PDH/Total Watts", powerDistribution.getTotalPower());
                 if (powerDistribution.getFaults().Brownout)
@@ -535,12 +534,13 @@ public class RobotContainer {
                         Alert.registerError("PDH Channel10BreakerFault");
                 if (powerDistribution.getFaults().Channel11BreakerFault)
                         Alert.registerError("PDH Channel11BreakerFault");
-                if (powerDistribution.getFaults().Channel12BreakerFault)
-                        Alert.registerError("PDH Channel12BreakerFault");
-                if (powerDistribution.getFaults().Channel13BreakerFault)
-                        Alert.registerError("PDH Channel13BreakerFault");
-                if (powerDistribution.getFaults().Channel14BreakerFault)
-                        Alert.registerError("PDH Channel14BreakerFault");
+                // We dont use these ports so they cause false errors
+                // if (powerDistribution.getFaults().Channel12BreakerFault)
+                //         Alert.registerError("PDH Channel12BreakerFault");
+                // if (powerDistribution.getFaults().Channel13BreakerFault)
+                //         Alert.registerError("PDH Channel13BreakerFault");
+                // if (powerDistribution.getFaults().Channel14BreakerFault)
+                //         Alert.registerError("PDH Channel14BreakerFault");
                 if (powerDistribution.getFaults().Channel15BreakerFault)
                         Alert.registerError("PDH Channel15BreakerFault");
                 if (powerDistribution.getFaults().Channel16BreakerFault)
@@ -559,8 +559,9 @@ public class RobotContainer {
                         Alert.registerError("PDH Channel21BreakerFault");
                 if (powerDistribution.getFaults().Channel22BreakerFault)
                         Alert.registerError("PDH Channel22BreakerFault");
-                if (powerDistribution.getFaults().Channel23BreakerFault)
-                        Alert.registerError("PDH Channel23BreakerFault");
+                // Also unused
+                // if (powerDistribution.getFaults().Channel23BreakerFault)
+                //         Alert.registerError("PDH Channel23BreakerFault");
                 if (powerDistribution.getFaults().Channel2BreakerFault)
                         Alert.registerError("PDH Channel2BreakerFault");
                 if (powerDistribution.getFaults().Channel3BreakerFault)
