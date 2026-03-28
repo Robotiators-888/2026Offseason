@@ -186,10 +186,14 @@ public class CMD_PredictiveAim extends RunCommand {
         index.setVolts(0);
     }
 
-    double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
+    // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = Math.copySign(1.0,MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband) );//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
     if (MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband)==0) {
       yInput=0.0;
+    }
+    double xInput = Math.copySign(1.0,MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband) );//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    if (MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband)==0) {
+      xInput=0.0;
     }
 
     

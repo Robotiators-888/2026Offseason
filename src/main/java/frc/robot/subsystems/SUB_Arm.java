@@ -49,7 +49,7 @@ public class SUB_Arm extends SubsystemBase {
         
         // Configure follower motor
         SparkMaxConfig followerConfig = new SparkMaxConfig();
-        followerConfig.follow(arm, true); // Opposite direction compared to leader
+        // followerConfig.follow(arm, true); // Opposite direction compared to leader
         followerConfig.smartCurrentLimit(35);
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
@@ -146,7 +146,7 @@ public class SUB_Arm extends SubsystemBase {
 
     /** Manual test drive for the arm */
     public void intakeArmTest() {
-        arm.set(-.6);
+        arm.set(-.3);
     }
 
     /** Drives the arm to the top setpoint using PID */
