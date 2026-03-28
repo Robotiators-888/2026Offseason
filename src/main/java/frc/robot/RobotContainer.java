@@ -469,6 +469,7 @@ public class RobotContainer {
                 SmartDashboard.putString("Trough/Closest", closestTrough);
                 logDrivetrain();
                 checkAlerts();
+                logPDH();
         }
 
         // Logs everything about the drivetrain
