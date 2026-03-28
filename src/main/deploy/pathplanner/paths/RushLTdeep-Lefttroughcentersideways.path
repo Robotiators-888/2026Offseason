@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.495,
-        "y": 4.25
+        "x": 7.8,
+        "y": 4.6
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.898152639087017,
-        "y": 5.899329529243937
+        "x": 7.203152639087016,
+        "y": 6.249329529243937
       },
       "isLocked": false,
       "linkedName": "RushLTDeep"
