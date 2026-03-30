@@ -169,7 +169,7 @@ public class CMD_PredictiveAim extends RunCommand {
     SmartDashboard.putNumber("PredictiveAim/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5);
-    boolean isReadyToShoot = isThetaErrorCorrect && shooter.atDesiredRPM();
+    boolean isReadyToShoot = isThetaErrorCorrect; //if we want to add
     
     SmartDashboard.putBoolean("PredictiveAim/isThetaErrorCorrect", isThetaErrorCorrect);
     SmartDashboard.putBoolean("PredictiveAim/ReadyToShoot", isReadyToShoot);
@@ -183,7 +183,8 @@ public class CMD_PredictiveAim extends RunCommand {
       index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else {
-        index.setVolts(0);
+      index.setVolts(0);
+      index.setMeteringRPM(-1000);
     }
 
     // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));

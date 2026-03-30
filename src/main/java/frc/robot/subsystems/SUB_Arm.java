@@ -49,7 +49,7 @@ public class SUB_Arm extends SubsystemBase {
         
         // Configure follower motor
         SparkMaxConfig followerConfig = new SparkMaxConfig();
-        // followerConfig.follow(arm, true); // Opposite direction compared to leader
+        followerConfig.follow(arm, true); // Opposite direction compared to leader
         followerConfig.smartCurrentLimit(35);
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }
