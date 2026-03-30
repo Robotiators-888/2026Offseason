@@ -76,8 +76,8 @@ public class CMD_PredictiveAim extends RunCommand {
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   
-  // private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
-  // private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
+  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
+  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
   
   /**
    * Constructs a new PredictiveAim command.
@@ -188,8 +188,8 @@ public class CMD_PredictiveAim extends RunCommand {
     }
 
     // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double yInput = MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband);//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double xInput = MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband);//ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double magnitude = Math.sqrt(Math.pow(xInput,2)+Math.pow(yInput,2));
     
     
