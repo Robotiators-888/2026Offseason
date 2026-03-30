@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.4616385542168677
+        "y": 0.462
       },
       "prevControl": null,
       "nextControl": {
         "x": 5.864250103179209,
-        "y": 0.5826209330957663
+        "y": 0.5829823788788986
       },
       "isLocked": false,
       "linkedName": "RightTroughCenterSideways"
