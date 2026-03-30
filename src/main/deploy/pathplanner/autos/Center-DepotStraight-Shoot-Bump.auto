@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Center-DepotStraightStart"
+            "pathName": "CenterTrough-DepotStart"
           }
         },
         {
@@ -27,19 +27,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "DepotStraightStart-DepotStraightEnd"
+                        "pathName": "DepotStart-DepotEnd"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "DepotStraightEnd-DepotStraightStart"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "DepotStraightStart-DepotShoot"
+                        "pathName": "DepotEnd-NewDepotShoot"
                       }
                     }
                   ]
