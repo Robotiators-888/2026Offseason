@@ -33,13 +33,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRTDeep"
+                        "pathName": "RightTroughCenter-RushRT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRTdeep-Righttroughcentersideways"
+                        "pathName": "RushRT-RightTroughCenterSideways"
                       }
                     }
                   ]
