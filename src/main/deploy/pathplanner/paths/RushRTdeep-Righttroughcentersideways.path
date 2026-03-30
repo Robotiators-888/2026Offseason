@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.183152639087017,
-        "y": 1.750670470756063
+        "x": 7.569136363636364,
+        "y": 2.96309090909091
       },
       "isLocked": false,
       "linkedName": "RushRTDeep"
@@ -17,23 +17,28 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.462
+        "y": 0.5
       },
       "prevControl": {
-        "x": 8.764727272727272,
-        "y": 0.4692023548740413
+        "x": 6.383852272727272,
+        "y": 0.5100681818181818
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "RightTroughCenterSideways"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.1116352201257862,
+      "rotationDegrees": 157.5
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,

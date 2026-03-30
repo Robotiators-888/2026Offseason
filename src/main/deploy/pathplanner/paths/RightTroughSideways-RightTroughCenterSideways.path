@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.948487874465049,
-        "y": 0.4616385542168677
+        "y": 0.5
       },
       "prevControl": null,
       "nextControl": {
         "x": 4.198487864905844,
-        "y": 0.46156941954679354
+        "y": 0.4999308653299258
       },
       "isLocked": false,
       "linkedName": "RighttroughSideways"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.462
+        "y": 0.5
       },
       "prevControl": {
         "x": 5.364566288286179,
-        "y": 0.46210776348223065
+        "y": 0.5001077634822306
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 2.0,
     "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
