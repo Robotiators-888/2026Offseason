@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 3.46987119949126,
-        "y": 1.8896041971022464
+        "y": 1.8896041971022466
       },
       "isLocked": false,
       "linkedName": "Outpost"
@@ -20,7 +20,7 @@
         "y": 7.15
       },
       "prevControl": {
-        "x": 2.2379036144578364,
+        "x": 2.237903614457837,
         "y": 7.171253012048193
       },
       "nextControl": null,
