@@ -15,6 +15,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,6 +31,8 @@ import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 
 public class CMD_Shuttle extends RunCommand{
+    /** Physical offsets for targeting calibration */
+    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
     /** Subsystems and state variables for shuttle targeting */
     private SUB_Index index;
     private SUB_Shooter shooter;
@@ -42,7 +45,7 @@ public class CMD_Shuttle extends RunCommand{
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                 .withRotationalDeadband(0) 
-                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withCenterOfRotation(shooterOffset);
 
     /** Motion profiling constraints for rotation */
     private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
@@ -110,16 +113,32 @@ public class CMD_Shuttle extends RunCommand{
                     drivetrain.getPose()
                 );
         
-        drivetrain.publisher2.set(targetPose);
-        SmartDashboard.putNumber("Y Test",drivetrain.getPose().getY());
-        
         Pose2d currentPose = drivetrain.getPose();
-        Translation2d targetTranslation = targetPose.getTranslation();
+        ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            drivetrain.getCurrentRobotChassisSpeeds(), 
+            currentPose.getRotation()
+        );
+
+        Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
+            shooterOffset.rotateBy(currentPose.getRotation())
+        );
+
+        double distanceToTarget = shooterFieldPosition.getDistance(targetPose.getTranslation());
+        double tof = shooter.getExpectedTOF(distanceToTarget);
+
+        Translation2d virtualTargetTranslation = new Translation2d(
+            targetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
+            targetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
+        );
+
+        drivetrain.publisher2.set(new Pose2d(virtualTargetTranslation, new Rotation2d()));
+        
+        Translation2d targetTranslation = virtualTargetTranslation;
         
         // Calculate the required heading to face the shuttle target
         Rotation2d targetRotation = new Rotation2d(
-            targetTranslation.getX() - currentPose.getX(),
-            targetTranslation.getY() - currentPose.getY()
+            targetTranslation.getX() - shooterFieldPosition.getX(),
+            targetTranslation.getY() - shooterFieldPosition.getY()
         );
 
         double omegaSpeed = robotAngleController.calculate(
@@ -131,7 +150,7 @@ public class CMD_Shuttle extends RunCommand{
         double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
         isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(14) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 40;
         
-        double distance = drivetrain.getPose().getTranslation().getDistance(targetPose.getTranslation());
+        double distance = shooterFieldPosition.getDistance(virtualTargetTranslation);
         shooter.shootMeters(distance);
         index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
         

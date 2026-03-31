@@ -49,7 +49,6 @@ public class CMD_PredictiveAim extends RunCommand {
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
-  private boolean isLocked;
 
   /** Physical offsets for targeting calibration */
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
@@ -70,11 +69,10 @@ public class CMD_PredictiveAim extends RunCommand {
   );
   
   public static boolean isThetaErrorCorrect = false;
-  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
   private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.10; // Limit max speed to 30% for better control while aiming
   private double MaxAngularRate = RotationsPerSecond.of(1.0).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withCenterOfRotation(shooterOffset); 
   
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -3.0, 0.0);
@@ -118,7 +116,6 @@ public class CMD_PredictiveAim extends RunCommand {
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
-    isLocked = false;
     running = true;
   }
 
