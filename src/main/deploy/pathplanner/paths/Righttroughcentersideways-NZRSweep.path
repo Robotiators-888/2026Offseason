@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.614566265060241,
-        "y": 0.5
+        "x": 5.710763087843833,
+        "y": 0.6588997338065656
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.614566265060241,
-        "y": 0.5
+        "x": 6.710763087843833,
+        "y": 0.6588997338065656
       },
       "isLocked": false,
-      "linkedName": "RightTroughCenterSideways"
+      "linkedName": "RightTroughCenter"
     },
     {
       "anchor": {
@@ -117,7 +117,7 @@
   "folder": "RightTroughPath",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
