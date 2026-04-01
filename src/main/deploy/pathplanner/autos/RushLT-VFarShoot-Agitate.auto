@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "LeftTrough-LeftTroughCenter"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -30,6 +24,12 @@
                 "type": "sequential",
                 "data": {
                   "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "LeftTrough-LeftTroughCenter"
+                      }
+                    },
                     {
                       "type": "path",
                       "data": {

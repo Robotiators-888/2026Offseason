@@ -28,7 +28,12 @@
       "linkedName": "LeftTroughCenterSideways"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.35350553505534854,
+      "rotationDegrees": -140.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

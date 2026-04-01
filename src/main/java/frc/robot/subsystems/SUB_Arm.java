@@ -146,7 +146,7 @@ public class SUB_Arm extends SubsystemBase {
 
     /** Manual test drive for the arm */
     public void intakeArmTest() {
-        arm.set(-.3);
+        arm.set(-.5);
     }
 
     /** Drives the arm to the top setpoint using PID */
