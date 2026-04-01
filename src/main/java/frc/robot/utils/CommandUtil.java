@@ -134,13 +134,12 @@ public class CommandUtil {
     private Command getShakeyCommand () {
                 
                 Command c = new ParallelCommandGroup(
-                        new InstantCommand(()->{frc.robot.RobotContainer.isShaking=true;}),
                         new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
                         new SequentialCommandGroup(
                                 new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                 new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
                         ).repeatedly()
-                ).finallyDo(()->{frc.robot.RobotContainer.isShaking=false;});
+                );
                 return c;
         }
 }

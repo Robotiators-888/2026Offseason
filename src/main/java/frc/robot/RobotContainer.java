@@ -181,7 +181,7 @@ public class RobotContainer {
                 }, index));
 
                 
-
+                commandUtil.registerAllNamedCommands();
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
