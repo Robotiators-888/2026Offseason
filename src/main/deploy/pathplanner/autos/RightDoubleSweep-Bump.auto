@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughSideways-RightTroughCenterSideways"
+            "pathName": "RightTrough - RightTroughCenterSideways"
           }
         },
         {
@@ -33,13 +33,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenterSideways-RushRTDeepOrbit"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "RushRTDeepOrbit-RightTroughCenterSideways"
+                        "pathName": "Righttroughcentersideways-NZRSweep"
                       }
                     },
                     {
