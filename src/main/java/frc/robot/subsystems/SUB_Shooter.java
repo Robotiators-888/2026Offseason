@@ -31,6 +31,7 @@ public class SUB_Shooter extends SubsystemBase {
     private double lastRPM = 0;
     private double dipRPM = 0;
     private boolean hasGoneDown = false;
+    private boolean isShooting;
     
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
@@ -90,12 +91,14 @@ public class SUB_Shooter extends SubsystemBase {
     @Deprecated
     public void set(double speed) {
         topFlywheel.set(speed);
+        isShooting = speed!=0;
     }
 
     /** @param rpm Target velocity for both flywheels */
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
         topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
+        isShooting = rpm!=0;
     }
 
     /** @return Average current RPM of both flywheels */
@@ -135,6 +138,7 @@ public class SUB_Shooter extends SubsystemBase {
     /** @param volts Direct voltage output for manual testing */
     public void setVolts(double volts) {
         topFlywheel.setControl(voltageRequest.withOutput(volts));
+        isShooting = volts!=0;
     }
 
     @Override
@@ -169,18 +173,24 @@ public class SUB_Shooter extends SubsystemBase {
 
     private void updateFuelShot () {
         double currentAmps = desiredSpeed - flywheelRPM();
-        if (!hasGoneDown && currentAmps > lastRPM) {
-            hasGoneDown = true;
-            dipRPM += currentAmps - dipRPM;
+        if (isShooting) {
+            if (!hasGoneDown && currentAmps > lastRPM) {
+                hasGoneDown = true;
+                dipRPM += currentAmps - dipRPM;
+            }
+            if (hasGoneDown && currentAmps > lastRPM) {
+                dipRPM += currentAmps - dipRPM;
+            }
+            if (hasGoneDown && currentAmps < lastRPM) {
+                hasGoneDown = false;
+                if (dipRPM > 100)
+                    fuelShot++;
+                dipRPM = 0;
+            }
         }
-        if (hasGoneDown && currentAmps > lastRPM) {
-            dipRPM += currentAmps - dipRPM;
-        }
-        if (hasGoneDown && currentAmps < lastRPM) {
-            hasGoneDown = false;
-            if (dipRPM > 100)
-                fuelShot++;
+        else {
             dipRPM = 0;
+            hasGoneDown = false;
         }
         lastRPM = currentAmps;
     }
