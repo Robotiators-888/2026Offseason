@@ -178,7 +178,7 @@ public class SUB_Shooter extends SubsystemBase {
         }
         if (hasGoneDown && currentAmps < lastRPM) {
             hasGoneDown = false;
-            if (dipRPM > 50)
+            if (dipRPM > 100)
                 fuelShot++;
             dipRPM = 0;
         }
