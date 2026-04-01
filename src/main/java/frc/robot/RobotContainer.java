@@ -206,7 +206,7 @@ public class RobotContainer {
                                 )
                 );
 
-                NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> arm.intakeArmDown(), arm).until(() -> arm.isArmDownReached() || arm.isForwardPressed()));
+                NamedCommands.registerCommand("DeployIntakeEncoder", new InstantCommand(() -> arm.intakeArmDown(), arm));
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ManualShoot", Commands.sequence(
