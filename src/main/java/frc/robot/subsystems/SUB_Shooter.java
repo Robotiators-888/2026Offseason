@@ -28,9 +28,9 @@ public class SUB_Shooter extends SubsystemBase {
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private double fuelShot = 0;
-    private double lastAmps = 0;
-    private double spikeAmps = 0;
-    private boolean hasGoneUp = false;
+    private double lastRPM = 0;
+    private double dipRPM = 0;
+    private boolean hasGoneDown = false;
     
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
@@ -168,21 +168,21 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     private void updateFuelShot () {
-        double currentAmps = topFlywheel.getStatorCurrent().getValueAsDouble();
-        if (!hasGoneUp && currentAmps > lastAmps) {
-            hasGoneUp = true;
-            spikeAmps += currentAmps - lastAmps;
+        double currentAmps = desiredSpeed - flywheelRPM();
+        if (!hasGoneDown && currentAmps > lastRPM) {
+            hasGoneDown = true;
+            dipRPM += currentAmps - dipRPM;
         }
-        if (hasGoneUp && currentAmps > lastAmps) {
-            spikeAmps += currentAmps - lastAmps;
+        if (hasGoneDown && currentAmps > lastRPM) {
+            dipRPM += currentAmps - dipRPM;
         }
-        if (hasGoneUp && currentAmps < lastAmps) {
-            hasGoneUp = false;
-            if (spikeAmps > 50)
+        if (hasGoneDown && currentAmps < lastRPM) {
+            hasGoneDown = false;
+            if (dipRPM > 50)
                 fuelShot++;
-            spikeAmps = 0;
+            dipRPM = 0;
         }
-        lastAmps = currentAmps;
+        lastRPM = currentAmps;
     }
 
     /** 
