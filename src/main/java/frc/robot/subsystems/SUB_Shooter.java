@@ -23,8 +23,8 @@ public class SUB_Shooter extends SubsystemBase {
     /** Subsystem hardware and control state */
     private TalonFX topFlywheel;
     private TalonFX bottomFlywheel;
-    private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
-    private final VelocityVoltage m_request = new VelocityVoltage(0).withEnableFOC(true);
+    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private double fuelShot = 0;
