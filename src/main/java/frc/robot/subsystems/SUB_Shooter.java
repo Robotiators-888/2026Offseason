@@ -27,6 +27,10 @@ public class SUB_Shooter extends SubsystemBase {
     private final VelocityVoltage m_request = new VelocityVoltage(0).withEnableFOC(true);
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+    private double fuelShot = 0;
+    private double lastAmps = 0;
+    private double spikeAmps = 0;
+    private boolean hasGoneUp = false;
     
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
@@ -135,7 +139,9 @@ public class SUB_Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
+      updateFuelShot();
       // Telemetry logging for dashboard and diagnostics
+      SmartDashboard.putNumber("Shooter/Fuel Shot", fuelShot);
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
       SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", bottomFlywheel.getStatorCurrent().getValueAsDouble());
@@ -159,6 +165,24 @@ public class SUB_Shooter extends SubsystemBase {
       
       Alert.alertKraken(topFlywheel);
       Alert.alertKraken(bottomFlywheel);
+    }
+
+    private void updateFuelShot () {
+        double currentAmps = topFlywheel.getStatorCurrent().getValueAsDouble();
+        if (!hasGoneUp && currentAmps > lastAmps) {
+            hasGoneUp = true;
+            spikeAmps += currentAmps - lastAmps;
+        }
+        if (hasGoneUp && currentAmps > lastAmps) {
+            spikeAmps += currentAmps - lastAmps;
+        }
+        if (hasGoneUp && currentAmps < lastAmps) {
+            hasGoneUp = false;
+            if (spikeAmps > 50)
+                fuelShot++;
+            spikeAmps = 0;
+        }
+        lastAmps = currentAmps;
     }
 
     /** 
