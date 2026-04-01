@@ -35,7 +35,7 @@ public final class Constants {
                 
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.152; 
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.14; 
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 
                 // PID constants
@@ -66,8 +66,8 @@ public final class Constants {
                 public static final int KINDEX_MOTOR_CANID = 41;      // Spindexer motor
                 public static final int kMETERING_WHEEL_CANID = 42;   // High-speed feed to shooter
                 
-                public static final double kINDEX_MOTOR_VOLTS = 5.0;    // Spindexer feed voltage
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; 
+                public static final double kINDEX_MOTOR_VOLTS = 8.5;    // Spindexer feed voltage
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 12.0; 
                 
                 // Max RPM of NEO at 12V is 5676; scaled by target voltage
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); 
