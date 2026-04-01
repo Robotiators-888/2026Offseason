@@ -76,6 +76,7 @@ import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
 import frc.robot.utils.AllianceFlipUtil;
+import frc.robot.utils.CommandUtil;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
@@ -96,20 +97,13 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-        private final SendableChooser<Command> autoChooser;
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Arm arm = SUB_Arm.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        private static String autoName, newAutoName;
-        Optional<Alliance> lastAlliance;
-        Optional<Alliance> alliance;
-        public static Field2d autoField = new Field2d();
-        public int listIndex = 0;
-        private Boolean lastActiveAlliance = true;
-        public double targetRPM = 1000;
-        Field2d field;
+        public final CommandUtil commandUtil = new CommandUtil(drivetrain, arm, roller, index, photonVision, shooter);
+        private final SendableChooser<Command> autoChooser;
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
@@ -130,6 +124,15 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.Velocity); 
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
+        
+        private static String autoName, newAutoName;
+        Optional<Alliance> lastAlliance;
+        Optional<Alliance> alliance;
+        public static Field2d autoField = new Field2d();
+        public int listIndex = 0;
+        private Boolean lastActiveAlliance = true;
+        public double targetRPM = 1000;
+        Field2d field;
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -177,97 +180,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(0);
                 }, index));
 
-                NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
-
-                                () -> drivetrain.setReachedTarget(true)));
-
-                NamedCommands.registerCommand("ResetReachedTarget",
-                                new InstantCommand(() -> drivetrain.setReachedTarget(false)));
-
                 
-                // Intake
-
-                NamedCommands.registerCommand("Intake",
-                        new RunCommand(() -> {
-                                arm.intakeArmTest();
-                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        }
-                        ,arm,roller)
-                );
-
-
-                NamedCommands.registerCommand("StopIntake",
-                                Commands.parallel(
-                                        new InstantCommand(() -> roller.set(0), roller),
-                                        new InstantCommand(() -> arm.setArm(0), arm)
-                                )
-                );
-
-                NamedCommands.registerCommand("DeployIntakeEncoder", new InstantCommand(() -> arm.intakeArmDown(), arm));
-
-                // Shooter and Indexer
-                NamedCommands.registerCommand("ManualShoot", Commands.sequence(
-                Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
-                Commands.run(() -> {
-                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                }, shooter, index)
-                ));
-
-                NamedCommands.registerCommand("ShootAutoAim", 
-                        new CMD_AimBotAuto(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index
-                        )
-                );
-
-                NamedCommands.registerCommand("ShootAndMove", 
-                        new CMD_PredictiveAimAuto(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index
-                        )
-                );
-
-                // NamedCommands.registerCommand("IntakeWiggle",
-                //         new RunCommand(() -> 
-                //                 intake.intakeWiggle()
-                //         , intake)
-                // );
-                
-                NamedCommands.registerCommand("IntakeAgitate",
-                        getShakeyCommand()
-                );
-
-                NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
-                                        Commands.run(()->{
-                                                double distance = drivetrain.getPose().getTranslation().getDistance(
-                                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                                                        )).orElse(drivetrain.getPose().getTranslation())
-                                                );
-                                                shooter.shootMeters(distance);
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                                                index.setVolts(-1.0);
-                                        },shooter,index).until(() -> shooter.atDesiredRPM()&&Math.abs(index.intakeMeteringRPM()-Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100),
-                                        Commands.run(()->{
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                                        },shooter,index)
-                                ));
-
-                NamedCommands.registerCommand("StopShooting", Commands.parallel(
-                                new InstantCommand(() -> {
-                                        index.set(0);
-                                        index.setMeteringSpeed(0);
-                                }, index),
-                                new InstantCommand(() -> shooter.stop(), shooter)));
 
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -752,18 +665,6 @@ public class RobotContainer {
                                 
                         }
                 }
-        }
-
-        private Command getShakeyCommand () {
-                
-                Command c = new ParallelCommandGroup(
-                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                        new SequentialCommandGroup(
-                                new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                        ).repeatedly()
-                );
-                return c;
         }
 
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
