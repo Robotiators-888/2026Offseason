@@ -166,7 +166,7 @@ public class CMD_PredictiveAim extends RunCommand {
     SmartDashboard.putNumber("PredictiveAim/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5);
-    boolean isReadyToShoot = isThetaErrorCorrect; //if we want to add
+    boolean isReadyToShoot = isThetaErrorCorrect; //if we want to add shooter RPM requirements, we can add it here as well (shooter.atDesiredRPM())
     
     SmartDashboard.putBoolean("PredictiveAim/isThetaErrorCorrect", isThetaErrorCorrect);
     SmartDashboard.putBoolean("PredictiveAim/ReadyToShoot", isReadyToShoot);
@@ -188,6 +188,9 @@ public class CMD_PredictiveAim extends RunCommand {
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double magnitude = Math.sqrt(Math.pow(xInput,2)+Math.pow(yInput,2));
+    if (magnitude == 0.0) {
+      magnitude = 1.0; //No divivde by zero, and if we're not commanding movement, we don't need to limit it
+    }
     
     
     // We add a small constant "kick" to overcome friction when moving proactively

@@ -8,21 +8,28 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
+
+import java.util.Optional;
 
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 public class CMD_PredictiveAimAuto extends Command {
     private final CommandSwerveDrivetrain drivetrain;
+    private final SUB_PhotonVision photonVision;
     private final SUB_Shooter shooter;
     private final SUB_Index index;
     
-    private final Translation2d staticTargetTranslation;
+    private Translation2d staticTargetTranslation;
     private final Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
     
     // The maximum allowed sideways drift of the shooter during the ball's flight (in meters)
@@ -40,11 +47,11 @@ public class CMD_PredictiveAimAuto extends Command {
     // The dynamic rotational feedback (rad/s) we will feed to PathPlanner
     private double currentOmegaOverride = 0.0;
 
-    public CMD_PredictiveAimAuto(CommandSwerveDrivetrain drivetrain, SUB_Shooter shooter, SUB_Index index, Translation2d target) {
+    public CMD_PredictiveAimAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {
         this.drivetrain = drivetrain;
+        this.photonVision = photonVision;
         this.shooter = shooter;
         this.index = index;
-        this.staticTargetTranslation = target;
         
         autoAimAngleController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -54,6 +61,14 @@ public class CMD_PredictiveAimAuto extends Command {
 
     @Override
     public void initialize() {
+        // Determine the correct target tag based on current alliance
+        Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
+            ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
+            : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
+        
+        double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
+        staticTargetTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
+
         // Reset the PID to prevent initial jerking
         autoAimAngleController.reset(
             drivetrain.getPose().getRotation().getRadians(),
@@ -77,15 +92,19 @@ public class CMD_PredictiveAimAuto extends Command {
         double distanceToHub = currentPose.getTranslation().getDistance(staticTargetTranslation);
         double tof = shooter.getExpectedTOF(distanceToHub);
 
-        // 2. Virtual Target (Ignoring shooter offset rotation for now)
+        // 2. Virtual Target
         Translation2d virtualTarget = new Translation2d(
             staticTargetTranslation.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
             staticTargetTranslation.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
         );
 
+        Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
+            shooterOffset.rotateBy(currentPose.getRotation())
+        );
+
         Rotation2d targetRotation = new Rotation2d(
-            virtualTarget.getX() - currentPose.getX(),
-            virtualTarget.getY() - currentPose.getY()
+            virtualTarget.getX() - shooterFieldPosition.getX(),
+            virtualTarget.getY() - shooterFieldPosition.getY()
         );
 
         // 3. Calculate Rotational Velocity (Omega) via our own PID
