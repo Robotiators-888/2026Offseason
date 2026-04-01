@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.2705,
-        "y": 7.5884
+        "x": 3.948,
+        "y": 7.588361445783132
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2705,
-        "y": 7.5884
+        "x": 2.948,
+        "y": 7.588361445783132
       },
       "isLocked": false,
       "linkedName": "LefttroughSideways"
