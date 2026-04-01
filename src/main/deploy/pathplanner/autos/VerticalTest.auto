@@ -17,13 +17,19 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "VerticalDistanceTest"
+                  "pathName": "TestPath"
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "ShootAndMove"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
                 }
               }
             ]

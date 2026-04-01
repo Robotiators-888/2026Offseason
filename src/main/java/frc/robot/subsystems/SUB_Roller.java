@@ -39,7 +39,7 @@ public class SUB_Roller extends SubsystemBase {
         talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         talonConfig.CurrentLimits.SupplyCurrentLimit = 80;
         talonConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        talonConfig.CurrentLimits.SupplyCurrentLowerTime = 1.2;
+        talonConfig.CurrentLimits.SupplyCurrentLowerTime = 2.2;
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         roller.getConfigurator().apply(talonConfig);
     }
