@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -11,6 +13,8 @@ import frc.robot.utils.Alert;
 public class SUB_Roller extends SubsystemBase {
     /** Subsystem hardware components */
     private TalonFX roller;
+    private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+    private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
     private static SUB_Roller INSTANCE = null;
 
     /**
@@ -43,12 +47,12 @@ public class SUB_Roller extends SubsystemBase {
 
     /** @param speed Target voltage for the roller motor */
     public void setVolts(double speed){
-        roller.setVoltage(speed);
+        roller.setControl(voltageRequest.withOutput(speed));
     }
 
     /** @param speed Target percent output for the roller motor [-1.0, 1.0] */
     public void set(double speed){
-        roller.set(speed);
+        roller.setControl(dutyCycleRequest.withOutput(speed));
     }
 
     /** @return Current velocity of the roller in RPM */
