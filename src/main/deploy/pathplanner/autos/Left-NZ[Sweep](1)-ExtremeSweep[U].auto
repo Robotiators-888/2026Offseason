@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTrough-RightTroughCenter"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -33,13 +33,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "Righttroughcentersideways-NZRSweep"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Righttroughcentersideways-Overbump"
+                        "pathName": "Lefttroughcenter-NZLBigSweep"
                       }
                     }
                   ]
