@@ -13,10 +13,10 @@
   ],
   "autoFolders": [
     "Fits20s",
-    "TooLong",
-    "Orbit",
+    "TrenchShoot",
     "TOFIX",
-    "Test"
+    "Test",
+    "TooLong"
   ],
   "defaultMaxVel": 5.25,
   "defaultMaxAccel": 5.2,

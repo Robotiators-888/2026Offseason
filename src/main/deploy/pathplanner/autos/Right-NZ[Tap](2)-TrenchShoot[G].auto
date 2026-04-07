@@ -170,6 +170,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }

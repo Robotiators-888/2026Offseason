@@ -27,19 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTrough-RightTroughCenter"
+                        "pathName": "LeftTrough-LeftTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRTDeep"
+                        "pathName": "LeftTroughCenter-RushLTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRTdeep-Righttroughcentersideways"
+                        "pathName": "RushLTdeep-Lefttroughcentersideways"
                       }
                     }
                   ]
@@ -57,7 +57,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenterSideways-RightTroughSideways"
+            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
           }
         },
         {
@@ -100,19 +100,32 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightOrbitShoot-Outpost"
+            "pathName": "LeftTroughSideways-DepotStart"
           }
         },
         {
-          "type": "wait",
+          "type": "race",
           "data": {
-            "waitTime": 1.5
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "DepotStart-DepotEnd"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost-OutpostShoot"
+            "pathName": "DepotEnd-DepotShoot"
           }
         },
         {
@@ -124,12 +137,6 @@
                 "data": {
                   "name": "ShootAutoAim"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
               }
             ]
           }
@@ -138,6 +145,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }
