@@ -88,7 +88,7 @@ public final class Constants {
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(172));
+                                Units.degreesToRadians(172-90));
                 public static final Transform3d kRobotToCamera1 = new Transform3d(
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
                                 Units.inchesToMeters(7.8), cameraRotation);
@@ -96,7 +96,7 @@ public final class Constants {
                 public static final String kCam2Name = "BackRightCam"; 
                 public static final Rotation3d cameraRotation2 = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(-172));
+                                Units.degreesToRadians(-172+90));
                 public static final Transform3d kRobotToCamera2 = new Transform3d(
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
                                 Units.inchesToMeters(7.8), cameraRotation2);
