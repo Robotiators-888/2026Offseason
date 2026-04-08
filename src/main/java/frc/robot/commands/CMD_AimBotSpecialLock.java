@@ -221,11 +221,11 @@ public class CMD_AimBotSpecialLock extends RunCommand {
         // 2. Convert that vector to ROBOT coordinates
         Translation2d robotRelativeCenterOfRotation = fieldRelativeVectorToTarget.rotateBy(currentPose.getRotation().unaryMinus());
         
-        // 3. Trick WPILib kinematics into calculating the perfect perpendicular wheel angles
+        // 3. Calculating the perfect perpendicular wheel angles
         ChassisSpeeds fakeOrbitSpeeds = new ChassisSpeeds(0.0, 0.0, 1.0); // 1 rad/s rotation
         SwerveModuleState[] orbitStates = drivetrain.getKinematics().toSwerveModuleStates(fakeOrbitSpeeds, robotRelativeCenterOfRotation);
         
-        // 4. Force speeds to zero so the robot stays perfectly still and CANNOT spiral
+        // 4. Force speeds to zero so the robot stays perfectly still
         for (SwerveModuleState state : orbitStates) {
             state.speedMetersPerSecond = 0.0;
         }
@@ -245,7 +245,7 @@ public class CMD_AimBotSpecialLock extends RunCommand {
   public void end(boolean interrupted) {
     running = false;
     
-    // Safety check: Ensure wheels revert to Brake mode when command ends
+    // Safety check
     if (wasLocked) {
         for (int i = 0; i < drivetrain.getModules().length; i++) {
             drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
