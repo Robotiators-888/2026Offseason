@@ -175,19 +175,28 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       isLocked = true;
     }
     else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
-      // isLocked = false;
+      isLocked = false;
     }
 
     // Lock wheels or drive
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
-        var frontLeftState = new SwerveModuleState(0, Rotation2d.fromDegrees(0));
-        var frontRightState = new SwerveModuleState(0, Rotation2d.fromDegrees(0));
-        var backLeftState = new SwerveModuleState(0, Rotation2d.fromDegrees(0));
-        var backRightState = new SwerveModuleState(0, Rotation2d.fromDegrees(0));
-        // Convert to chassis speeds
-        ChassisSpeeds chassisSpeeds = drivetrain.getKinematics().toChassisSpeeds(
-          frontLeftState, frontRightState, backLeftState, backRightState);
-        drivetrain.setControl(new ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
+        // 1. Find the vector from the Robot to the Target in FIELD coordinates
+      Translation2d fieldRelativeVectorToTarget = targetTranslation.minus(currentPose.getTranslation());
+      
+      // 2. Convert that vector to ROBOT coordinates (relative to the robot's physical center)
+      // We do this by rotating the vector by the inverse of the robot's current heading.
+      Translation2d robotRelativeCenterOfRotation = fieldRelativeVectorToTarget.rotateBy(currentPose.getRotation().unaryMinus());
+      
+      // 3. Command a microscopic rotation around the target.
+      // We request a tiny rotational velocity (e.g., 0.001 rad/s). This forces the Phoenix 6 
+      // kinematics to calculate and snap the steering modules to the exact orbit angles, 
+      // but the speed is so small that the drive motors won't actually move the robot.
+      ChassisSpeeds orbitLockSpeeds = new ChassisSpeeds(0.0, 0.0, 0.001);
+      
+      // 4. Send the request to CTRE with the custom center of rotation
+      drivetrain.setControl(new ApplyRobotSpeeds()
+          .withSpeeds(orbitLockSpeeds)
+          .withCenterOfRotation(robotRelativeCenterOfRotation));
         
     } else {
         drivetrain.setControl(
