@@ -34,7 +34,7 @@ import frc.robot.subsystems.SUB_Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.SwerveRequest.ApplyRobotSpeeds;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class CMD_AimBotSpecialLock extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
@@ -47,6 +47,7 @@ public class CMD_AimBotSpecialLock extends RunCommand {
   private final SUB_Shooter shooter;
   private final SUB_Index index;
   private boolean isLocked;
+  private boolean wasLocked; // Tracks state for Coast/Brake transitions
 
   /** Physical offsets for targeting calibration */
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
@@ -64,24 +65,45 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
   private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+            
+  // --- CUSTOM SWERVE REQUEST FOR EXPLICIT STATES ---
+  // This satisfies CTRE's architecture while giving us bare-metal control of the angles
+  private class ApplyModuleStates implements SwerveRequest {
+      public SwerveModuleState[] targetStates = new SwerveModuleState[4];
+      
+      public ApplyModuleStates withStates(SwerveModuleState[] states) {
+          this.targetStates = states;
+          return this;
+      }
+
+      @Override
+      public com.ctre.phoenix6.StatusCode apply(com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters parameters, com.ctre.phoenix6.swerve.SwerveModule<?,?,?>... modulesToApply) {
+          for (int i = 0; i < modulesToApply.length; ++i) {
+              if (targetStates[i] != null) {
+                  // This is the ModuleRequest from the Phoenix 6 docs!
+                  modulesToApply[i].apply(new com.ctre.phoenix6.swerve.SwerveModule.ModuleRequest()
+                      .withState(targetStates[i])
+                      .withDriveRequest(DriveRequestType.OpenLoopVoltage));
+              }
+          }
+          return com.ctre.phoenix6.StatusCode.OK;
+      }
+  }
+  private final ApplyModuleStates moduleStatesRequest = new ApplyModuleStates();
+  // --------------------------------------------------
+
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
   
   /**
    * Constructs a new AimBot command.
-   * @param drivetrain The swerve drivetrain subsystem
-   * @param photonVision The vision subsystem for target tracking
-   * @param shooter The shooter subsystem
-   * @param index The indexer subsystem
-   * @param translationXSupplier Supplier for X translation input
-   * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBotSpecialLock(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBotSpecialLock(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    
+    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
@@ -113,6 +135,7 @@ public class CMD_AimBotSpecialLock extends RunCommand {
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
     isLocked = false;
+    wasLocked = false;
     running = true;
   }
 
@@ -178,37 +201,57 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       isLocked = false;
     }
 
+    // --- NEUTRAL MODE TRANSITIONS ---
+    if (isLocked && !wasLocked) {
+        for (int i = 0; i < drivetrain.getModules().length; i++) {
+            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
+        }
+    } else if (!isLocked && wasLocked) {
+        for (int i = 0; i < drivetrain.getModules().length; i++) {
+            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
+        }
+    }
+    wasLocked = isLocked;
+
     // Lock wheels or drive
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
         // 1. Find the vector from the Robot to the Target in FIELD coordinates
-      Translation2d fieldRelativeVectorToTarget = targetTranslation.minus(currentPose.getTranslation());
-      
-      // 2. Convert that vector to ROBOT coordinates (relative to the robot's physical center)
-      // We do this by rotating the vector by the inverse of the robot's current heading.
-      Translation2d robotRelativeCenterOfRotation = fieldRelativeVectorToTarget.rotateBy(currentPose.getRotation().unaryMinus());
-      
-      // 3. Command a microscopic rotation around the target.
-      // We request a tiny rotational velocity (e.g., 0.001 rad/s). This forces the Phoenix 6 
-      // kinematics to calculate and snap the steering modules to the exact orbit angles, 
-      // but the speed is so small that the drive motors won't actually move the robot.
-      ChassisSpeeds orbitLockSpeeds = new ChassisSpeeds(0.0, 0.0, 0.001);
-      
-      // 4. Send the request to CTRE with the custom center of rotation
-      drivetrain.setControl(new ApplyRobotSpeeds()
-          .withSpeeds(orbitLockSpeeds)
-          .withCenterOfRotation(robotRelativeCenterOfRotation));
+        Translation2d fieldRelativeVectorToTarget = targetTranslation.minus(currentPose.getTranslation());
+        
+        // 2. Convert that vector to ROBOT coordinates
+        Translation2d robotRelativeCenterOfRotation = fieldRelativeVectorToTarget.rotateBy(currentPose.getRotation().unaryMinus());
+        
+        // 3. Trick WPILib kinematics into calculating the perfect perpendicular wheel angles
+        ChassisSpeeds fakeOrbitSpeeds = new ChassisSpeeds(0.0, 0.0, 1.0); // 1 rad/s rotation
+        SwerveModuleState[] orbitStates = drivetrain.getKinematics().toSwerveModuleStates(fakeOrbitSpeeds, robotRelativeCenterOfRotation);
+        
+        // 4. Force speeds to zero so the robot stays perfectly still and CANNOT spiral
+        for (SwerveModuleState state : orbitStates) {
+            state.speedMetersPerSecond = 0.0;
+        }
+        
+        // 5. Apply the raw states explicitly using our custom Phoenix 6 ModuleRequest class
+        drivetrain.setControl(moduleStatesRequest.withStates(orbitStates));
         
     } else {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); // TODO: Comment
+          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); 
     }
   }
 
   @Override
   public void end(boolean interrupted) {
     running = false;
+    
+    // Safety check: Ensure wheels revert to Brake mode when command ends
+    if (wasLocked) {
+        for (int i = 0; i < drivetrain.getModules().length; i++) {
+            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
+        }
+        wasLocked = false;
+    }
   }
 
   @Override

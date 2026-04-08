@@ -64,7 +64,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_AimBotMove;
+import frc.robot.commands.CMD_AimBotSpecialLock;
 import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
@@ -534,6 +534,7 @@ public class RobotContainer {
         public void testInit() {
         }
 
+
         public void testPeriodic() {
                 photonPoseUpdate();
         }
@@ -541,7 +542,7 @@ public class RobotContainer {
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification = new Elastic.Notification(
-                                Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
+                                Elastic.Notification.NotificationLevel.INFO, "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
         }
