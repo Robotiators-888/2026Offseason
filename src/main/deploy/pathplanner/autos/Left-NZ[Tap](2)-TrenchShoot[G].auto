@@ -27,19 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTrough-RightTroughCenter"
+                        "pathName": "LeftTrough-LeftTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRT"
+                        "pathName": "LeftTroughCenter-RushLT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRT-RightTroughCenterSideways"
+                        "pathName": "RushLT-LeftTroughCenterSideways"
                       }
                     }
                   ]
@@ -57,7 +57,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenterSideways-RightTroughSideways"
+            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
           }
         },
         {
@@ -79,7 +79,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
@@ -100,7 +100,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughSideways-RightTroughCenterSideways-FastStart"
+            "pathName": "LeftTroughSideways-LeftTroughCenterSideways-FastStart"
           }
         },
         {
@@ -120,13 +120,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenterSideways-RushRTDeep"
+                        "pathName": "LeftTroughCenterSideways-RushLTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRTdeep-Righttroughcentersideways"
+                        "pathName": "RushLTdeep-Lefttroughcentersideways"
                       }
                     }
                   ]
@@ -144,7 +144,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenterSideways-RightTroughSideways"
+            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
           }
         },
         {
@@ -160,7 +160,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
@@ -170,6 +170,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }
