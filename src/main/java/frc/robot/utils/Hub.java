@@ -4,16 +4,8 @@ import java.util.Optional;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.CMD_AimBot;
-import frc.robot.subsystems.SUB_Shooter;
-import frc.robot.utils.Elastic.Notification;
-import frc.robot.utils.Elastic.Notification.NotificationLevel;
 
 public class Hub {
-    private static Boolean lastActiveAlliance = true;
     private static String gameData = "";
 
     public static Optional<Boolean> isAllianceHubActive () {
@@ -80,36 +72,5 @@ public class Hub {
 
     public static void fetchMatchData () {
         gameData = DriverStation.getGameSpecificMessage();
-    }
-
-    public static void start(CommandXboxController Driver1, CommandXboxController Driver2, SUB_Shooter shooter) {
-        final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-        SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
-        if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
-                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
-                                "The active hub has changed!"));
-                // Maybe do a rumble
-                lastActiveAlliance = activeAlliance.get();
-        }
-        SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
-        if (Hub.isAllianceHubActive().isPresent()) {
-                SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
-        }
-        if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
-                        || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
-                        || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
-                Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
-        } else {
-                Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
-                Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);
-        }
-        if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect && CMD_AimBot.isRunning()) {
-                Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
-                Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
-        } else {
-                Driver1.getHID().setRumble(RumbleType.kRightRumble, 0);
-                Driver2.getHID().setRumble(RumbleType.kRightRumble, 0);
-        }
     }
 }
