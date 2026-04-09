@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.7653922967189715,
-        "y": 1.8671184022824536
+        "x": 7.767325301204821,
+        "y": 0.9861686746987948
       },
       "isLocked": false,
       "linkedName": "RushRTDeep"
@@ -20,8 +20,8 @@
         "y": 0.6588997338065656
       },
       "prevControl": {
-        "x": 7.209029957203994,
-        "y": 1.1043937232524967
+        "x": 6.8384698795180725,
+        "y": 0.669265060240964
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTrough-RightTroughCenter"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -21,15 +21,22 @@
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "RightTroughCenter-RushRT"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "Intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Lefttroughcenter-NZLDiagonalSweep"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -39,24 +46,6 @@
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RushRT-RightTroughCenter"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightTroughCenter-RightTrough"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "RightTrough-Shoot"
           }
         },
         {
@@ -72,7 +61,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]

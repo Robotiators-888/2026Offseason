@@ -19,10 +19,9 @@ import frc.robot.Constants.PhotonVision;
 import frc.robot.utils.Alert;
 
 public class SUB_PhotonVision extends SubsystemBase {
-  // Set up singleton
   private static SUB_PhotonVision INSTANCE = null;
 
-  // Create cameras and targets
+  /** Hardware cameras and targeting state */
   private final PhotonCamera cam1 = new PhotonCamera(PhotonVision.kCamName1);
   private final PhotonCamera cam2 = new PhotonCamera(PhotonVision.kCam2Name);
   private final PhotonCamera cam3 = new PhotonCamera(PhotonVision.kCam3Name);
@@ -34,7 +33,7 @@ public class SUB_PhotonVision extends SubsystemBase {
   private final PhotonPoseEstimator poseEstimator3;
   public AprilTagFieldLayout at_field;
 
-  // Function to get singleton
+  /** @return Single instance of the SUB_PhotonVision subsystem */
   public static SUB_PhotonVision getInstance() {
     if (INSTANCE == null) {
       INSTANCE = new SUB_PhotonVision();
@@ -43,10 +42,10 @@ public class SUB_PhotonVision extends SubsystemBase {
   }
 
   private SUB_PhotonVision() {
-    // Load the correct field
-    at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark); // TODO: Change for diff events
+    // Load the 2026 field layout
+    at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
 
-    // Set up cameras and pose estimators
+    // Initialize cameras and pose estimators with MULTI_TAG_PNP strategy
     cam1.setPipelineIndex(0);
     cam2.setPipelineIndex(0);
     cam3.setPipelineIndex(0);
@@ -54,65 +53,66 @@ public class SUB_PhotonVision extends SubsystemBase {
     poseEstimator1 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
         PhotonVision.kRobotToCamera1);
     poseEstimator2 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-         PhotonVision.kRobotToCamera2); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
+         PhotonVision.kRobotToCamera2);
     poseEstimator3 = new PhotonPoseEstimator(at_field, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-         PhotonVision.kRobotToCamera3); //TODO: For more camera (like 4 camera so we have one for climb) could we run vision on the RIO without losing too much processing?
-    // Make sure Multi Tag is enabled
+         PhotonVision.kRobotToCamera3);
+
+    // Set fallback strategy for single-tag scenarios
     poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
     poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
   }
 
-  // Functions to get camera poses
+  /** @return Latest estimated robot pose from camera 1 */
   public Optional<EstimatedRobotPose> getCam1Pose() {
     List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
-  
+
     Optional<EstimatedRobotPose> finalPose1 = Optional.empty();
-    // Process results in reverse order to find the latest  result
+    // Process results in reverse order to find the latest valid result
     java.util.ListIterator<PhotonPipelineResult> iterator = results1.listIterator(results1.size());
     while (iterator.hasPrevious()) {
       PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
         cam1BestTarget = result.getBestTarget();
         finalPose1 = poseEstimator1.update(result);
-        break; // Found the latest result, stop processing older ones
+        break; 
       }
     }
     return finalPose1;
   }
 
+  /** @return Latest estimated robot pose from camera 2 */
   public Optional<EstimatedRobotPose> getCam2Pose() {
     List<PhotonPipelineResult> results2 = cam2.getAllUnreadResults();
     Optional<EstimatedRobotPose> finalPose2 = Optional.empty();
-    // Process results in reverse order to find the latest  result
     java.util.ListIterator<PhotonPipelineResult> iterator = results2.listIterator(results2.size());
     while (iterator.hasPrevious()) {
       PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
         cam2BestTarget = result.getBestTarget();
         finalPose2 = poseEstimator2.update(result);
-        break; // Found the latest result, stop processing older ones
+        break; 
       }
     }
     return finalPose2;
   }
+
+  /** @return Latest estimated robot pose from camera 3 */
   public Optional<EstimatedRobotPose> getCam3Pose() {
     List<PhotonPipelineResult> results3 = cam3.getAllUnreadResults();
     Optional<EstimatedRobotPose> finalPose3 = Optional.empty();
-    // Process results in reverse order to find the latest result
     java.util.ListIterator<PhotonPipelineResult> iterator = results3.listIterator(results3.size());
     while (iterator.hasPrevious()) {
       PhotonPipelineResult result = iterator.previous();
       if (result.hasTargets()) {
         cam3BestTarget = result.getBestTarget();
         finalPose3 = poseEstimator3.update(result);
-        break; // Found the latest result, stop processing older ones
+        break; 
       }
     }
     return finalPose3;
   }
 
-  // Get best camera targets
   public PhotonTrackedTarget getCam1BestTarget() {
     return cam1BestTarget;
   }
@@ -124,7 +124,6 @@ public class SUB_PhotonVision extends SubsystemBase {
     return cam3BestTarget;
   }
 
-  // Get target Yaw Pich or Area
   public double getTargetYaw(PhotonTrackedTarget target) {
     return target.getYaw();
   }
@@ -137,14 +136,14 @@ public class SUB_PhotonVision extends SubsystemBase {
     return target.getArea();
   }
 
-  // Get the id of a photon target
+  /** @return The fiducial ID of the tracked target */
   public int getId(PhotonTrackedTarget target) {
     return target.getFiducialId();
   }
 
-  // Alert if cameras are disconnected
   @Override
   public void periodic() {
+    // Check connection status and report errors
    if (!cam1.isConnected()) {
       Alert.registerError("PhotonVision Camera 1 Disconnected");
     }

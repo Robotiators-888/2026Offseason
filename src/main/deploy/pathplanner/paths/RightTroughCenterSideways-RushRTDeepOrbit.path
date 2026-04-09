@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.4616385542168677
+        "y": 0.5
       },
       "prevControl": null,
       "nextControl": {
         "x": 5.864250103179209,
-        "y": 0.5826209330957663
+        "y": 0.6209823788788986
       },
       "isLocked": false,
       "linkedName": "RightTroughCenterSideways"
@@ -55,7 +55,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

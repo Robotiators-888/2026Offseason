@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "RightTrough-RightTroughCenter"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
@@ -27,19 +33,25 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTrough-LeftTroughCenter"
+                        "pathName": "RightTroughCenter-RushRT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTroughCenter-RushLTDeep"
+                        "pathName": "RushRT-RightTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushLTdeep-Lefttroughcentersideways"
+                        "pathName": "RightTroughCenter-RightTrough"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RightTrough-MiddleShoot"
                       }
                     }
                   ]
@@ -55,12 +67,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -73,13 +79,13 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.5
+                  "waitTime": 4.0
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
@@ -98,12 +104,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "LeftTroughSideways-DepotStart"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -114,18 +114,55 @@
                 }
               },
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "DepotStart-DepotEnd"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "MiddleShoot-RightTrough"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RightTrough-RightTroughCenter"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RightTroughCenter-RushRTDeep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RushRTDeep-RightTroughCenter"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RightTroughCenter-RightTrough"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RightTrough-MiddleShoot"
+                      }
+                    }
+                  ]
                 }
               }
             ]
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "DepotEnd-DepotShoot"
+            "name": "StopIntake"
           }
         },
         {
@@ -137,6 +174,12 @@
                 "data": {
                   "name": "ShootAutoAim"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeAgitate"
+                }
               }
             ]
           }
@@ -145,6 +188,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "Fits20s",
   "choreoAuto": false
 }

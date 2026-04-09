@@ -67,7 +67,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               },
               {
@@ -154,7 +154,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               },
               {
@@ -170,6 +170,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }

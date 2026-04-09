@@ -27,19 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTrough-LeftTroughCenter"
+                        "pathName": "RightTrough-RightTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTroughCenter-RushLT"
+                        "pathName": "RightTroughCenter-RushRT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushLT-LeftTroughCenterSideways"
+                        "pathName": "RushRT-RightTroughCenterSideways"
                       }
                     }
                   ]
@@ -57,7 +57,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
+            "pathName": "RightTroughCenterSideways-RightTroughSideways"
           }
         },
         {
@@ -67,28 +67,22 @@
               {
                 "type": "named",
                 "data": {
+                  "name": "IntakeAgitate"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
                   "name": "ShootAutoAim"
                 }
               },
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.5
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
+                  "waitTime": 4.0
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShooting"
           }
         },
         {
@@ -98,9 +92,15 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "LeftTroughSideways-LeftTroughCenterSideways-FastStart"
+            "pathName": "RightTroughSideways-RightTroughCenterSideways"
           }
         },
         {
@@ -120,13 +120,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTroughCenterSideways-RushLTDeep"
+                        "pathName": "RightTroughCenterSideways-RushRTDeepOrbit"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushLTdeep-Lefttroughcentersideways"
+                        "pathName": "RushRTDeepOrbit-RightTroughCenterSideways"
                       }
                     }
                   ]
@@ -144,7 +144,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
+            "pathName": "RightTroughCenterSideways-RightTroughSideways"
           }
         },
         {
@@ -154,13 +154,13 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootAutoAim"
+                  "name": "IntakeAgitate"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "ShootAutoAim"
                 }
               }
             ]
@@ -170,6 +170,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }

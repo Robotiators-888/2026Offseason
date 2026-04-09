@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Center-DepotStraightStart"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
@@ -21,13 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTrough-RightTroughCenter"
+                        "pathName": "DepotStraightStart-DepotStraightEnd"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRT"
+                        "pathName": "DepotStraightEnd-DepotStraightStart"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "DepotStraightStart-DepotShoot"
                       }
                     }
                   ]
@@ -49,12 +61,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "RushRT-Shoot"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -62,6 +68,12 @@
                 "type": "named",
                 "data": {
                   "name": "ShootAutoAim"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IntakeAgitate"
                 }
               }
             ]

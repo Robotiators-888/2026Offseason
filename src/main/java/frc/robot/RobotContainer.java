@@ -64,21 +64,24 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_AimBotMove;
+import frc.robot.commands.CMD_AimBotSpecialLock;
+import frc.robot.commands.CMD_PredictiveAim;
+import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
 import frc.robot.subsystems.SUB_Index;
-import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
 import frc.robot.utils.AllianceFlipUtil;
+import frc.robot.utils.CommandUtil;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
+import frc.robot.utils.RobotTelemetry;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -95,26 +98,16 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-        private final SendableChooser<Command> autoChooser;
-        public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Arm arm = SUB_Arm.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        private static String autoName, newAutoName;
-        Optional<Alliance> lastAlliance;
-        Optional<Alliance> alliance;
-        public static Field2d autoField = new Field2d();
-        public int listIndex = 0;
-        private Boolean lastActiveAlliance = true;
-        public double targetRPM = 1000;
-        Field2d field;
+        public final CommandUtil commandUtil = new CommandUtil(drivetrain, arm, roller, index, photonVision, shooter);
+        private final SendableChooser<Command> autoChooser;
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private boolean isTeleop = false;
-        private boolean isShaking = false; 
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -132,6 +125,15 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.Velocity); 
         private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
+        
+        private static String autoName, newAutoName;
+        Optional<Alliance> lastAlliance;
+        Optional<Alliance> alliance;
+        public static Field2d autoField = new Field2d();
+        public int listIndex = 0;
+        public double targetRPM = 1000;
+        Field2d field;
+        private final RobotTelemetry robotTelemetry;
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -140,9 +142,9 @@ public class RobotContainer {
                 field = new Field2d();
                 try {
                         pathLeftToNeutral = PathPlannerPath.fromPathFile("LeftTrough-LeftTroughCenter");
-                        pathNeutralToLeft = PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTrough");
+                        pathNeutralToLeft = PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTroughTA");
                         pathRightToNeutral = PathPlannerPath.fromPathFile("RightTrough-RightTroughCenter");
-                        pathNeutralToRight = PathPlannerPath.fromPathFile("RightTroughCenter-RightTrough");
+                        pathNeutralToRight = PathPlannerPath.fromPathFile("RightTroughCenter-RightTroughTA");
                 } catch (Exception e) {
                         Alert.registerError("Failed to load trench paths: " + e.getMessage());
                 }
@@ -178,92 +180,9 @@ public class RobotContainer {
                         index.set(0);
                         index.setMeteringSpeed(0);
                 }, index));
-                leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
 
-                NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
-
-                                () -> drivetrain.setReachedTarget(true)));
-
-                NamedCommands.registerCommand("ResetReachedTarget",
-                                new InstantCommand(() -> drivetrain.setReachedTarget(false)));
-
-                
-                // Intake
-
-                NamedCommands.registerCommand("Intake",
-                        new RunCommand(() -> {
-                                arm.intakeArmTest();
-                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        }
-                                
-                        ,arm,roller)
-                );
-
-
-                NamedCommands.registerCommand("StopIntake",
-                                Commands.parallel(
-                                        new InstantCommand(() -> roller.set(0), roller),
-                                        new InstantCommand(() -> arm.setArm(0), arm)
-                                )
-                );
-
-                NamedCommands.registerCommand("DeployIntakeEncoder", Commands.run(() -> arm.intakeArmDown(), arm).until(() -> arm.isArmDownReached() || arm.isForwardPressed()));
-
-                // Shooter and Indexer
-                NamedCommands.registerCommand("ManualShoot", Commands.sequence(
-                Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
-                Commands.run(() -> {
-                        shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                }, shooter, index)
-                ));
-
-                NamedCommands.registerCommand("ShootAutoAim", 
-                        new CMD_AimBotAuto(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index
-                        )
-                );
-
-                // NamedCommands.registerCommand("IntakeWiggle",
-                //         new RunCommand(() -> 
-                //                 intake.intakeWiggle()
-                //         , intake)
-                // );
-                
-                NamedCommands.registerCommand("IntakeAgitate",
-                        getShakeyCommand()
-                );
-
-                NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
-                                        Commands.run(()->{
-                                                double distance = drivetrain.getPose().getTranslation().getDistance(
-                                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                                                        )).orElse(drivetrain.getPose().getTranslation())
-                                                );
-                                                shooter.shootMeters(distance);
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                                                index.setVolts(-1.0);
-                                        },shooter,index).until(() -> shooter.atDesiredRPM()&&Math.abs(index.intakeMeteringRPM()-Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100),
-                                        Commands.run(()->{
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
-                                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                                        },shooter,index)
-                                ));
-
-                NamedCommands.registerCommand("StopShooting", Commands.parallel(
-                                new InstantCommand(() -> {
-                                        index.set(0);
-                                        index.setMeteringSpeed(0);
-                                }, index),
-                                new InstantCommand(() -> shooter.stop(), shooter)));
-
+                robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
+                commandUtil.registerAllNamedCommands();
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
@@ -289,16 +208,6 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                // Driver1.leftTrigger().whileTrue(
-                //         new ParallelCommandGroup(
-                //                 new CMD_AimBotAuto(
-                //                         drivetrain, 
-                //                         photonVision, 
-                //                         shooter, 
-                //                         index
-                //                 )
-                //         )
-                // );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
@@ -339,6 +248,19 @@ public class RobotContainer {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         arm.intakeArmTest();
                 }, roller, arm));
+                Driver1.leftTrigger().whileTrue(
+                        new ParallelCommandGroup(
+                                new CMD_PredictiveAim(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
+                                ),
+                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller)
+                        )
+                );
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_AimBot(
@@ -349,10 +271,7 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
-                                // Commands.either would cause the command to not start even if the button was released
-                                // getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
-                                
+                                getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean())
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
@@ -394,7 +313,6 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
-                // Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
         public void robotInit() {
@@ -412,8 +330,6 @@ public class RobotContainer {
         }
 
         public void robotPeriodic() {
-
-                SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
@@ -422,7 +338,6 @@ public class RobotContainer {
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-
                 Pose2d currentPose = drivetrain.getPose();
                 
                 Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
@@ -460,58 +375,9 @@ public class RobotContainer {
 
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
-                logDrivetrain();
-                checkAlerts();
+                robotTelemetry.update();
         }
 
-        // Logs everything about the drivetrain
-        public void logDrivetrain () {
-                drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
-                drivetrain.desiredSwerveModuleStatesPublisher.set(drivetrain.getState().ModuleTargets);
-                for (int i = 0; i < drivetrain.getModules().length; i++) {
-                        TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
-                        TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();
-                        int driveMotorId = driveMotor.getDeviceID();
-                        int steerMotorId = steerMotor.getDeviceID();
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Stator Current", steerMotor.getStatorCurrent().getValueAsDouble());
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Supply Current", driveMotor.getSupplyCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Supply Current", steerMotor.getSupplyCurrent().getValueAsDouble());
-                        
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Motor Voltage", driveMotor.getMotorVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Motor Voltage", steerMotor.getMotorVoltage().getValueAsDouble());
-                        
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Supply Voltage", driveMotor.getSupplyVoltage().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Supply Voltage", steerMotor.getSupplyVoltage().getValueAsDouble());
-                        
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + driveMotorId + " RPM", driveMotor.getVelocity().getValue().baseUnitMagnitude());
-                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + steerMotorId + " RPM", steerMotor.getVelocity().getValue().baseUnitMagnitude());
-                        
-                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Encoder Pos", driveMotor.getPosition().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Encoder Pos", steerMotor.getPosition().getValueAsDouble());
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Torque Current", driveMotor.getTorqueCurrent().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Torque Current", steerMotor.getTorqueCurrent().getValueAsDouble());
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Drive Motor ID " + driveMotorId + " Device Temp", driveMotor.getDeviceTemp().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Steer Motor ID " + steerMotorId + " Device Temp", steerMotor.getDeviceTemp().getValueAsDouble());
-
-                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Drive Motor ID " + driveMotorId + " Processor Temp", driveMotor.getProcessorTemp().getValueAsDouble());
-                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Steer Motor ID " + steerMotorId + " Processor Temp", steerMotor.getProcessorTemp().getValueAsDouble());
-                        
-                        SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
-                }
-        }
-
-        private void checkAlerts () {
-                for (int i = 0; i < drivetrain.getModules().length; i++) {
-                        Alert.alertKraken(drivetrain.getModule(i).getDriveMotor());
-                        Alert.alertKraken(drivetrain.getModule(i).getSteerMotor());
-                }
-        }
 
         public void autonomousInit() {
                 drivetrain.setIntakeComplete(true);
@@ -533,7 +399,6 @@ public class RobotContainer {
         }
 
         public void autonomousPeriodic() {
-                isTeleop = false;
                 photonPoseUpdate();
         }
 
@@ -541,54 +406,25 @@ public class RobotContainer {
         public void testInit() {
         }
 
+
         public void testPeriodic() {
-                isTeleop = false;
                 photonPoseUpdate();
         }
 
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification = new Elastic.Notification(
-                                Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
+                                Elastic.Notification.NotificationLevel.INFO, "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
         }
 
         public void teleopPeriodic() {
-                isTeleop = true;
                 photonPoseUpdate();
-                final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-                SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
-                if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
-                        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
-                                        "The active hub has changed!"));
-                        // Maybe do a rumble
-                        lastActiveAlliance = activeAlliance.get();
-                }
-                SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
-                if (Hub.isAllianceHubActive().isPresent()) {
-                        SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
-                }
-                if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
-                                || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
-                                || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
-                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                } else {
-                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
-                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);
-                }
-                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect && CMD_AimBot.isRunning()) {
-                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
-                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
-                } else {
-                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 0);
-                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 0);
-                }
+                Hub.start(Driver1,Driver2,shooter);
         }
 
         public void disabledPeriodic() {
-                isTeleop = false;
                 newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
                 if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
@@ -644,7 +480,7 @@ public class RobotContainer {
         }
 
         private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
-                        StructPublisher<Pose2d> publisher) {
+                        StructPublisher<Pose3d> publisher) {
                 if (poseOptional.isPresent()) {
                         EstimatedRobotPose estimatedPose = poseOptional.get();
                         Pose3d photonPose = estimatedPose.estimatedPose;
@@ -669,7 +505,7 @@ public class RobotContainer {
                                                         photonPose.toPose2d(),
                                                         estimatedPose.timestampSeconds,
                                                         VecBuilder.fill(xyStddev,xyStddev,rotStddev));
-                                        publisher.set(photonPose.toPose2d());
+                                        publisher.set(photonPose);
                                 }
 
                                 
@@ -677,28 +513,14 @@ public class RobotContainer {
                 }
         }
 
-        private Command getShakeyCommand () {
-                
-                Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                                new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                                ).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
-                return c;
-        }
-
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
                 Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                                new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                                ).until(condition).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
+                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                        new SequentialCommandGroup(
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)
+                        ).repeatedly()
+                );
                 return c;
         }
 

@@ -27,19 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTrough-RightTroughCenter"
+                        "pathName": "LeftTrough-LeftTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRT"
+                        "pathName": "LeftTroughCenter-RushLTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRT-RightTroughCenterSideways"
+                        "pathName": "RushLTdeep-Lefttroughcentersideways"
                       }
                     }
                   ]
@@ -57,7 +57,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenterSideways-RightTroughSideways"
+            "pathName": "LeftTroughCenterSideways-LeftTroughSideways"
           }
         },
         {
@@ -100,7 +100,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughSideways-RightTroughCenterSideways-FastStart"
+            "pathName": "LeftTroughSideways-DepotStart"
           }
         },
         {
@@ -114,37 +114,18 @@
                 }
               },
               {
-                "type": "sequential",
+                "type": "path",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "RightTroughCenterSideways-RushRTDeep"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "RushRTdeep-Righttroughcentersideways"
-                      }
-                    }
-                  ]
+                  "pathName": "DepotStart-DepotEnd"
                 }
               }
             ]
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenterSideways-RightTroughSideways"
+            "pathName": "DepotEnd-DepotShoot"
           }
         },
         {
@@ -156,12 +137,6 @@
                 "data": {
                   "name": "ShootAutoAim"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
               }
             ]
           }
@@ -170,6 +145,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Orbit",
+  "folder": "TrenchShoot",
   "choreoAuto": false
 }
