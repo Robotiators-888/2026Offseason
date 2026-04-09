@@ -131,7 +131,6 @@ public class RobotContainer {
         Optional<Alliance> alliance;
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
-        private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         Field2d field;
         private final RobotTelemetry robotTelemetry;
@@ -272,7 +271,6 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
                                 getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean())
                         )
                 );
@@ -315,7 +313,6 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
-                // Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
         public void robotInit() {
@@ -424,34 +421,7 @@ public class RobotContainer {
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
-                final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
-                SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
-                if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
-                        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
-                                        "The active hub has changed!"));
-                        // Maybe do a rumble
-                        lastActiveAlliance = activeAlliance.get();
-                }
-                SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
-                if (Hub.isAllianceHubActive().isPresent()) {
-                        SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
-                }
-                if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
-                                || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
-                                || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
-                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
-                } else {
-                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
-                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);
-                }
-                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect && CMD_AimBot.isRunning()) {
-                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
-                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
-                } else {
-                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 0);
-                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 0);
-                }
+                Hub.start(Driver1,Driver2,shooter);
         }
 
         public void disabledPeriodic() {
