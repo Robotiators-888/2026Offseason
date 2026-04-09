@@ -32,8 +32,11 @@ import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class CMD_AimBotSpecialLock extends RunCommand {
@@ -81,16 +84,15 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       }
 
       @Override
-      public com.ctre.phoenix6.StatusCode apply(com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters parameters, com.ctre.phoenix6.swerve.SwerveModule<?,?,?>... modulesToApply) {
+      public StatusCode apply(SwerveControlParameters parameters, SwerveModule<?,?,?>... modulesToApply) {
           for (int i = 0; i < modulesToApply.length; ++i) {
               if (targetStates[i] != null) {
-                  // This is the ModuleRequest from the Phoenix 6 docs!
-                  modulesToApply[i].apply(new com.ctre.phoenix6.swerve.SwerveModule.ModuleRequest()
+                  modulesToApply[i].apply(new SwerveModule.ModuleRequest()
                       .withState(targetStates[i])
                       .withDriveRequest(DriveRequestType.OpenLoopVoltage));
               }
           }
-          return com.ctre.phoenix6.StatusCode.OK;
+          return StatusCode.OK;
       }
   }
   private final ApplyModuleStates moduleStatesRequest = new ApplyModuleStates();
