@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.569136363636364,
-        "y": 2.96309090909091
+        "x": 7.183152639087017,
+        "y": 1.750670470756063
       },
       "isLocked": false,
       "linkedName": "RushRTDeep"
@@ -17,29 +17,24 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.5
+        "y": 0.4616385542168677
       },
       "prevControl": {
-        "x": 6.383852272727272,
-        "y": 0.5100681818181818
+        "x": 6.342139800285306,
+        "y": 0.36689015691868687
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "RightTroughCenterSideways"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.5660377358490569,
-      "rotationDegrees": 130.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.5,
-    "maxAcceleration": 5.2,
+    "maxVelocity": 5.25,
+    "maxAcceleration": 4.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -55,5 +50,5 @@
     "velocity": 0,
     "rotation": 95.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

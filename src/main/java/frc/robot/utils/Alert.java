@@ -3,7 +3,6 @@ package frc.robot.utils;
 import java.util.HashMap;
 
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -199,45 +198,5 @@ public class Alert {
       registerError("Motor " + krakenId + " Fault_UnstableSupplyV");
     if (kraken.getFault_UsingFusedCANcoderWhileUnlicensed().getValue())
       registerError("Motor " + krakenId + " Fault_UsingFusedCANcoderWhileUnlicensed");
-  }
-
-  public static void alertNeoFaults (SparkMax neo) {
-    int neoId = neo.getDeviceId();
-    if (neo.getFaults().can)
-      registerError("Motor " + neoId + " Fault: can");
-    if (neo.getFaults().escEeprom)
-      registerError("Motor " + neoId + " Fault: escEeprom");
-    if (neo.getFaults().firmware)
-      registerError("Motor " + neoId + " Fault: firmware");
-    if (neo.getFaults().gateDriver)
-      registerError("Motor " + neoId + " Fault: gateDriver");
-    if (neo.getFaults().motorType)
-      registerError("Motor " + neoId + " Fault: motorType");
-    if (neo.getFaults().other)
-      registerError("Motor " + neoId + " Fault: other");
-    if (neo.getFaults().sensor)
-      registerError("Motor " + neoId + " Fault: sensor");
-    if (neo.getFaults().temperature)
-      registerError("Motor " + neoId + " Fault: temperature");
-  }
-
-  public static void alertNeoWarnings (SparkMax neo) {
-    int neoId = neo.getDeviceId();
-    if (neo.getWarnings().brownout)
-      registerWarning("Motor " + neoId + " Warning: brownout");
-    if (neo.getWarnings().escEeprom)
-      registerWarning("Motor " + neoId + " Warning: escEeprom");
-    if (neo.getWarnings().extEeprom)
-      registerWarning("Motor " + neoId + " Warning: extEeprom");
-    if (neo.getWarnings().hasReset)
-      registerWarning("Motor " + neoId + " Warning: hasReset");
-    if (neo.getWarnings().other)
-      registerWarning("Motor " + neoId + " Warning: other");
-    if (neo.getWarnings().overcurrent)
-      registerWarning("Motor " + neoId + " Warning: overcurrent");
-    if (neo.getWarnings().sensor)
-      registerWarning("Motor " + neoId + " Warning: sensor");
-    if (neo.getWarnings().stall)
-      registerWarning("Motor " + neoId + " Warning: stall");
   }
 }

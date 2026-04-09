@@ -33,13 +33,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRT"
+                        "pathName": "RightTroughCenter-RushRTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRT-RightTroughCenterSideways"
+                        "pathName": "RushRTdeep-Righttroughcentersideways"
                       }
                     }
                   ]
@@ -67,7 +67,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "IntakeAgitate"
+                  "name": "Intake"
                 }
               },
               {
@@ -79,7 +79,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.0
+                  "waitTime": 4.5
                 }
               }
             ]
@@ -154,7 +154,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "IntakeAgitate"
+                  "name": "Intake"
                 }
               },
               {

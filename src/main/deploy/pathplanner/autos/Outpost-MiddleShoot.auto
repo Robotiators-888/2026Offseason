@@ -13,39 +13,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftTrough-LeftTroughCenter"
+            "pathName": "CenterTrough-Outpost"
           }
         },
         {
-          "type": "race",
+          "type": "wait",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Lefttroughcenter-NZLBigSweep"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
+            "waitTime": 3.0
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "StopIntake"
+            "pathName": "Outpost-Shoot"
           }
         },
         {
@@ -61,7 +41,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "IntakeAgitate"
+                  "name": "Intake"
                 }
               }
             ]
