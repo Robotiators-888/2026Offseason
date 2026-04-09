@@ -31,12 +31,12 @@ public final class Constants {
         public static final class Shooter {
                 public static final int kSHOOTER_topFlywheel_MOTOR_CANID = 44;
                 public static final int kSHOOTER_bottomFlywheel_MOTOR_CANID = 43;
-                public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+                public static final double kSHOOTER_FLYWHEEL_RPM = 1000; // RPM
                 
                 // Feedforward constants (Manual tuning in progress)
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.14; 
-                public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.0; //Volts
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.14; //Volts/sec
+                public static final double kSHOOTER_FLYWHEEL_kA = 0.0; //Volts/sec^2
                 
                 // PID constants
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.5;
@@ -47,18 +47,18 @@ public final class Constants {
         /** Intake roller motor configuration */
         public static final class Roller {
                 public static final int kINTAKE_MOTOR_CANID = 30; 
-                public static final double kROLLER_MOTOR_SPEED = 0.9;
-                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; 
+                public static final double kROLLER_MOTOR_SPEED = 0.9; //Percent
+                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; //Volts
         }
 
         /** Intake arm motor configuration and relative setpoints (NEO 2.0 Encoder) */
         public static final class Arm {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kARM_MOTOR_SPEED = 0.1; 
+                public static final double kARM_MOTOR_SPEED = 0.1; // Percent
                 public static final double kARM_BOTTOM_SETPOINT = -209; // Degrees (Relative)
                 public static final double kARM_TOP_SETPOINT = 0;       // Degrees (Relative)
-                public static final double kARM_FAULT_AMPS = 30;       // Stall detection threshold
+                public static final double kARM_FAULT_AMPS = 30;       // Stall detection threshold in amps
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -67,24 +67,24 @@ public final class Constants {
                 public static final int kMETERING_WHEEL_CANID = 42;   // High-speed feed to shooter
                 
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;    // Spindexer feed voltage
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; 
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; // Volts
                 
                 // Max RPM of NEO at 12V is 5676; scaled by target voltage
-                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); 
+                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); //RPM
         }
 
         /** Standard field measurements in meters */
         public static final class Field {
-                public static final double fieldLength = 1653.2 / 100.0; 
-                public static final double fieldWidth = 800.1 / 100.0; 
+                public static final double fieldLength = 1653.2 / 100.0; //meters
+                public static final double fieldWidth = 800.1 / 100.0; //meters
         }
 
         /** Vision camera names and physical transformations on the robot */
         public static final class PhotonVision {
                 public static final String kCamName1 = "BackLeftCam";
-                public static final double kMaxZError = 0.2;
-                public static final double kMaxAmbiguity = 0.1;
-                public static final double kMaxDistance = 12.0;
+                public static final double kMaxZError = 0.2;  //Unused Unknown Previous Purpose
+                public static final double kMaxAmbiguity = 0.1; //Normalized Ambiguity
+                public static final double kMaxDistance = 4.0; //meters
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
@@ -112,7 +112,7 @@ public final class Constants {
 
         /** PWM configurations and predefined color values for Blinkin */
         public static class LEDs {
-                public static final int kPWMPort = 9;
+                public static final int kPWMPort = 9; //Port number 
                 public static final double kColorGreen = 0.77;
                 public static final double kColorRed = 0.61;
                 public static final double kParty_Palette_Twinkles = -0.53;
