@@ -29,29 +29,41 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class CMD_AimBotAuto extends RunCommand {
+  /** Subsystems and state variables for autonomous targeting */
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Pose2d targetPose = new Pose2d();
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
+
+  /** Physical offset from robot center to shooter exit */
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
   
+  /** Motion profiling constraints for rotation (narrower for auto) */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-      RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
-      RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
+      RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
+      RotationsPerSecond.of(12).in(RadiansPerSecond)   
   );
 
+  /** PID controller for robot heading alignment during autonomous */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+      3.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
+  /**
+   * Constructs a new autonomous AimBot command.
+   * @param drivetrain The swerve drivetrain subsystem
+   * @param photonVision The vision subsystem
+   * @param shooter The shooter subsystem
+   * @param index The indexer subsystem
+   */
   public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
@@ -66,6 +78,7 @@ public class CMD_AimBotAuto extends RunCommand {
   public void initialize() {
     robotAngleController.setTolerance(Units.degreesToRadians(0.0));
     
+    // Determine the correct target tag based on current alliance
     Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
       : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
@@ -75,6 +88,7 @@ public class CMD_AimBotAuto extends RunCommand {
     
     targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
+    // Reset PID controller to the current state of the robot
     robotAngleController.reset(
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
@@ -90,26 +104,27 @@ public class CMD_AimBotAuto extends RunCommand {
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
-    // 2. Calculate the angle directly from the SHOOTER to the target
+
+    // Calculate target heading directly from shooter position to the hub
     Rotation2d targetRotation = new Rotation2d(
         targetTranslation.getX() - shooterFieldPosition.getX(),
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
+
     drivetrain.publisher2.set(new Pose2d(shooterFieldPosition,targetRotation));
-    // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
-    // 3. Calculate rotational velocity (omega) using the PID controller
     double omegaSpeed = robotAngleController.calculate(
         currentPose.getRotation().getRadians(),
         targetRotation.getRadians()
     );
 
-    // Calculate error for deadband checking
+    // Update alignment status for automated firing
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
+    
     double distance = drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
@@ -120,16 +135,18 @@ public class CMD_AimBotAuto extends RunCommand {
     shooter.shootMeters(distance);
     
     index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
+    
+    // Automated firing trigger
     boolean isShooterReady = shooter.atDesiredRPM();
     boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
-    if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
+    if (isThetaErrorCorrect && isShooterReady) {
         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
+        index.setMeteringRPM(-1000);
     }
     
-
-    
+    // Drive request with PID rotation (no translation in static auto aim)
     drivetrain.setControl(
       drive.withVelocityX(0)
       .withVelocityY(0)

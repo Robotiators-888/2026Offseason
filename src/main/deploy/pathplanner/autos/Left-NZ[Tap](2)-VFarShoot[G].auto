@@ -27,19 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTrough-RightTroughCenter"
+                        "pathName": "LeftTrough-LeftTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRTDeep"
+                        "pathName": "LeftTroughCenter-RushLT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRTDeep-RightTroughCenter"
+                        "pathName": "RushLT-LeftTroughCenter"
                       }
                     }
                   ]
@@ -57,13 +57,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenter-RightTrough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "TroughRight-RightFarShoot"
+            "pathName": "TroughLeft-LeftVFarShoot"
           }
         },
         {
@@ -79,13 +79,13 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.5
+                  "waitTime": 4.4
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
@@ -94,7 +94,57 @@
         {
           "type": "named",
           "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "StopShooting"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftVFarShoot-TroughLeft"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTrough-LeftTroughCenter"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "LeftTroughCenter-RushLTDeep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RushLTDeep-LeftTroughCenter"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -106,19 +156,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightFarShoot-Outpost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.5
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost-OutpostShoot"
+            "pathName": "TroughLeft-LeftVFarShoot"
           }
         },
         {
@@ -134,7 +178,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
