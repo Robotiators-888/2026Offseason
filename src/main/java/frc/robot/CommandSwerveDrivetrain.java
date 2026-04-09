@@ -17,6 +17,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -128,12 +129,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         .getStructTopic("SmartDashboard/Drivetrain/debugXPoint", Pose2d.struct).publish(); 
     public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
         .getStructTopic("SmartDashboard/Drivetrain/debugYPoint", Pose2d.struct).publish(); 
-    public final StructPublisher<Pose2d> publisher3 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose2d.struct).publish(); 
-    public final StructPublisher<Pose2d> publisher4 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose2d.struct).publish(); 
-    public final StructPublisher<Pose2d> publisher5 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose2d.struct).publish(); 
+    public final StructPublisher<Pose3d> publisher3 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose3d.struct).publish(); 
+    public final StructPublisher<Pose3d> publisher4 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose3d.struct).publish(); 
+    public final StructPublisher<Pose3d> publisher5 = NetworkTableInstance.getDefault()
+        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose3d.struct).publish(); 
     public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
         .getStructTopic("SmartDashboard/Drivetrain/SelectedPose", Pose2d.struct).publish();
     public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()

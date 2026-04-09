@@ -11,9 +11,28 @@
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "VerticalDistanceTest"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "TestPath"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAndMove"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         }
       ]

@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "RightTrough-RightTroughCenter"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -33,13 +27,19 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRT"
+                        "pathName": "LeftTrough-LeftTroughCenter"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRT-RightTroughCenter"
+                        "pathName": "LeftTroughCenter-RushLT"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RushLT-LeftTroughCenter"
                       }
                     }
                   ]
@@ -57,13 +57,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenter-RightTrough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "TroughRight-RightFarShoot"
+            "pathName": "TroughLeft-LeftVFarShoot"
           }
         },
         {
@@ -79,7 +79,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.0
+                  "waitTime": 4.4
                 }
               },
               {
@@ -94,25 +94,25 @@
         {
           "type": "named",
           "data": {
-            "name": "StopShooting"
+            "name": "StopIntake"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "StopIntake"
+            "name": "StopShooting"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightFarShoot-TroughRight"
+            "pathName": "LeftVFarShoot-TroughLeft"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightTrough-RightTroughCenter"
+            "pathName": "LeftTrough-LeftTroughCenter"
           }
         },
         {
@@ -132,13 +132,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RightTroughCenter-RushRTDeep"
+                        "pathName": "LeftTroughCenter-RushLTDeep"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "RushRTDeep-RightTroughCenter"
+                        "pathName": "RushLTDeep-LeftTroughCenter"
                       }
                     }
                   ]
@@ -156,13 +156,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "RightTroughCenter-RightTrough"
+            "pathName": "LeftTroughCenter-LeftTrough"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "TroughRight-RightFarShoot"
+            "pathName": "TroughLeft-LeftVFarShoot"
           }
         },
         {

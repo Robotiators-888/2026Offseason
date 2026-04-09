@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.495,
-        "y": 4.25
+        "x": 7.8,
+        "y": 4.6
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.65447218259629,
-        "y": 5.128316690442225
+        "x": 7.95947218259629,
+        "y": 5.478316690442225
       },
       "isLocked": false,
       "linkedName": "RushLTDeep"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.393
+        "y": 7.293
       },
       "prevControl": {
         "x": 6.600912981455064,
-        "y": 7.583152639087019
+        "y": 7.483152639087019
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxVelocity": 3.0,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -50,5 +50,5 @@
     "velocity": 0,
     "rotation": -95.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
