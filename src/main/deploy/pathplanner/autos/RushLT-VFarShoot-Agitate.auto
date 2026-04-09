@@ -11,9 +11,21 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTrough-LeftTroughCenter"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
               {
                 "type": "sequential",
                 "data": {
@@ -21,22 +33,16 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTrough-LeftTroughCenter"
+                        "pathName": "LeftTroughCenter-RushLT"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "LeftTroughCenter-RushLT"
+                        "pathName": "RushLT-LeftTroughCenter"
                       }
                     }
                   ]
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
                 }
               }
             ]
@@ -51,7 +57,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "NZL-BumpL"
+            "pathName": "LeftTroughCenter-LeftTrough"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TroughLeft-LeftVFarShoot"
           }
         },
         {
@@ -61,51 +73,19 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootAndMove"
+                  "name": "ShootAutoAim"
                 }
               },
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "BumpL-DepotStraightStart"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "DepotStraightStart-DepotStraightEnd"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "DepotStraightEnd-DepotStraightStart"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "DepotStraightStart-DepotShoot"
-                      }
-                    }
-                  ]
+                  "waitTime": 4.4
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake"
+                  "name": "IntakeAgitate"
                 }
               }
             ]
@@ -118,19 +98,87 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopShooting"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftVFarShoot-TroughLeft"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTrough-LeftTroughCenter"
+          }
+        },
+        {
           "type": "race",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "IntakeAgitate"
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "LeftTroughCenter-RushLTDeep"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "RushLTDeep-LeftTroughCenter"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "LeftTroughCenter-LeftTrough"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "TroughLeft-LeftVFarShoot"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "ShootAutoAim"
+                  "name": "IntakeAgitate"
                 }
               }
             ]

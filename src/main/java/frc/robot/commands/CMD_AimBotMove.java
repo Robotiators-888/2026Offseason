@@ -7,11 +7,8 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Optional;
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -24,8 +21,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
-import frc.robot.Constants.Operator;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
@@ -33,19 +28,15 @@ import frc.robot.subsystems.SUB_Shooter;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-public class CMD_AimBot extends RunCommand {
+public class CMD_AimBotMove extends RunCommand {
   // Holds constructor arguments and sets up variables
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Pose2d targetPose = new Pose2d();
-  private final DoubleSupplier translationXSupplier;
-  private final DoubleSupplier translationYSupplier;
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
-  private boolean isLocked;
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
-  Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
   
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
@@ -57,21 +48,15 @@ public class CMD_AimBot extends RunCommand {
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+  private final SwerveRequest.RobotCentric drive = new SwerveRequest.RobotCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
-  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
-  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBotMove(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {    super(() -> {});
     // Hold constructor arguments
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
-    this.translationXSupplier = translationXSupplier;
-    this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
     // Require subsystems
@@ -96,7 +81,6 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
-    isLocked = false;
     running = true;
   }
 
@@ -115,9 +99,6 @@ public class CMD_AimBot extends RunCommand {
         targetTranslation.getX() - shooterFieldPosition.getX(),
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
-
-    targetRotation = targetRotation.plus(shooterThetaOffset);
-
     // Update telemetry
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
@@ -140,8 +121,8 @@ public class CMD_AimBot extends RunCommand {
                     new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
             )).orElse(drivetrain.getPose().getTranslation())
     );
-    shooter.shootMeters(distance);
-    
+    shooter.shootMeters(distance-(drivetrain.getState().Speeds.vxMetersPerSecond*shooter.getExpectedTOF(distance)));
+    SmartDashboard.putNumber("CMD_AimBot/TOF", distance-(drivetrain.getState().Speeds.vxMetersPerSecond*shooter.getExpectedTOF(distance)));
      // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
     if (isThetaErrorCorrect && isShooterReady) {
@@ -150,26 +131,14 @@ public class CMD_AimBot extends RunCommand {
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
     }
-    double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+    double xInput = 1.3;
 
-    // Wheel locking logic
-    if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
-      isLocked = true;
-    }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
-      isLocked = false;
-    }
+    
+    drivetrain.setControl(
+      drive.withVelocityX((!isThetaErrorCorrect||distance<1.5) ? 0:xInput)
+      .withVelocityY(0)
+      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
 
-    // Lock wheels or drive
-    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
-        drivetrain.setControl(brakeRequest);
-    } else {
-        drivetrain.setControl(
-          drive.withVelocityX(xInput * MaxSpeed)
-          .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); // TODO: Comment
-    }
   }
 
   @Override

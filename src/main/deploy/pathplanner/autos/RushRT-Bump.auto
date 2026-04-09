@@ -63,12 +63,6 @@
                 "data": {
                   "name": "ShootAutoAim"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "IntakeAgitate"
-                }
               }
             ]
           }
