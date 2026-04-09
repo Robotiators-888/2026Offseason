@@ -64,7 +64,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_AimBotSpecialLock;
+import frc.robot.commands.CMD_AimBotMove;
 import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
@@ -81,7 +81,6 @@ import frc.robot.utils.Elastic;
 import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
-import frc.robot.utils.RobotTelemetry;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -131,9 +130,9 @@ public class RobotContainer {
         Optional<Alliance> alliance;
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
+        private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         Field2d field;
-        private final RobotTelemetry robotTelemetry;
 
         /**
          * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -181,7 +180,7 @@ public class RobotContainer {
                         index.setMeteringSpeed(0);
                 }, index));
 
-                robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
+                
                 commandUtil.registerAllNamedCommands();
                 configureBindings();
                 autoChooser = AutoBuilder.buildAutoChooser();
@@ -208,6 +207,16 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
+                // Driver1.leftTrigger().whileTrue(
+                //         new ParallelCommandGroup(
+                //                 new CMD_AimBotAuto(
+                //                         drivetrain, 
+                //                         photonVision, 
+                //                         shooter, 
+                //                         index
+                //                 )
+                //         )
+                // );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
@@ -271,6 +280,7 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
+                                // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
                                 getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean())
                         )
                 );
@@ -313,6 +323,7 @@ public class RobotContainer {
                                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
                         )).orElse(drivetrain.getPose().getTranslation())
                 ))));
+                // Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
         public void robotInit() {
@@ -338,6 +349,7 @@ public class RobotContainer {
                 SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+
                 Pose2d currentPose = drivetrain.getPose();
                 
                 Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
@@ -375,9 +387,125 @@ public class RobotContainer {
 
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
-                robotTelemetry.update();
+                logDrivetrain();
+                checkAlerts();
+                logPDH();
         }
 
+        // Logs everything about the drivetrain
+        public void logDrivetrain () {
+                drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
+                drivetrain.desiredSwerveModuleStatesPublisher.set(drivetrain.getState().ModuleTargets);
+                for (int i = 0; i < drivetrain.getModules().length; i++) {
+                        TalonFX driveMotor = drivetrain.getModule(i).getDriveMotor();
+                        TalonFX steerMotor = drivetrain.getModule(i).getSteerMotor();
+                        int driveMotorId = driveMotor.getDeviceID();
+                        int steerMotorId = steerMotor.getDeviceID();
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Stator Current", steerMotor.getStatorCurrent().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Supply Current", driveMotor.getSupplyCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Supply Current", steerMotor.getSupplyCurrent().getValueAsDouble());
+                        
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Motor Voltage", driveMotor.getMotorVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Motor Voltage", steerMotor.getMotorVoltage().getValueAsDouble());
+                        
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Drive Motor ID " + driveMotorId + " Supply Voltage", driveMotor.getSupplyVoltage().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Voltage/Steer Motor ID " + steerMotorId + " Supply Voltage", steerMotor.getSupplyVoltage().getValueAsDouble());
+                        
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Drive Motor ID " + driveMotorId + " RPM", driveMotor.getVelocity().getValue().baseUnitMagnitude());
+                        SmartDashboard.putNumber("Drivetrain/Motors/RPM/Steer Motor ID " + steerMotorId + " RPM", steerMotor.getVelocity().getValue().baseUnitMagnitude());
+                        
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Drive Motor ID " + driveMotorId + " Encoder Pos", driveMotor.getPosition().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Pos/Steer Motor ID " + steerMotorId + " Encoder Pos", steerMotor.getPosition().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Torque Current", driveMotor.getTorqueCurrent().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Torque Current", steerMotor.getTorqueCurrent().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Drive Motor ID " + driveMotorId + " Device Temp", driveMotor.getDeviceTemp().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Steer Motor ID " + steerMotorId + " Device Temp", steerMotor.getDeviceTemp().getValueAsDouble());
+
+                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Drive Motor ID " + driveMotorId + " Processor Temp", driveMotor.getProcessorTemp().getValueAsDouble());
+                        SmartDashboard.putNumber("Drivetrain/Motors/Temp/Steer Motor ID " + steerMotorId + " Processor Temp", steerMotor.getProcessorTemp().getValueAsDouble());
+                        
+                        SmartDashboard.putNumber("Drivetrain/Motors/AbsEncoder/Encoder ID " + drivetrain.getModule(i).getEncoder().getDeviceID() + " Position", drivetrain.getModule(i).getEncoder().getPosition().getValueAsDouble());
+                }
+        }
+
+        public void logPDH () {
+                SmartDashboard.putNumber("PDH/Battery Voltage", powerDistribution.getVoltage());
+                SmartDashboard.putNumberArray("PDH/All Currents Amps", powerDistribution.getAllCurrents());
+                SmartDashboard.putNumber("PDH/Tempurature Celsius", powerDistribution.getTemperature());
+                SmartDashboard.putNumber("PDH/Total Current Amps", powerDistribution.getTotalCurrent());
+                SmartDashboard.putNumber("PDH/Total Energy Joules", powerDistribution.getTotalEnergy());
+                // Not supported on PDH
+                // SmartDashboard.putNumber("PDH/Total Watts", powerDistribution.getTotalPower());
+                if (powerDistribution.getFaults().Brownout)
+                        Alert.registerError("PDH Brownout!!");
+                if (powerDistribution.getFaults().CanWarning)
+                        Alert.registerWarning("PDH CanWarning");
+                if (powerDistribution.getFaults().HardwareFault)
+                        Alert.registerError("PDH HardwareFault");
+                if (powerDistribution.getFaults().Channel0BreakerFault)
+                        Alert.registerError("PDH Channel0BreakerFault");
+                if (powerDistribution.getFaults().Channel10BreakerFault)
+                        Alert.registerError("PDH Channel10BreakerFault");
+                if (powerDistribution.getFaults().Channel11BreakerFault)
+                        Alert.registerError("PDH Channel11BreakerFault");
+                // We dont use these ports so they cause false errors
+                // if (powerDistribution.getFaults().Channel12BreakerFault)
+                //         Alert.registerError("PDH Channel12BreakerFault");
+                // if (powerDistribution.getFaults().Channel13BreakerFault)
+                //         Alert.registerError("PDH Channel13BreakerFault");
+                // if (powerDistribution.getFaults().Channel14BreakerFault)
+                //         Alert.registerError("PDH Channel14BreakerFault");
+                if (powerDistribution.getFaults().Channel15BreakerFault)
+                        Alert.registerError("PDH Channel15BreakerFault");
+                if (powerDistribution.getFaults().Channel16BreakerFault)
+                        Alert.registerError("PDH Channel16BreakerFault");
+                if (powerDistribution.getFaults().Channel17BreakerFault)
+                        Alert.registerError("PDH Channel17BreakerFault");
+                if (powerDistribution.getFaults().Channel18BreakerFault)
+                        Alert.registerError("PDH Channel18BreakerFault");
+                if (powerDistribution.getFaults().Channel19BreakerFault)
+                        Alert.registerError("PDH Channel19BreakerFault");
+                if (powerDistribution.getFaults().Channel1BreakerFault)
+                        Alert.registerError("PDH Channel1BreakerFault");
+                if (powerDistribution.getFaults().Channel20BreakerFault)
+                        Alert.registerError("PDH Channel20BreakerFault");
+                if (powerDistribution.getFaults().Channel21BreakerFault)
+                        Alert.registerError("PDH Channel21BreakerFault");
+                if (powerDistribution.getFaults().Channel22BreakerFault)
+                        Alert.registerError("PDH Channel22BreakerFault");
+                // Also unused
+                // if (powerDistribution.getFaults().Channel23BreakerFault)
+                //         Alert.registerError("PDH Channel23BreakerFault");
+                if (powerDistribution.getFaults().Channel2BreakerFault)
+                        Alert.registerError("PDH Channel2BreakerFault");
+                if (powerDistribution.getFaults().Channel3BreakerFault)
+                        Alert.registerError("PDH Channel3BreakerFault");
+                if (powerDistribution.getFaults().Channel4BreakerFault)
+                        Alert.registerError("PDH Channel4BreakerFault");
+                if (powerDistribution.getFaults().Channel5BreakerFault)
+                        Alert.registerError("PDH Channel5BreakerFault");
+                if (powerDistribution.getFaults().Channel6BreakerFault)
+                        Alert.registerError("PDH Channel6BreakerFault");
+                if (powerDistribution.getFaults().Channel7BreakerFault)
+                        Alert.registerError("PDH Channel7BreakerFault");
+                if (powerDistribution.getFaults().Channel18BreakerFault)
+                        Alert.registerError("PDH Channel18BreakerFault");
+                if (powerDistribution.getFaults().Channel9BreakerFault)
+                        Alert.registerError("PDH Channel19BreakerFault");
+        }
+
+        private void checkAlerts () {
+                for (int i = 0; i < drivetrain.getModules().length; i++) {
+                        Alert.alertKraken(drivetrain.getModule(i).getDriveMotor());
+                        Alert.alertKraken(drivetrain.getModule(i).getSteerMotor());
+                }
+        }
 
         public void autonomousInit() {
                 drivetrain.setIntakeComplete(true);
@@ -406,7 +534,6 @@ public class RobotContainer {
         public void testInit() {
         }
 
-
         public void testPeriodic() {
                 photonPoseUpdate();
         }
@@ -414,14 +541,41 @@ public class RobotContainer {
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification = new Elastic.Notification(
-                                Elastic.Notification.NotificationLevel.INFO, "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
+                                Elastic.Notification.NotificationLevel.INFO, "I AM STEVE", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
         }
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
-                Hub.start(Driver1,Driver2,shooter);
+                final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
+                SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
+                if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
+                        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
+                                        "The active hub has changed!"));
+                        // Maybe do a rumble
+                        lastActiveAlliance = activeAlliance.get();
+                }
+                SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
+                if (Hub.isAllianceHubActive().isPresent()) {
+                        SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
+                }
+                if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
+                                || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
+                                || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
+                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
+                } else {
+                        Driver1.getHID().setRumble(RumbleType.kLeftRumble, 0);
+                        Driver2.getHID().setRumble(RumbleType.kLeftRumble, 0);
+                }
+                if (shooter.atDesiredRPM() && CMD_AimBot.isThetaErrorCorrect && CMD_AimBot.isRunning()) {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 1);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 1);
+                } else {
+                        Driver1.getHID().setRumble(RumbleType.kRightRumble, 0);
+                        Driver2.getHID().setRumble(RumbleType.kRightRumble, 0);
+                }
         }
 
         public void disabledPeriodic() {
