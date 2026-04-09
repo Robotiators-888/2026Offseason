@@ -74,7 +74,6 @@ public class CMD_AimBotSpecialLock extends RunCommand {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
             
   // --- CUSTOM SWERVE REQUEST FOR EXPLICIT STATES ---
-  // This satisfies CTRE's architecture while giving us bare-metal control of the angles
   private class ApplyModuleStates implements SwerveRequest {
       public SwerveModuleState[] targetStates = new SwerveModuleState[4];
       
