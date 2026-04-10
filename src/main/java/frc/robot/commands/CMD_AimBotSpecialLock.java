@@ -189,7 +189,8 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
-        index.setMeteringRPM(-1000);
+        // Changed from -1000 to 0 to reduce brownouts, approved by Mr Lange and Ms Candice
+        index.setMeteringRPM(0);
     }
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));

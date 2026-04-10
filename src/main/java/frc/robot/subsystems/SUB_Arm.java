@@ -146,7 +146,8 @@ public class SUB_Arm extends SubsystemBase {
 
     /** Manual test drive for the arm */
     public void intakeArmTest() {
-        arm.set(-.5);
+        // Mr. Lange said to make the PID based
+        arm.set(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); // Mr. Lange said half intake being held down
     }
 
     /** Drives the arm to the top setpoint using PID */
