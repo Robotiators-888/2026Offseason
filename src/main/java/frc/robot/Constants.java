@@ -35,7 +35,7 @@ public final class Constants {
                 
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0; //Volts
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.14; //Volts/sec
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.15225; //Volts/sec // 5% increase from previous Mr.Lange suggests, 0.145 was from Bethesda okay in match, but not good
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0; //Volts/sec^2
                 
                 // PID constants
@@ -67,7 +67,7 @@ public final class Constants {
                 public static final int kMETERING_WHEEL_CANID = 42;   // High-speed feed to shooter
                 
                 public static final double kINDEX_MOTOR_VOLTS = 12.0;    // Spindexer feed voltage
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 10.0; // Volts
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; // Volts
                 
                 // Max RPM of NEO at 12V is 5676; scaled by target voltage
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); //RPM

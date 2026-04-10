@@ -105,9 +105,10 @@ public class RobotContainer {
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         public final CommandUtil commandUtil = new CommandUtil(drivetrain, arm, roller, index, photonVision, shooter);
         private final SendableChooser<Command> autoChooser;
-        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        // Mr. Lange chnage to 1/2 second for 0 to full change
+        private final SlewRateLimiter xLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
+        private final SlewRateLimiter yLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
+        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
