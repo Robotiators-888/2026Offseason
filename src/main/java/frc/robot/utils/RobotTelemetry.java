@@ -5,21 +5,25 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.CommandSwerveDrivetrain;
 
+// This class handles all logging of the drivetrain and PDH
 public class RobotTelemetry {
     private final CommandSwerveDrivetrain drivetrain;
     private final PowerDistribution powerDistribution;
 
+    // Aquire our PDH instances
     public RobotTelemetry(CommandSwerveDrivetrain drivetrain, PowerDistribution powerDistribution) {
         this.drivetrain = drivetrain;
         this.powerDistribution = powerDistribution;
     }
 
+    // This function is the easy API to call every robotPeriodic
     public void update() {
         logDrivetrain();
         logPDH();
         checkAlerts();
     }
 
+    // Logs drivetrain modulestates, encoder positons, current, voltage, RPM, and temps
     private void logDrivetrain() {
         drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
         drivetrain.desiredSwerveModuleStatesPublisher.set(drivetrain.getState().ModuleTargets);
@@ -52,6 +56,7 @@ public class RobotTelemetry {
         }
     }
 
+    // Logs faults and other data from the PDH
     public void logPDH () {
                 SmartDashboard.putNumber("PDH/Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumberArray("PDH/All Currents Amps", powerDistribution.getAllCurrents());
@@ -118,6 +123,7 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel19BreakerFault");
         }
 
+    // Checks for faults on all drivetrain krakens
     private void checkAlerts() {
         for (int i = 0; i < drivetrain.getModules().length; i++) {
             Alert.alertKraken(drivetrain.getModule(i).getDriveMotor());
