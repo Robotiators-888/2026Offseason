@@ -13,7 +13,7 @@ import frc.robot.utils.Alert;
 public class SUB_Arm extends SubsystemBase {
     /** Subsystem state and configuration constants */
     public static boolean extended;
-    private PIDController controller = new PIDController(0.001, 0, 0);
+    private PIDController controller = new PIDController(0.002, 0, 0);
     private SparkMax arm;
     private SparkMax armFollower;
     private boolean stickUp = false;
