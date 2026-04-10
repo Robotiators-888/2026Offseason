@@ -41,19 +41,19 @@ public class CMD_Shuttle extends RunCommand{
     private final DoubleSupplier translationXSupplier;
     private final DoubleSupplier translationYSupplier;
     
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
+    private double MaxSpeed = 1.0; 
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
                 .withRotationalDeadband(0) 
-                .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withCenterOfRotation(shooterOffset);
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     /** Motion profiling constraints for rotation */
     private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
         RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
         RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
     );
-    private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0);
-    private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0);
+    private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-3.0,0.0);
+    private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-3.0,0.0);
 
     /** PID controller for robot heading alignment during shuttle */
     private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
@@ -163,8 +163,12 @@ public class CMD_Shuttle extends RunCommand{
             index.setVolts(0);
         }
 
-        double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
         double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+        double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
+        double magnitude = Math.sqrt(Math.pow(xInput,2)+Math.pow(yInput,2));
+        if (magnitude == 0.0) {
+        magnitude = 1.0; //No divivde by zero, and if we're not commanding movement, we don't need to limit it
+        }
         
         // Apply swerve drive request with PID-calculated rotation
         drivetrain.setControl(
