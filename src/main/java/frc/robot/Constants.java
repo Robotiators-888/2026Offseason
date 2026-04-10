@@ -55,7 +55,7 @@ public final class Constants {
         public static final class Arm {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kARM_MOTOR_SPEED = 0.1; // Percent
+                public static final double kARM_MOTOR_SPEED = 0.2; // Percent
                 public static final double kARM_BOTTOM_SETPOINT = -209; // Degrees (Relative)
                 public static final double kARM_TOP_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kARM_FAULT_AMPS = 30;       // Stall detection threshold in amps
@@ -67,7 +67,7 @@ public final class Constants {
                 public static final int kMETERING_WHEEL_CANID = 42;   // High-speed feed to shooter
                 
                 public static final double kINDEX_MOTOR_VOLTS = 12.0;    // Spindexer feed voltage
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; // Volts
+                public static final double kINDEX_METERING_MOTOR_VOLTS = 10.0; // Volts
                 
                 // Max RPM of NEO at 12V is 5676; scaled by target voltage
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); //RPM
