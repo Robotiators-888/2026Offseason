@@ -97,17 +97,17 @@ public final class Constants {
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(172));
+                                Units.degreesToRadians(172-90));
                 public static final Transform3d kRobotToCamera1 = new Transform3d(
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
                                 Units.inchesToMeters(7.8), cameraRotation);
 
-                public static final String kCam2Name = "BackRightCam"; // TODO: Change to the correct name(AprilTagCam) and Transform3d and Rotation3d (Make sure to use this Transform3d and Rotation3d for the other camera)
+                public static final String kCam2Name = "BackRightCam"; 
                 public static final Rotation3d cameraRotation2 = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(-172)); // CCW positive yaw with it circling around the z axis, zero is straight forward
+                                Units.degreesToRadians(-172+90));
                 public static final Transform3d kRobotToCamera2 = new Transform3d(
-                                Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5), // X is forward and the camera is in front of the center of the robot, Y positive is left and the camera is on the right of the robot, Z is up from the ground and it is above the ground
+                                Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
                                 Units.inchesToMeters(7.8), cameraRotation2);
 
 
