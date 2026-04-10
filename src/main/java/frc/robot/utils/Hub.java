@@ -13,9 +13,14 @@ import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 
 public class Hub {
+    // Used for publishing and rumble logic
     private static Boolean lastActiveAlliance = true;
+    // Holds cached gamedata from the fms that tells us who won auto
     private static String gameData = "";
 
+    // Tells us if our hub is currently active
+    // Its a convinient wrapper around getActiveAlliance
+    // Returns empty if autonomous or gamedata is empty after fetching it
     public static Optional<Boolean> isAllianceHubActive () {
         if (getActiveAlliance().isEmpty()) {
             return Optional.empty();
@@ -23,11 +28,15 @@ public class Hub {
         return Optional.of(getActiveAlliance().get() == DriverStation.getAlliance().orElse(Alliance.Red));
     }
 
+    // Gets the active alliance
+    // Returns empty if autonomous
     public static Optional<Alliance> getActiveAlliance () {
+        // Return empty if autonomous
         if (DriverStation.isAutonomous()) {
             return Optional.empty();
         }
         
+        // Try to fetch match data if not cached, return empty if this fails
         double matchTime = DriverStation.getMatchTime();
         if (gameData.length() == 0) {
             gameData = DriverStation.getGameSpecificMessage(); 
@@ -36,24 +45,29 @@ public class Hub {
             }
         }
         
+        // Determine the alliance that wins autonmous
         Alliance initialAlliance = gameData.charAt(0) == 'R' ? Alliance.Red : Alliance.Blue;
 
+        // Return the correct info based on match time and initialAlliance
+        // If in alliance shift or endgame, return our alliance
         if (matchTime >= 130 || matchTime < 30) {
             return Optional.of(DriverStation.getAlliance().orElse(Alliance.Red));
         }
+        // In the correct shifts return the opposite of initial alliance
         else if (matchTime >= 105 || (matchTime < 80 && matchTime >= 55)) {
             return initialAlliance == Alliance.Red ? Optional.of(Alliance.Blue) : Optional.of(Alliance.Red);
         }
+        // In other shifts return the initial alliance
         else {
             return Optional.of(initialAlliance);
         }
     }
 
+    // Gets the time until next alliance change which is helpful for rumble and elastic publishing
     public static double getTimeUntilNextChange () {
         double matchTime = DriverStation.getMatchTime();
         // Auto and transition shift
         if (matchTime >= 30+(25*4)) {
-            // Idk if this is right
             return 30 - (30+(25*4)+30 - matchTime);
         }
         // Shift 1
@@ -78,17 +92,18 @@ public class Hub {
         }
     }
 
+    // Not needed but precaches the gamedata, it should be called on teleop init
     public static void fetchMatchData () {
         gameData = DriverStation.getGameSpecificMessage();
     }
 
+    // Used to rumble the controllers
     public static void start(CommandXboxController Driver1, CommandXboxController Driver2, SUB_Shooter shooter) {
         final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
         SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
         if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                 Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
                                 "The active hub has changed!"));
-                // Maybe do a rumble
                 lastActiveAlliance = activeAlliance.get();
         }
         SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
