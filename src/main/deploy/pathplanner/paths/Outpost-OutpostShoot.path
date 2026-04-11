@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.75,
-        "y": 0.66
+        "x": 0.9984736091298143,
+        "y": 0.6127246790299581
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.3220162884186852,
-        "y": 1.14170675934898
+        "x": 1.5704898975484995,
+        "y": 1.0944314383789382
       },
       "isLocked": false,
       "linkedName": "Outpost"
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

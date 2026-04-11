@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 5.68661934338953,
-        "y": 7.393
+        "y": 7.293
       },
       "prevControl": null,
       "nextControl": {
         "x": 6.797162636011218,
-        "y": 7.451223525762389
+        "y": 7.351223525762389
       },
       "isLocked": false,
       "linkedName": "LeftTroughCenter"
@@ -55,7 +55,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

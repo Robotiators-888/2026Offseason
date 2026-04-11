@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.2,
-        "y": 0.4616385542168677
+        "x": 3.948487874465049,
+        "y": 0.5
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.449999990440795,
-        "y": 0.46156941954679354
+        "x": 4.198487864905844,
+        "y": 0.4999308653299258
       },
       "isLocked": false,
       "linkedName": "RighttroughSideways"
@@ -17,11 +17,11 @@
     {
       "anchor": {
         "x": 5.614566265060241,
-        "y": 0.4616385542168677
+        "y": 0.5
       },
       "prevControl": {
         "x": 5.364566288286179,
-        "y": 0.4617463176990984
+        "y": 0.5001077634822306
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 5.25,
-    "maxAcceleration": 4.2,
+    "maxAcceleration": 5.2,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
