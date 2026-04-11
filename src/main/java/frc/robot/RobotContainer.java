@@ -121,6 +121,9 @@ public class RobotContainer {
         private boolean fieldRelative = true;
         private Command trenchAlign = Commands.none();
         private boolean trenchAligning = false;
+        private int periodicCounter = 0;
+        private final int alertLogTime = 150*1;
+        public static boolean shouldAlert = true;
 
         // xBox Controllers for driver input
         private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -422,16 +425,14 @@ public class RobotContainer {
         }
 
         public void robotPeriodic() {
-
-                SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
-                SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
-                autoField.setRobotPose(drivetrain.getPose());
-                drivetrain.robotPosePublisher.set(drivetrain.getPose());
-                field.setRobotPose(drivetrain.getPose());
-                SmartDashboard.putData("Drivetrain/Field", field);
-                SmartDashboard.putNumber(autoName, listIndex);
-                SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
-                SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                periodicCounter++;
+                if (periodicCounter >= alertLogTime) {
+                        shouldAlert = true;
+                        periodicCounter = 0;
+                }
+                else {
+                        shouldAlert = false;
+                }
 
                 Pose2d currentPose = drivetrain.getPose();
                 
@@ -470,8 +471,19 @@ public class RobotContainer {
 
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
-                logDrivetrain();
-                checkAlerts();
+                if (shouldAlert) {
+                        SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
+                        SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
+                        autoField.setRobotPose(drivetrain.getPose());
+                        drivetrain.robotPosePublisher.set(drivetrain.getPose());
+                        field.setRobotPose(drivetrain.getPose());
+                        SmartDashboard.putData("Drivetrain/Field", field);
+                        SmartDashboard.putNumber(autoName, listIndex);
+                        SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
+                        SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                        logDrivetrain();
+                        checkAlerts();
+                }
         }
 
         // Logs everything about the drivetrain
@@ -702,13 +714,12 @@ public class RobotContainer {
 
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
                 Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                                new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                                ).until(condition).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
+                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                        new SequentialCommandGroup(
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
+                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)
+                        ).repeatedly()
+                );
                 return c;
         }
 

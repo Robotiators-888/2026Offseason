@@ -9,6 +9,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 
 public class SUB_Index extends SubsystemBase {
     // Initializes variables in the subsystem
@@ -96,6 +97,7 @@ public class SUB_Index extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
+        if (RobotContainer.shouldAlert) {
         SmartDashboard.putNumber("Index/Index RPM", indexRPM()); //Puts Index RPM into the dashboard
         
         SmartDashboard.putNumber("Index/Index Output Current", index.getOutputCurrent()); //Inputs how many amps are going from controller to motor
@@ -112,5 +114,6 @@ public class SUB_Index extends SubsystemBase {
     
         SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
         SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
+        }
     }
 }

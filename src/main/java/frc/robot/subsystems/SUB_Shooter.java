@@ -15,6 +15,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.utils.Alert;
 
 public class SUB_Shooter extends SubsystemBase {
@@ -130,6 +131,7 @@ public class SUB_Shooter extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
+        if (RobotContainer.shouldAlert) {
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed); //Puts desired RPM into smart dashboard
       
       SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble()); //Puts top flywheel stator current into dashboard
@@ -150,21 +152,21 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
       
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
-      
-      Alert.alertKraken(topFlywheel);
-      Alert.alertKraken(bottomFlywheel);
+        SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
+        SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
+        SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+        Alert.alertKraken(topFlywheel);
+        Alert.alertKraken(bottomFlywheel);
+      }
     }
 
     // Gets the time of flight of the fuel for shoot on the move

@@ -8,6 +8,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 
 public class SUB_Arm extends SubsystemBase {
     // Initiliazes values and objects used in subsystem
@@ -61,7 +62,7 @@ public class SUB_Arm extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
-
+        if (RobotContainer.shouldAlert) {
         SmartDashboard.putBoolean("Arm/Arm Forward Limit", isForwardPressed()); //Returns if the intake arm is down
         SmartDashboard.putBoolean("Arm/Arm Reverse Limit", isReversePressed()); //Returns if the intake arm is up
         
@@ -75,6 +76,7 @@ public class SUB_Arm extends SubsystemBase {
 
         SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
         SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
+        }
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }

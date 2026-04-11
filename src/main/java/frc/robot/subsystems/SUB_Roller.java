@@ -6,6 +6,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.utils.Alert;
 
 public class SUB_Roller extends SubsystemBase {
@@ -53,6 +54,7 @@ public class SUB_Roller extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
+                if (RobotContainer.shouldAlert) {
         SmartDashboard.putNumber("Roller/RollerRPM", rollerRPM()); //puts roller motor RPM into Smart Dashboard
 
         
@@ -68,8 +70,8 @@ public class SUB_Roller extends SubsystemBase {
 
         SmartDashboard.putNumber("Roller/Roller Device Temp", roller.getDeviceTemp().getValueAsDouble());
         SmartDashboard.putNumber("Roller/Roller Processor Temp", roller.getProcessorTemp().getValueAsDouble());
-
-        Alert.alertKraken(roller);
+          Alert.alertKraken(roller);
+                }
     }
 
     
