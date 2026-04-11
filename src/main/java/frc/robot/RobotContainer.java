@@ -359,9 +359,9 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                                // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
                                 // Commands.either would cause the command to not start even if the button was released
-                                // getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
+                                getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
                                 
                         )
                 );
