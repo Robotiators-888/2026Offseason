@@ -39,7 +39,8 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.145; // 6 is reasonable 7.833 exact // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 0.3; //TODO: After testing SVA, test PID, default is 4.8
+                // Mr Lange said to increase p
+                public static final double kSHOOTER_FLYWHEEL_kP = 1.2; //TODO: After testing SVA, test PID, default is 4.8
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0; //TODO: After testing SVA, test PID, default is rpm/60.0*0.1
         }
@@ -56,7 +57,7 @@ public final class Constants {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
                 public static final double kARM_MOTOR_SPEED = 0.1; // Percentage of max voltage to run the arm at
-                public static final double kARM_BOTTOM_SETPOINT = -209; // Degrees 
+                public static final double kARM_BOTTOM_SETPOINT = -202; // Degrees 
                 public static final double kARM_TOP_SETPOINT = 0; // Degrees
                 public static final double kARM_FAULT_AMPS = 30; // Amps
         }

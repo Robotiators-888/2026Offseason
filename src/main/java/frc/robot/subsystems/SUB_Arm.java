@@ -13,7 +13,8 @@ import frc.robot.RobotContainer;
 public class SUB_Arm extends SubsystemBase {
     // Initiliazes values and objects used in subsystem
     public static boolean extended;
-    private PIDController controller = new PIDController(0.001, 0, 0);
+    // Mr Lange said to increase pid from .001 to .01
+    private PIDController controller = new PIDController(0.005, 0, 0);
     private SparkMax arm;
     private SparkMax armFollower;
     private boolean stickUp = false;

@@ -122,7 +122,7 @@ public class RobotContainer {
         private Command trenchAlign = Commands.none();
         private boolean trenchAligning = false;
         private int periodicCounter = 0;
-        private final int alertLogTime = 150*1;
+        private final double alertLogTime = 150*.5;
         public static boolean shouldAlert = true;
 
         // xBox Controllers for driver input
@@ -193,7 +193,7 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("Intake",
                         new RunCommand(() -> {
-                                arm.intakeArmTest();
+                                arm.intakeArmDown();
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         }
                                 
@@ -208,7 +208,7 @@ public class RobotContainer {
                                 )
                 );
 
-                NamedCommands.registerCommand("DeployIntakeEncoder", new InstantCommand(() -> arm.intakeArmTest(), arm).until(() -> arm.isArmDownReached() || arm.isForwardPressed()));
+                NamedCommands.registerCommand("DeployIntakeEncoder", Commands.none());
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ManualShoot", Commands.sequence(
@@ -350,8 +350,8 @@ public class RobotContainer {
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        arm.intakeArmTest();
-                }, roller, arm));
+                        arm.intakeArmDown();
+                }, roller, arm).repeatedly());
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_AimBotSpecialLock(
