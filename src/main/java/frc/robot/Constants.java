@@ -66,7 +66,8 @@ public final class Constants {
         public static final class Index {
                 public static final int KINDEX_MOTOR_CANID = 41; 
                 public static final int kMETERING_WHEEL_CANID = 42;
-                public static final double kINDEX_MOTOR_VOLTS = 5; // Volts to run the index motor at when feeding balls into the shooter, can be tested and tuned in testing
+                // Mr Lange approved 5 -> 8.5 volts
+                public static final double kINDEX_MOTOR_VOLTS = 8.5; // Volts to run the index motor at when feeding balls into the shooter, can be tested and tuned in testing
                 public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; // Volts to run the metering wheel at when feeding balls into the shooter, can be tested and tuned in testing
                 public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); // Max RPM of NEO at 12V is 5676
                 
