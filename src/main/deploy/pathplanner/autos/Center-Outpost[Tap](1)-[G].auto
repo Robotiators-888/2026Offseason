@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "DeployIntakeEncoder"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [

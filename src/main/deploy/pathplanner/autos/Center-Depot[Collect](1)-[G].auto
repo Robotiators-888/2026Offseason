@@ -5,18 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "DeployIntakeEncoder"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Center-DepotStraightStart"
-          }
-        },
-        {
           "type": "race",
           "data": {
             "commands": [
@@ -24,6 +12,12 @@
                 "type": "sequential",
                 "data": {
                   "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Center-DepotStraightStart"
+                      }
+                    },
                     {
                       "type": "path",
                       "data": {
