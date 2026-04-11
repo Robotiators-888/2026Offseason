@@ -61,6 +61,7 @@ import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.commands.CMD_PredictiveAim;
+import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
@@ -217,6 +218,15 @@ public class RobotContainer {
 
                 NamedCommands.registerCommand("ShootAutoAim", 
                         new CMD_AimBotAuto(
+                                drivetrain, 
+                                photonVision, 
+                                shooter, 
+                                index
+                        )
+                );
+
+                NamedCommands.registerCommand("ShootAndMove", 
+                        new CMD_PredictiveAimAuto(
                                 drivetrain, 
                                 photonVision, 
                                 shooter, 
