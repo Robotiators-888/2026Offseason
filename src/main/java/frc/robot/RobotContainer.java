@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
-import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -29,6 +29,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.PathPlannerLogging;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -37,10 +38,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NTSendableBuilder;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -56,7 +53,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
@@ -64,7 +60,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_AimBotMove;
+import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
@@ -289,16 +285,19 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                // Driver1.leftTrigger().whileTrue(
-                //         new ParallelCommandGroup(
-                //                 new CMD_AimBotAuto(
-                //                         drivetrain, 
-                //                         photonVision, 
-                //                         shooter, 
-                //                         index
-                //                 )
-                //         )
-                // );
+                Driver1.leftTrigger().whileTrue(
+                        new ParallelCommandGroup(
+                                new CMD_PredictiveAim(
+                                        drivetrain, 
+                                        photonVision, 
+                                        shooter, 
+                                        index,
+                                        () -> -(Driver1.getLeftY()),
+                                        () -> -(Driver1.getLeftX()) 
+                                ),
+                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller)
+                        )
+                );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
