@@ -68,6 +68,9 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 0.3; //sets how long current has to be above limit before it is considered a fault in seconds
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast; //Sets flywheel to coast when not running (wont immediatly stop)
         shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; //Positive motor will make motor spin clockwise
+        shooterConfig.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 1.0/5.0;
+        shooterConfig.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 1.0/5.0;
+        shooterConfig.ClosedLoopRamps.TorqueClosedLoopRampPeriod = 1.0/5.0;
         //Sets PID values
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV; // The rpm in the docs means the target rpm we want to reach on average, not that we should multiply the rpm in code. Wtih our previous code we would have tripped the breaker if it had worked...
@@ -183,6 +186,7 @@ public class SUB_Shooter extends SubsystemBase {
     // Gets the time of flight of the fuel for shoot on the move
     public static double getExpectedTOFStatic(double distanceMeters) {
         double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
+        
         // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
         double averageHorizontalVelocity = targetRPM * 0.00434;
         if (averageHorizontalVelocity <= 0.0) {

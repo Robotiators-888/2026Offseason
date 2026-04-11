@@ -108,9 +108,9 @@ public class RobotContainer {
         private Boolean lastActiveAlliance = true;
         public double targetRPM = 1000;
         Field2d field;
-        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        private final SlewRateLimiter xLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
+        private final SlewRateLimiter yLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
+        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
         private boolean isTeleop = false;
         private boolean isShaking = false; 
         // TrenchCrossing Paths
@@ -473,6 +473,7 @@ public class RobotContainer {
                 SmartDashboard.putString("Trough/Closest", closestTrough);
                 if (shouldAlert) {
                         SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
+                        SmartDashboard.putNumber("Stat/Battery Total Current (Amps)", powerDistribution.getTotalCurrent());
                         SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                         autoField.setRobotPose(drivetrain.getPose());
                         drivetrain.robotPosePublisher.set(drivetrain.getPose());
@@ -703,7 +704,7 @@ public class RobotContainer {
                 
                 Command c = new ParallelCommandGroup(
                                 new InstantCommand(()->{isShaking=true;}),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE/4.0), roller),
                                 new SequentialCommandGroup(
                                         new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                         new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
@@ -714,7 +715,7 @@ public class RobotContainer {
 
         private Command getCancellableShakeyCommand (BooleanSupplier condition) {
                 Command c = new ParallelCommandGroup(
-                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
+                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE/4.0), roller),
                         new SequentialCommandGroup(
                                 Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
                                 Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)

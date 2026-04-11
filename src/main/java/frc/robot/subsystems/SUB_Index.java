@@ -34,11 +34,11 @@ public class SUB_Index extends SubsystemBase {
         meteringWheel = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
         //Sets up config for motors
         SparkMaxConfig indexConfig = new SparkMaxConfig();
-        indexConfig.smartCurrentLimit(50); //sets current limit for index
+        indexConfig.smartCurrentLimit(50,25); //sets current limit for index
         indexConfig.inverted(true); //makes index motor inverted
         index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); //sets sparkmax to persist mode so it wont lose settings
         SparkMaxConfig meteringConfig = new SparkMaxConfig(); //sets up config for metering wheel
-        meteringConfig.smartCurrentLimit(60); // sets current limit
+        meteringConfig.smartCurrentLimit(50,30); // sets current limit
         double kP = 0.00005; // Super Aggressive P to get metering wheel to speed FAST
         double kI = 0.0;
         double kD = 0.0; 
