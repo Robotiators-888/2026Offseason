@@ -57,6 +57,7 @@ public final class Constants {
                 public static final int kARM_MOTOR_CANID = 31; 
                 public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
                 public static final double kARM_MOTOR_SPEED = 0.1; // Percentage of max voltage to run the arm at
+                // It couldn't reach 209 so Mr Lange said to change it to 202 but we need a better system
                 public static final double kARM_BOTTOM_SETPOINT = -202; // Degrees 
                 public static final double kARM_TOP_SETPOINT = 0; // Degrees
                 public static final double kARM_FAULT_AMPS = 30; // Amps

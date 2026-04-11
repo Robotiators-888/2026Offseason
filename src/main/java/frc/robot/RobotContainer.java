@@ -195,7 +195,7 @@ public class RobotContainer {
                         new RunCommand(() -> {
                                 arm.intakeArmDown();
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        }
+                        } // Might need to add repeatedly if it doesn't correct
                                 
                         ,arm,roller)
                 );
