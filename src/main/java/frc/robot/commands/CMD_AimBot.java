@@ -153,6 +153,7 @@ public class CMD_AimBot extends RunCommand {
                     new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
             )).orElse(drivetrain.getPose().getTranslation())
     );
+    SmartDashboard.putNumber("CMD_AimBot/Distance (m)", distance);
     shooter.shootMeters(distance);
     
      // Keep metering wheel spinning
