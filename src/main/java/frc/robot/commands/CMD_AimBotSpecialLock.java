@@ -37,7 +37,6 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class CMD_AimBotSpecialLock extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
@@ -50,7 +49,6 @@ public class CMD_AimBotSpecialLock extends RunCommand {
   private final SUB_Shooter shooter;
   private final SUB_Index index;
   private boolean isLocked;
-  private boolean wasLocked; // Tracks state for Coast/Brake transitions
 
   /** Physical offsets for targeting calibration */
   Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
@@ -136,7 +134,6 @@ public class CMD_AimBotSpecialLock extends RunCommand {
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
     isLocked = false;
-    wasLocked = false;
     running = true;
   }
 
@@ -203,18 +200,6 @@ public class CMD_AimBotSpecialLock extends RunCommand {
       isLocked = false;
     }
 
-    // --- NEUTRAL MODE TRANSITIONS ---
-    if (isLocked && !wasLocked) {
-        for (int i = 0; i < drivetrain.getModules().length; i++) {
-            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Coast);
-        }
-    } else if (!isLocked && wasLocked) {
-        for (int i = 0; i < drivetrain.getModules().length; i++) {
-            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
-        }
-    }
-    wasLocked = isLocked;
-
     // Lock wheels or drive
     if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
         // 1. Find the vector from the Robot to the Target in FIELD coordinates
@@ -247,13 +232,6 @@ public class CMD_AimBotSpecialLock extends RunCommand {
   public void end(boolean interrupted) {
     running = false;
     
-    // Safety check
-    if (wasLocked) {
-        for (int i = 0; i < drivetrain.getModules().length; i++) {
-            drivetrain.getModule(i).getDriveMotor().setNeutralMode(NeutralModeValue.Brake);
-        }
-        wasLocked = false;
-    }
   }
 
   @Override

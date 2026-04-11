@@ -62,6 +62,8 @@ public class TunerConstants {
                 .withStatorCurrentLimitEnable(true)
                 .withSupplyCurrentLimit(Amps.of(50))
                 .withSupplyCurrentLimitEnable(true)
+        ).withMotorOutput(
+            new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast)
         );
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
