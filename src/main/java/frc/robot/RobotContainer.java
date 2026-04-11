@@ -60,6 +60,7 @@ import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_AimBotAuto;
+import frc.robot.commands.CMD_AimBotSpecialLock;
 import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
@@ -350,7 +351,7 @@ public class RobotContainer {
                 }, roller, arm));
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
-                                new CMD_AimBot(
+                                new CMD_AimBotSpecialLock(
                                         drivetrain, 
                                         photonVision, 
                                         shooter, 
