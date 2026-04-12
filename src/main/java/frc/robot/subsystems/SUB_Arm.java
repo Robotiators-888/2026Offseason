@@ -71,6 +71,9 @@ public class SUB_Arm extends SubsystemBase {
         if (periodicCountFault > 0) {
             periodicCountFault--;
         }
+        if (arm.getEncoder().getPosition() < Constants.Arm.kARM_BOTTOM_SETPOINT) {
+            arm.getEncoder().setPosition(Constants.Arm.kARM_BOTTOM_SETPOINT);
+        }
     }
 
     //sets arm to speed put in method
@@ -116,7 +119,7 @@ public class SUB_Arm extends SubsystemBase {
 
     //sets arm to speed put in method
     public void setArmSlick(double speed) {
-        if (arm.getOutputCurrent() > Constants.Arm.kARM_FAULT_AMPS) {
+        if (arm.getOutputCurrent() > (Constants.Arm.kARM_FAULT_AMPS-7)) {
             periodicCountFault+=2;
         }
         if (periodicCountFault > 12) {
@@ -152,6 +155,15 @@ public class SUB_Arm extends SubsystemBase {
     public void intakeArmDown() {
         setArmSlick(controller.calculate(arm.getEncoder().getPosition(), (Constants.Arm.kARM_BOTTOM_SETPOINT-5))); 
     }
+
+    public void intakeArmDownRoller() {
+        setArmUnsafe(controller.calculate(arm.getEncoder().getPosition(), (Constants.Arm.kARM_BOTTOM_SETPOINT-5))); 
+    }
+
+    public void intakeArmDownTeleop() {
+        setArmUnsafe(controller.calculate(arm.getEncoder().getPosition(), (Constants.Arm.kARM_BOTTOM_SETPOINT-10))); 
+    }
+
     public void intakeArmTest() {
         arm.set(-.6);
     }

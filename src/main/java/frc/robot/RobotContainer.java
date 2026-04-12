@@ -172,7 +172,7 @@ public class RobotContainer {
                 }, roller));
 
                 arm.setDefaultCommand(new RunCommand(() -> {
-                        arm.setArm(0);
+                        arm.setArmUnsafe(0);
                 }, arm));
                 shooter.setDefaultCommand(new RunCommand(() -> {
                         shooter.stop();
@@ -352,7 +352,7 @@ public class RobotContainer {
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        arm.intakeArmDown();
+                        arm.intakeArmDownRoller();
                 }, roller, arm).repeatedly());
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
@@ -389,7 +389,7 @@ public class RobotContainer {
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, index, shooter));
-                Driver2.povDown().onTrue(Commands.run(()->arm.intakeArmDown(),arm));
+                Driver2.povDown().whileTrue(Commands.run(()->arm.intakeArmDownTeleop(),arm));
                 Driver2.povUp().onTrue(Commands.run(()->arm.intakeArmUp(),arm));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
                         arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
