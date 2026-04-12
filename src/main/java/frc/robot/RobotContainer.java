@@ -122,8 +122,8 @@ public class RobotContainer {
         private Command trenchAlign = Commands.none();
         private boolean trenchAligning = false;
         private int periodicCounter = 0;
-        private final double slowAlertLogTime = 50*.5;
-        private final double highAlertLogTime = 5;
+        private final int slowAlertLogTime = (int)(50*1.0);
+        private final int highAlertLogTime = 5;
         public static boolean highShouldAlert = false;
         public static boolean slowShouldAlert = false;
 
@@ -428,21 +428,20 @@ public class RobotContainer {
 
         public void robotPeriodic() {
                 periodicCounter++;
-                if (periodicCounter >= slowAlertLogTime) {
+                if (periodicCounter % slowAlertLogTime == 0) {
                         slowShouldAlert = true;
-                        periodicCounter = 0;
                 }
                 else {
                         slowShouldAlert = false;
                 }
-                if (periodicCounter >= highAlertLogTime) {
+                if (periodicCounter % highAlertLogTime == 0) {
                         highShouldAlert = true;
-                        periodicCounter = 0;
                 }
                 else {
                         highShouldAlert = false;
                 }
-
+                // SmartDashboard.putBoolean("Stat/Slow Alert",slowShouldAlert);
+                // SmartDashboard.putBoolean("Stat/High Alert",highShouldAlert);
                 Pose2d currentPose = drivetrain.getPose();
                 
                 Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
