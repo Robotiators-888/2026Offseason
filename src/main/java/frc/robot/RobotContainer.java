@@ -484,8 +484,7 @@ public class RobotContainer {
                         field.setRobotPose(drivetrain.getPose());
                         SmartDashboard.putData("Drivetrain/Field", field);
                         SmartDashboard.putNumber(autoName, listIndex);
-                        SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
-                        
+                        SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);                        
                         checkAlerts();
                 }
                 if (highShouldAlert) {

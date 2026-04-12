@@ -163,8 +163,6 @@ public class SUB_Shooter extends SubsystemBase {
             SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
             updateFuelShot();
             SmartDashboard.putNumber("Shooter/Fuel", fuelShot);
-            Alert.alertKraken(topFlywheel);
-            Alert.alertKraken(bottomFlywheel);
         }
         if (RobotContainer.slowShouldAlert) {
             SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", topFlywheel.getSupplyVoltage().getValueAsDouble());  //puts motor supply voltage into table
@@ -178,6 +176,8 @@ public class SUB_Shooter extends SubsystemBase {
 
             SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
             SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
+            Alert.alertKraken(topFlywheel);
+            Alert.alertKraken(bottomFlywheel);
         }
     }
 
