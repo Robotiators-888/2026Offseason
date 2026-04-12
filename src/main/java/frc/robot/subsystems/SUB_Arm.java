@@ -113,6 +113,31 @@ public class SUB_Arm extends SubsystemBase {
         
     }
 
+
+    //sets arm to speed put in method
+    public void setArmSlick(double speed) {
+        if (arm.getOutputCurrent() > Constants.Arm.kARM_FAULT_AMPS) {
+            periodicCountFault+=2;
+        }
+        if (periodicCountFault > 12) {
+            //if speed is going up when faults are high the arm is up
+            if (speed > 0) {
+                stickUp = true;
+                stickDown = false;
+                arm.getEncoder().setPosition(Constants.Arm.kARM_TOP_SETPOINT);
+            //If speed is negative when faults are high the arm is down
+            } else if (speed < 0) {
+                stickUp = false;
+                stickDown = true;
+                arm.getEncoder().setPosition(Constants.Arm.kARM_BOTTOM_SETPOINT);
+            }
+            speed = 0;
+        }
+        //sets speed of arm motor
+        arm.set(speed);
+        
+    }
+
     //Retuns if arm is extended
     public boolean isExtended() {
         return extended;
@@ -120,7 +145,7 @@ public class SUB_Arm extends SubsystemBase {
 
     //Makes arm go down based on PID
     public void intakeArmDown() {
-        setArm(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); 
+        setArmSlick(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); 
     }
     public void intakeArmTest() {
         arm.set(-.6);
