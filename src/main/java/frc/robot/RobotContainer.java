@@ -728,8 +728,8 @@ public class RobotContainer {
                                 new InstantCommand(()->{isShaking=true;}),
                                 new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE/4.0), roller),
                                 new SequentialCommandGroup(
-                                        new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                        new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
+                                        new RunCommand(()->arm.setArmUnsafe(.15), arm).withTimeout(.4),
+                                        new RunCommand(()->arm.setArmUnsafe(-.13), arm).withTimeout(.4)
                                 ).repeatedly()
                         ).finallyDo(()->{isShaking=false;});
                 return c;

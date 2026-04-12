@@ -138,6 +138,11 @@ public class SUB_Arm extends SubsystemBase {
         
     }
 
+    // Only use if you know what you are doing
+    public void setArmUnsafe (double speed) {
+        arm.set(speed);
+    }
+
     //Retuns if arm is extended
     public boolean isExtended() {
         return extended;
@@ -145,7 +150,7 @@ public class SUB_Arm extends SubsystemBase {
 
     //Makes arm go down based on PID
     public void intakeArmDown() {
-        setArmSlick(controller.calculate(arm.getEncoder().getPosition(), Constants.Arm.kARM_BOTTOM_SETPOINT)); 
+        setArmSlick(controller.calculate(arm.getEncoder().getPosition(), (Constants.Arm.kARM_BOTTOM_SETPOINT-5))); 
     }
     public void intakeArmTest() {
         arm.set(-.6);
