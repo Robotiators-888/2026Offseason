@@ -29,6 +29,11 @@ public class SUB_Shooter extends SubsystemBase {
     private double desiredSpeed = 0;
     private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
+    private boolean isShooting = false;
+    private boolean hasGoneDown = false;
+    private double dipRPM = 0;
+    private double lastRPM = 0;
+    private int fuelShot = 0;
     // Set up singleton
     public static SUB_Shooter getInstance (){
         if (INSTANCE == null) {
@@ -88,12 +93,14 @@ public class SUB_Shooter extends SubsystemBase {
     // Creates method to set flywheel speeds
     public void set(double speed) {
         topFlywheel.set(speed);
+        isShooting = speed!=0;
     }
 
     // Creates method to set RPM
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
         topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
+        isShooting = rpm!=0;
     }
 
     // Returns flywheel RPM
@@ -124,11 +131,13 @@ public class SUB_Shooter extends SubsystemBase {
     public void stop() {
         this.desiredSpeed = 0;
         topFlywheel.setControl(voltageRequest.withOutput(0));
+        isShooting = false;
     }
 
     //Sets motor volts to what is inputed
     public void setVolts(double volts) {
         topFlywheel.setControl(voltageRequest.withOutput(volts));
+        isShooting = volts!=0;
     }
 
     // Logs everything every periodic
@@ -151,6 +160,8 @@ public class SUB_Shooter extends SubsystemBase {
             SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
             SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
             SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+            updateFuelShot();
+            SmartDashboard.putNumber("Shooter/Fuel", fuelShot);
             Alert.alertKraken(topFlywheel);
             Alert.alertKraken(bottomFlywheel);
         }
@@ -167,6 +178,30 @@ public class SUB_Shooter extends SubsystemBase {
             SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
             SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
         }
+    }
+
+    private void updateFuelShot () {
+        double currentAmps = desiredSpeed - flywheelRPM();
+        if (isShooting) {
+            if (!hasGoneDown && currentAmps > lastRPM) {
+                hasGoneDown = true;
+                dipRPM += currentAmps - dipRPM;
+            }
+            if (hasGoneDown && currentAmps > lastRPM) {
+                dipRPM += currentAmps - dipRPM;
+            }
+            if (hasGoneDown && currentAmps < lastRPM) {
+                hasGoneDown = false;
+                if (dipRPM > 100)
+                    fuelShot++;
+                dipRPM = 0;
+            }
+        }
+        else {
+            dipRPM = 0;
+            hasGoneDown = false;
+        }
+        lastRPM = currentAmps;
     }
 
     public double getExpectedTOF(double distanceMeters) {
