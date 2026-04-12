@@ -97,23 +97,26 @@ public class SUB_Index extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
-        if (RobotContainer.shouldAlert) {
-        SmartDashboard.putNumber("Index/Index RPM", indexRPM()); //Puts Index RPM into the dashboard
-        
-        SmartDashboard.putNumber("Index/Index Output Current", index.getOutputCurrent()); //Inputs how many amps are going from controller to motor
-        SmartDashboard.putNumber("Index/Metering Output Current", meteringWheel.getOutputCurrent());
-        
-        SmartDashboard.putNumber("Index/Metering RPM", intakeMeteringRPM()); //Inputs metering wheel RPM
-        SmartDashboard.putNumber("Index/Metering Target RPM", targetMeteringRPM); //Inputs metering wheel target RPM
-        
-        SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage()); //Returns volatge going into metering wheel Talon FX
-        SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage()); //Returns voltage going into Indexing sparkmax
+        if (RobotContainer.highShouldAlert) {
+            SmartDashboard.putNumber("Index/Index RPM", indexRPM()); //Puts Index RPM into the dashboard
+            
+            SmartDashboard.putNumber("Index/Index Output Current", index.getOutputCurrent()); //Inputs how many amps are going from controller to motor
+            SmartDashboard.putNumber("Index/Metering Output Current", meteringWheel.getOutputCurrent());
+            
+            SmartDashboard.putNumber("Index/Metering RPM", intakeMeteringRPM()); //Inputs metering wheel RPM
+            SmartDashboard.putNumber("Index/Metering Target RPM", targetMeteringRPM); //Inputs metering wheel target RPM
 
-        SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
-        SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition()); //Inputs how many amps are going from controller to motor
-    
-        SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
-        SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
+            SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
+            SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition()); //Inputs how many amps are going from controller to motor
+        
+            
+        }
+        if (RobotContainer.slowShouldAlert) {
+            SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
+            SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
+            
+            SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage()); //Returns volatge going into metering wheel Talon FX
+            SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage()); //Returns voltage going into Indexing sparkmax
         }
     }
 }

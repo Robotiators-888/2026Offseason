@@ -54,24 +54,26 @@ public class SUB_Roller extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
-                if (RobotContainer.shouldAlert) {
-        SmartDashboard.putNumber("Roller/RollerRPM", rollerRPM()); //puts roller motor RPM into Smart Dashboard
+        if (RobotContainer.highShouldAlert) {
+            SmartDashboard.putNumber("Roller/RollerRPM", rollerRPM()); //puts roller motor RPM into Smart Dashboard
 
-        
-        SmartDashboard.putNumber("Roller/Roller Encoder Pos", roller.getPosition().getValueAsDouble());
+            
+            SmartDashboard.putNumber("Roller/Roller Encoder Pos", roller.getPosition().getValueAsDouble());
 
 
-        SmartDashboard.putNumber("Roller/Roller Stator Current", roller.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
-        SmartDashboard.putNumber("Roller/Roller Supply Current", roller.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Torque Current", roller.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Roller/Roller Stator Current", roller.getStatorCurrent().getValueAsDouble()); //Return stator current of intake roller
+            SmartDashboard.putNumber("Roller/Roller Supply Current", roller.getSupplyCurrent().getValueAsDouble());
+            
+            SmartDashboard.putNumber("Roller/Roller Motor Voltage", roller.getMotorVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Supply Voltage", roller.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Motor Voltage", roller.getMotorVoltage().getValueAsDouble());
-
-        SmartDashboard.putNumber("Roller/Roller Device Temp", roller.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Processor Temp", roller.getProcessorTemp().getValueAsDouble());
-          Alert.alertKraken(roller);
-                }
+            Alert.alertKraken(roller);
+        }
+        if (RobotContainer.slowShouldAlert) {
+            SmartDashboard.putNumber("Roller/Roller Torque Current", roller.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Roller/Roller Device Temp", roller.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Roller/Roller Processor Temp", roller.getProcessorTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Roller/Roller Supply Voltage", roller.getSupplyVoltage().getValueAsDouble());
+        }
     }
 
     

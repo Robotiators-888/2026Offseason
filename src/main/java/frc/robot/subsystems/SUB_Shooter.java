@@ -133,64 +133,44 @@ public class SUB_Shooter extends SubsystemBase {
 
     // Logs everything every periodic
     public void periodic() {
-        if (RobotContainer.shouldAlert) {
-      SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed); //Puts desired RPM into smart dashboard
-      
-      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble()); //Puts top flywheel stator current into dashboard
-      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", bottomFlywheel.getStatorCurrent().getValueAsDouble()); //Puts bottom flywheel stator current into dashboard
-      
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", topFlywheel.getSupplyCurrent().getValueAsDouble()); //Puts top flywheel supply current into dashboard
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", bottomFlywheel.getSupplyCurrent().getValueAsDouble()); //Buts bottom flywheel supply current into dashboard
-      
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", topFlywheel.getSupplyVoltage().getValueAsDouble());  //puts motor supply voltage into table
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", bottomFlywheel.getSupplyVoltage().getValueAsDouble());
-      
-      SmartDashboard.putNumber("Shooter/Top Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble()); //puts motor voltage into table
-      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", bottomFlywheel.getMotorVoltage().getValueAsDouble());
+        if (RobotContainer.highShouldAlert) {
+            SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed); //Puts desired RPM into smart dashboard
+            
+            SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble()); //Puts top flywheel stator current into dashboard
+            SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", bottomFlywheel.getStatorCurrent().getValueAsDouble()); //Puts bottom flywheel stator current into dashboard
+            
+            SmartDashboard.putNumber("Shooter/Top Motor Supply Current", topFlywheel.getSupplyCurrent().getValueAsDouble()); //Puts top flywheel supply current into dashboard
+            SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", bottomFlywheel.getSupplyCurrent().getValueAsDouble()); //Buts bottom flywheel supply current into dashboard
+            
+            SmartDashboard.putNumber("Shooter/Top Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble()); //puts motor voltage into table
+            SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", bottomFlywheel.getMotorVoltage().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", topFlywheel.getPosition().getValueAsDouble()); //puts angle of top flywheel into table
-      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble()); //puts angle of bottom table
-
-      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
-
-        SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
-
-        SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
-
-        SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
-      
-        SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
-        SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
-        SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
-        Alert.alertKraken(topFlywheel);
-        Alert.alertKraken(bottomFlywheel);
-      }
-    }
-
-    // Gets the time of flight of the fuel for shoot on the move
-    public double getExpectedTOF(double distanceMeters) {
-        double targetRPM = distanceToRPM.get(distanceMeters);
-        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
-        double averageHorizontalVelocity = targetRPM * 0.00434;
-        if (averageHorizontalVelocity <= 0.0) {
-            return 0.0;
-        }
-        return distanceMeters / averageHorizontalVelocity;
-    }
-
-    // Gets the time of flight of the fuel for shoot on the move
-    public static double getExpectedTOFStatic(double distanceMeters) {
-        double targetRPM = getInstance().distanceToRPM.get(distanceMeters);
+            SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", topFlywheel.getPosition().getValueAsDouble()); //puts angle of top flywheel into table
+            SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble()); //puts angle of bottom table
         
-        // 0.00434 is the estimated conversion factor from RPM to horizontal velocity (m/s)
-        double averageHorizontalVelocity = targetRPM * 0.00434;
-        if (averageHorizontalVelocity <= 0.0) {
-            return 0.0;
+            SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of top flywheel into table
+            SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM)); //Puts RPM of bottom flywheel into table
+            SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM()); //Puts average RPM of the flywheels into table
+            Alert.alertKraken(topFlywheel);
+            Alert.alertKraken(bottomFlywheel);
         }
-        return distanceMeters / averageHorizontalVelocity;
+        if (RobotContainer.slowShouldAlert) {
+            SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", topFlywheel.getSupplyVoltage().getValueAsDouble());  //puts motor supply voltage into table
+            SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", bottomFlywheel.getSupplyVoltage().getValueAsDouble());
+
+            SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
+
+            SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
+
+            SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
+        }
     }
+
+    public double getExpectedTOF(double distanceMeters) {
+        return distanceMeters*0.215298795+0.753755412;
+    }
+
 }

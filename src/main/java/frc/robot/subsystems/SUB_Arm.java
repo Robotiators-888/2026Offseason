@@ -50,33 +50,23 @@ public class SUB_Arm extends SubsystemBase {
         armFollower.configure(followerConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);  //Sets persist parameters
     }
 
-    //Returns if motor arm is down T/F
-    public boolean isForwardPressed() {
-        return stickUp||Math.abs(arm.getEncoder().getPosition()-Constants.Arm.kARM_TOP_SETPOINT)<10;
-    }
-
-    //Returns if motor arm is up T/F
-    public boolean isReversePressed() {
-        return stickDown||Math.abs(arm.getEncoder().getPosition()-Constants.Arm.kARM_BOTTOM_SETPOINT)<10;
-    }
 
 
     // Logs everything every periodic
     public void periodic() {
-        if (RobotContainer.shouldAlert) {
-        SmartDashboard.putBoolean("Arm/Arm Forward Limit", isForwardPressed()); //Returns if the intake arm is down
-        SmartDashboard.putBoolean("Arm/Arm Reverse Limit", isReversePressed()); //Returns if the intake arm is up
-        
-        SmartDashboard.putNumber("Arm/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
+        if (RobotContainer.highShouldAlert) {
+            
+            SmartDashboard.putNumber("Arm/Arm Encoder Pos", arm.getEncoder().getPosition()); //Returns angle of intake arm
 
-        SmartDashboard.putNumber("Arm/Arm Output Current", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
+            SmartDashboard.putNumber("Arm/Arm Output Current", arm.getOutputCurrent()); //Returns how much current is going into the intake arm motors
 
-        SmartDashboard.putNumber("Arm/Arm Bus Voltage", arm.getBusVoltage());
+            SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
+            SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
+        }
+        if (RobotContainer.slowShouldAlert) {
+            SmartDashboard.putNumber("Arm/Arm Bus Voltage", arm.getBusVoltage());
 
-        SmartDashboard.putNumber("Arm/Arm Motor Temp", arm.getMotorTemperature());
-
-        SmartDashboard.putBoolean("Arm/Stick Up", stickUp);  
-        SmartDashboard.putBoolean("Arm/Stick Down", stickDown);
+            SmartDashboard.putNumber("Arm/Arm Motor Temp", arm.getMotorTemperature());
         }
         if (periodicCountFault > 0) {
             periodicCountFault--;
