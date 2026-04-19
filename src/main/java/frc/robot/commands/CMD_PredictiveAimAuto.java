@@ -143,7 +143,7 @@ public class CMD_PredictiveAimAuto extends Command {
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
         } else {
             index.setVolts(0);
-            index.setMeteringRPM(-1000); 
+            index.setMeteringRPM(0); 
         }
     }
 

@@ -181,7 +181,7 @@ public class CMD_PredictiveAim extends RunCommand {
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else {
       index.setVolts(0);
-      index.setMeteringRPM(-1000);
+      index.setMeteringRPM(0);
     }
 
     // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));

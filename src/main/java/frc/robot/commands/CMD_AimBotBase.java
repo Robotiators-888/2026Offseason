@@ -33,13 +33,14 @@ import frc.robot.subsystems.SUB_Shooter;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-public class CMD_AimBot extends RunCommand {
+// Base class for all Aimbot Commands
+// Even though the class has no abstract methods it is abstract becuase the methods defined don't make sense for a telop or auto command
+// It has a brake request (doesn't make sense for auto) but has no teleop drive controls (doesn't make sense for teleop)
+public abstract class CMD_AimBotBase extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Pose2d targetPose = new Pose2d();
-  private final DoubleSupplier translationXSupplier;
-  private final DoubleSupplier translationYSupplier;
   private static boolean running;
   private final SUB_Shooter shooter;
   private final SUB_Index index;
@@ -66,8 +67,6 @@ public class CMD_AimBot extends RunCommand {
   private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
-  private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
-  private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
   
   /**
    * Constructs a new AimBot command.
@@ -75,35 +74,26 @@ public class CMD_AimBot extends RunCommand {
    * @param photonVision The vision subsystem for target tracking
    * @param shooter The shooter subsystem
    * @param index The indexer subsystem
-   * @param translationXSupplier Supplier for X translation input
-   * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBotBase(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {
+    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
     this.index = index;
-    this.translationXSupplier = translationXSupplier;
-    this.translationYSupplier = translationYSupplier;
+    // Could be put in initialize
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
-    
+
     addRequirements(drivetrain, shooter, index);
   }
 
+  // The idea is that initialize and execute shouldn't need to be overrided again
   @Override
   public void initialize() {
-    // Determine the correct target tag based on the current alliance
     robotAngleController.setTolerance(Units.degreesToRadians(0.0));
-    
-    Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
-      ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
-      : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
-      
-    double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
-    Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
-    
-    targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
-    
+
+    targetPose = getTargetPose();
+
     // Reset the PID controller to the current state of the robot
     robotAngleController.reset(
         drivetrain.getPose().getRotation().getRadians(),
@@ -116,6 +106,8 @@ public class CMD_AimBot extends RunCommand {
   @Override
   public void execute() {
     // Set up poses
+    // Might be needed for SOTM
+    targetPose = getTargetPose();
     Pose2d currentPose = drivetrain.getPose();
 
     Translation2d targetTranslation = targetPose.getTranslation();
@@ -143,20 +135,14 @@ public class CMD_AimBot extends RunCommand {
     // Calculate error for deadband checking
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
-    
+
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
-    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
-    double distance = drivetrain.getPose().getTranslation().getDistance(
-            SUB_PhotonVision.getInstance().at_field.getTagPose(
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-            ).map(pose -> pose.toPose2d().getTranslation().plus(
-                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-            )).orElse(drivetrain.getPose().getTranslation())
-    );
+    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
+    double distance = getDistanceFromTarget();
     SmartDashboard.putNumber("CMD_AimBot/Distance (m)", distance);
     shooter.shootMeters(distance);
-    
-     // Keep metering wheel spinning
+
+    // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
     if (isThetaErrorCorrect && isShooterReady) {
       index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
@@ -165,8 +151,6 @@ public class CMD_AimBot extends RunCommand {
         index.setVolts(0);
         index.setMeteringRPM(0);
     }
-    double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-    double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
 
     // Wheel locking logic
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
@@ -177,14 +161,10 @@ public class CMD_AimBot extends RunCommand {
     }
 
     // Lock wheels or drive
-    if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
-        drivetrain.setControl(brakeRequest);
-    } else {
-        drivetrain.setControl(
-          drive.withVelocityX(xInput * MaxSpeed)
-          .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); // TODO: Comment
-    }
+    if (getBrakeRequestConditions())
+      doBrakeLogic();
+    else
+      drivetrain.setControl(getDriveRequest());
   }
 
   @Override
@@ -192,12 +172,66 @@ public class CMD_AimBot extends RunCommand {
     running = false;
   }
 
+  // The command keeps running until told to stop it has no natural finishing condition
   @Override
   public boolean isFinished() {
     return false;
   }
 
+  //*******************************//
+  // Methods that can be overriden
+  //*******************************//
+
+  // Override this method to get a different target pose
+  // Plus this is also good for code organization
+  private Pose2d getTargetPose () {
+    // Determine the correct target tag based on the current alliance
+    Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
+      ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
+      : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
+    double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
+    Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
+    return new Pose2d(hubCenterTranslation, new Rotation2d());
+  }
+
+  // Override this to return false for an auto command
+  private boolean getBrakeRequestConditions () {
+    return isThetaErrorCorrect && isLocked;
+  }
+
+  // Override this for special brake request
+  private void doBrakeLogic () {
+    drivetrain.setControl(brakeRequest);
+  }
+
+  // Get a drive request, override this for controller inputs
+  private SwerveRequest getDriveRequest() {
+    drive.withVelocityX(0)
+      .withVelocityY(0)
+      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate);
+  }
+
+  // Override this in case the target isn't the hub
+  private double getDistanceFromTarget () {
+    return getDistanceFromHub();
+  }
+
+  //****************//
+  // Static methods
+  //****************//
+
   public static boolean isRunning () {
     return running;
+  }
+
+  // This is used in a lot of places so it should be kept here
+  public static double getDistanceFromHub () {
+    return drivetrain.getPose().getTranslation().getDistance(
+            SUB_PhotonVision.getInstance().at_field.getTagPose(
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+            ).map(pose -> pose.toPose2d().getTranslation().plus(
+                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+            )).orElse(drivetrain.getPose().getTranslation())
+    );
   }
 }
