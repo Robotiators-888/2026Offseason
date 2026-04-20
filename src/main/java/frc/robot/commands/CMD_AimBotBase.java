@@ -69,7 +69,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   
   /**
-   * Constructs a new AimBot command.
+   * Constructs the AimBotBase class.
    * @param drivetrain The swerve drivetrain subsystem
    * @param photonVision The vision subsystem for target tracking
    * @param shooter The shooter subsystem
@@ -106,11 +106,8 @@ public abstract class CMD_AimBotBase extends RunCommand {
   @Override
   public void execute() {
     // Set up poses
-    // Might be needed for SOTM
-    targetPose = getTargetPose();
     Pose2d currentPose = drivetrain.getPose();
-
-    Translation2d targetTranslation = targetPose.getTranslation();
+    Translation2d targetTranslation = getTargetTranslation();
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
@@ -121,10 +118,14 @@ public abstract class CMD_AimBotBase extends RunCommand {
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
 
+    // SOTM doesn't have this for some reason
     targetRotation = targetRotation.plus(shooterThetaOffset);
 
     // Update telemetry
-    drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
+    // Static pose (Always the hub)
+    drivetrain.publisher1.set(new Pose2d(targetPose.getTranslation(), targetPose.getRotation()));
+    // Virtual pose (Real target for SOTM but same as publisher1 for everything else)
+    drivetrain.publisher2.set(new Pose2d(targetTranslation, targetRotation));
 
     // 3. Calculate rotational velocity (omega) using the PID controller
     double omegaSpeed = robotAngleController.calculate(
@@ -178,9 +179,9 @@ public abstract class CMD_AimBotBase extends RunCommand {
     return false;
   }
 
-  //*******************************//
-  // Methods that can be overriden
-  //*******************************//
+  //**************************************//
+  // Methods that can/should be overriden
+  //**************************************//
 
   // Override this method to get a different target pose
   // Plus this is also good for code organization
@@ -192,6 +193,10 @@ public abstract class CMD_AimBotBase extends RunCommand {
     double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
     Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
     return new Pose2d(hubCenterTranslation, new Rotation2d());
+  }
+
+  private Translation2d getTargetTranslation () {
+    return targetPose.getTranslation();
   }
 
   // Override this to return false for an auto command
@@ -206,7 +211,8 @@ public abstract class CMD_AimBotBase extends RunCommand {
 
   // Get a drive request, override this for controller inputs
   private SwerveRequest getDriveRequest() {
-    drive.withVelocityX(0)
+    return drive
+      .withVelocityX(0)
       .withVelocityY(0)
       .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate);
   }
