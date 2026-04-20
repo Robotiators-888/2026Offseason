@@ -59,7 +59,7 @@ public class CMD_AimBot extends CMD_AimBotBase {
   }
 
   @Override
-  private boolean getBrakeRequestConditions () {
+  protected boolean getBrakeRequestConditions () {
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
     return xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked;
@@ -67,7 +67,7 @@ public class CMD_AimBot extends CMD_AimBotBase {
 
   // Make sure to be able to drive with joysticks
   @Override
-  private SwerveRequest getDriveRequest (double omegaSpeed) {
+  protected SwerveRequest getDriveRequest (double omegaSpeed) {
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
     return drive
