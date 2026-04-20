@@ -41,7 +41,8 @@ public abstract class CMD_AimBotBase extends RunCommand {
   protected final SUB_PhotonVision photonVision;
   protected final CommandSwerveDrivetrain drivetrain;
   protected Pose2d targetPose = new Pose2d();
-  protected static boolean running;
+  // Shouldn't be protected because its behavior shouldn't change
+  private static boolean running;
   protected final SUB_Shooter shooter;
   protected final SUB_Index index;
   protected boolean isLocked;
@@ -185,7 +186,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
 
   // Override this method to get a different target pose
   // Plus this is also good for code organization
-  private Pose2d getTargetPose () {
+  protected Pose2d getTargetPose () {
     // Determine the correct target tag based on the current alliance
     Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
       ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
@@ -195,22 +196,23 @@ public abstract class CMD_AimBotBase extends RunCommand {
     return new Pose2d(hubCenterTranslation, new Rotation2d());
   }
 
-  private Translation2d getTargetTranslation () {
+  // Override this for a different target translation which is used for SOTM
+  protected Translation2d getTargetTranslation () {
     return targetPose.getTranslation();
   }
 
   // Override this to return false for an auto command
-  private boolean getBrakeRequestConditions () {
+  protected boolean getBrakeRequestConditions () {
     return isThetaErrorCorrect && isLocked;
   }
 
   // Override this for special brake request
-  private void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {
+  protected void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {
     drivetrain.setControl(brakeRequest);
   }
 
   // Get a drive request, override this for controller inputs
-  private SwerveRequest getDriveRequest(double omegaSpeed) {
+  protected SwerveRequest getDriveRequest(double omegaSpeed) {
     return drive
       .withVelocityX(0)
       .withVelocityY(0)
@@ -218,7 +220,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
   }
 
   // Override this in case the target isn't the hub
-  private double getDistanceFromTarget () {
+  protected double getDistanceFromTarget () {
     return drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
