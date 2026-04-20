@@ -35,10 +35,10 @@ public class CMD_AimBotAuto extends CMD_AimBotBase {
   }
 
   @Override
-  private boolean getBrakeRequestConditions () {
+  protected boolean getBrakeRequestConditions () {
     return false;
   }
 
   @Override
-  private void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {}
+  protected void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {}
 }
