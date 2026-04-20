@@ -40,5 +40,5 @@ public class CMD_AimBotAuto extends CMD_AimBotBase {
   }
 
   @Override
-  private void doBrakeLogic () {}
+  private void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {}
 }
