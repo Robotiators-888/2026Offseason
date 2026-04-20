@@ -38,34 +38,34 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 // It has a brake request (doesn't make sense for auto) but has no teleop drive controls (doesn't make sense for teleop)
 public abstract class CMD_AimBotBase extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
-  private final SUB_PhotonVision photonVision;
-  private final CommandSwerveDrivetrain drivetrain;
-  private Pose2d targetPose = new Pose2d();
-  private static boolean running;
-  private final SUB_Shooter shooter;
-  private final SUB_Index index;
-  private boolean isLocked;
+  protected final SUB_PhotonVision photonVision;
+  protected final CommandSwerveDrivetrain drivetrain;
+  protected Pose2d targetPose = new Pose2d();
+  protected static boolean running;
+  protected final SUB_Shooter shooter;
+  protected final SUB_Index index;
+  protected boolean isLocked;
 
   /** Physical offsets for targeting calibration */
-  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
-  Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
+  protected Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  protected Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
   
   /** Motion profiling constraints for rotation */
-  private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
+  protected final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
       RotationsPerSecond.of(1.6).in(RadiansPerSecond), 
       RotationsPerSecond.of(12).in(RadiansPerSecond)   
   );
 
   /** PID controller for robot heading alignment */
-  private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
+  protected final ProfiledPIDController robotAngleController = new ProfiledPIDController(
       5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
-  private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+  protected final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
+  protected double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
+  protected double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
+  protected final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
   
   /**
@@ -163,9 +163,9 @@ public abstract class CMD_AimBotBase extends RunCommand {
 
     // Lock wheels or drive
     if (getBrakeRequestConditions())
-      doBrakeLogic();
+      doBrakeLogic(currentPose, targetTranslation);
     else
-      drivetrain.setControl(getDriveRequest());
+      drivetrain.setControl(getDriveRequest(omegaSpeed));
   }
 
   @Override
@@ -205,33 +205,20 @@ public abstract class CMD_AimBotBase extends RunCommand {
   }
 
   // Override this for special brake request
-  private void doBrakeLogic () {
+  private void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {
     drivetrain.setControl(brakeRequest);
   }
 
   // Get a drive request, override this for controller inputs
-  private SwerveRequest getDriveRequest() {
+  private SwerveRequest getDriveRequest(double omegaSpeed) {
     return drive
       .withVelocityX(0)
       .withVelocityY(0)
-      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate);
+      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate));
   }
 
   // Override this in case the target isn't the hub
   private double getDistanceFromTarget () {
-    return getDistanceFromHub();
-  }
-
-  //****************//
-  // Static methods
-  //****************//
-
-  public static boolean isRunning () {
-    return running;
-  }
-
-  // This is used in a lot of places so it should be kept here
-  public static double getDistanceFromHub () {
     return drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
@@ -239,5 +226,13 @@ public abstract class CMD_AimBotBase extends RunCommand {
                     new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
             )).orElse(drivetrain.getPose().getTranslation())
     );
+  }
+
+  //******************//
+  // Static method(s)
+  //******************//
+
+  public static boolean isRunning () {
+    return running;
   }
 }
