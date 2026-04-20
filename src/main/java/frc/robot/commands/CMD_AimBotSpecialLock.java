@@ -80,14 +80,14 @@ public class CMD_AimBotSpecialLock extends CMD_AimBotBase {
   }
 
   @Override
-  private boolean getBrakeRequestConditions () {
+  protected boolean getBrakeRequestConditions () {
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));   
     return xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked;
   }
 
   @Override
-  private SwerveRequest getDriveRequest (double omegaSpeed) {
+  protected SwerveRequest getDriveRequest (double omegaSpeed) {
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
     return drive
@@ -97,7 +97,7 @@ public class CMD_AimBotSpecialLock extends CMD_AimBotBase {
   }
 
   @Override
-  private void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {
+  protected void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {
     // 1. Find the vector from the Robot to the Target in FIELD coordinates
     Translation2d fieldRelativeVectorToTarget = targetTranslation.minus(currentPose.getTranslation());
 
