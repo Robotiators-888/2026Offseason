@@ -88,22 +88,6 @@ public abstract class CMD_AimBotBase extends RunCommand {
     addRequirements(drivetrain, shooter, index);
   }
 
-  // This depricated is here to tell you that this constructor should only be called if you know what you are doing
-  // This constructor doesn't require the drive subsystem
-  @Depricated
-  public CMD_AimBotBase(SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, CommandSwerveDrivetrain drivetrain) {
-    super(() -> {});
-    this.photonVision = photonVision;
-    this.shooter = shooter;
-    this.index = index;
-    this.drivetrain = drivetrain;
-    // Could be put in initialize
-    robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
-
-    // Doesn't require the drivetrain be careful
-    addRequirements(shooter, index);
-  }
-
   // The idea is that initialize and execute shouldn't need to be overrided again
   @Override
   public void initialize() {
