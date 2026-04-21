@@ -72,14 +72,14 @@ public class CMD_PredictiveAim extends CMD_AimBotBase {
     );
 
     // 1. Calculate base distance and initial Time of Flight (TOF)
-    double distanceToHub = currentPose.getTranslation().getDistance(staticTargetPose.getTranslation());
+    double distanceToHub = currentPose.getTranslation().getDistance(targetPose.getTranslation());
     double tof = shooter.getExpectedTOF(distanceToHub);
 
     // 2. Calculate Virtual Target: PhysicalTarget - (RobotVelocity * TOF)
     // Moving towards the goal (positive velocity) makes the virtual target closer.
     return new Translation2d(
-        staticTargetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
-        staticTargetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
+        targetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
+        targetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
     );
   }
 
