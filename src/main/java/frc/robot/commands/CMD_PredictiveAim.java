@@ -107,4 +107,12 @@ public class CMD_PredictiveAim extends CMD_AimBotBase {
       .withVelocityY(yInput * MaxSpeed * (1/magnitude))
       .withRotationalRate(rotationOutput);
   }
+
+  @Override
+  protected boolean getBrakeRequestConditions () {
+    return false;
+  }
+
+  @Override
+  protected void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {}
 }
