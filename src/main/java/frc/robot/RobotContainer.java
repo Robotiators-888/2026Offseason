@@ -67,7 +67,6 @@ import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Arm;
 import frc.robot.subsystems.SUB_Index;
-import frc.robot.subsystems.SUB_LEDs;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
@@ -94,7 +93,6 @@ public class RobotContainer {
         private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         private final SendableChooser<Command> autoChooser;
-        public static final SUB_LEDs leds = SUB_LEDs.getInstance();
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Arm arm = SUB_Arm.getInstance();
@@ -179,7 +177,6 @@ public class RobotContainer {
                         index.set(0);
                         index.setMeteringSpeed(0);
                 }, index));
-                leds.setDefaultCommand(new InstantCommand(() -> leds.set(LEDs.kAllianceColor), leds));
 
                 NamedCommands.registerCommand("ReachedTarget", new InstantCommand(
 
