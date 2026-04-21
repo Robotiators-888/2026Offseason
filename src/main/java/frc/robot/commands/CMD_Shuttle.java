@@ -29,39 +29,14 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
+import frc.robot.commands.CMD_AimBotBase;
 
-public class CMD_Shuttle extends RunCommand{
-    /** Physical offsets for targeting calibration */
-    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
-    /** Subsystems and state variables for shuttle targeting */
-    private SUB_Index index;
-    private SUB_Shooter shooter;
-    private SUB_PhotonVision photonVision;
-    private CommandSwerveDrivetrain drivetrain;
+public class CMD_Shuttle extends CMD_AimBotBase {
     private final DoubleSupplier translationXSupplier;
     private final DoubleSupplier translationYSupplier;
-    
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-                .withRotationalDeadband(0) 
-                .withDriveRequestType(DriveRequestType.OpenLoopVoltage).withCenterOfRotation(shooterOffset);
 
-    /** Motion profiling constraints for rotation */
-    private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
-        RotationsPerSecond.of(0.75).in(RadiansPerSecond), 
-        RotationsPerSecond.of(1.5).in(RadiansPerSecond)   
-    );
     private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0);
     private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0);
-
-    /** PID controller for robot heading alignment during shuttle */
-    private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-        5.0, 0, 0.2,
-        thetaConstraints
-    );
-    private Pose2d targetPose = new Pose2d();
-    private boolean isThetaErrorCorrect;
 
     /**
      * Constructs a new CMD_Shuttle command for long-range scoring or passing.
@@ -72,33 +47,16 @@ public class CMD_Shuttle extends RunCommand{
      * @param translationXSupplier Supplier for X translation input
      * @param translationYSupplier Supplier for Y translation input
      */
-    public CMD_Shuttle (CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Shooter shooter,DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
-        super(()->{});
-        this.index = index;
-        this.shooter = shooter;
-        this.photonVision = photonVision;
-        this.drivetrain = drivetrain;
+    public CMD_Shuttle (CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Shooter shooter, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
+        super(dirvetrain, photonVision, index, shooter);
         this.translationXSupplier = translationXSupplier;
         this.translationYSupplier = translationYSupplier;
-        robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
-        isThetaErrorCorrect = false;
-        addRequirements(photonVision, drivetrain, index, shooter);
     }
 
-    @Override
-    public void initialize () {
-        robotAngleController.setTolerance(Units.degreesToRadians(0.0));
-        // Reset the PID controller to the current state of the robot
-        robotAngleController.reset(
-            drivetrain.getPose().getRotation().getRadians(),
-            drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
-        );
-    }
-
-    @Override
-    public void execute () {
+    @Overrid
+    protected Translation2d getTargetTranslation (Pose2d currentPose) {
         // Calculate a target pose shifted away from the hub for shuttling/passing
-        targetPose = photonVision.at_field.getTagPose(
+        Pose2d tempPose = photonVision.at_field.getTagPose(
                     DriverStation.getAlliance().orElse(
                         Alliance.Blue
                     ) == Alliance.Red ? 10 : 26
@@ -112,65 +70,42 @@ public class CMD_Shuttle extends RunCommand{
                 )).orElse(
                     drivetrain.getPose()
                 );
-        
-        Pose2d currentPose = drivetrain.getPose();
-        ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-            drivetrain.getCurrentRobotChassisSpeeds(), 
-            currentPose.getRotation()
+        // 1. Calculate base distance and initial Time of Flight (TOF)
+        double distanceToHub = currentPose.getTranslation().getDistance(tempPose.getTranslation());
+        double tof = shooter.getExpectedTOF(distanceToHub);
+
+        // 2. Calculate Virtual Target: PhysicalTarget - (RobotVelocity * TOF)
+        // Moving towards the goal (positive velocity) makes the virtual target closer.
+        return new Translation2d(
+            tempPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
+            tempPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
         );
+    }
 
-        Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
-            shooterOffset.rotateBy(currentPose.getRotation())
-        );
-
-        double distanceToTarget = shooterFieldPosition.getDistance(targetPose.getTranslation());
-        double tof = shooter.getExpectedTOF(distanceToTarget);
-
-        Translation2d virtualTargetTranslation = new Translation2d(
-            targetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
-            targetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof)
-        );
-
-        drivetrain.publisher2.set(new Pose2d(virtualTargetTranslation, new Rotation2d()));
-        
-        Translation2d targetTranslation = virtualTargetTranslation;
-        
-        // Calculate the required heading to face the shuttle target
-        Rotation2d targetRotation = new Rotation2d(
-            targetTranslation.getX() - shooterFieldPosition.getX(),
-            targetTranslation.getY() - shooterFieldPosition.getY()
-        );
-
-        double omegaSpeed = robotAngleController.calculate(
-            currentPose.getRotation().getRadians(),
-            targetRotation.getRadians()
-        );
-
-        // Check if the rotation error is within an acceptable threshold for firing
-        double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
-        isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(14) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 40;
-        
-        double distance = shooterFieldPosition.getDistance(virtualTargetTranslation);
-        shooter.shootMeters(distance);
-        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
-        
-        // Automated firing when aligned and up to speed
-        boolean isShooterReady = shooter.atDesiredRPM();
-        boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
-        if (isThetaErrorCorrect && isShooterReady && isMeteringReady) {
-            index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-        } else if (!isThetaErrorCorrect) {
-            index.setVolts(0);
-        }
-
+    @Override
+    protected double getDistanceFromTarget (Translation2d shooterFieldPosition, Translation2d targetTranslation) {
+      return shooterFieldPosition.getDistance(targetTranslation);
+    }
+    
+    @Override
+    protected SwerveRequest getDriveRequest (double omegaSpeed) {
         double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
         double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
-        
+
         // Apply swerve drive request with PID-calculated rotation
         drivetrain.setControl(
-        drive.withVelocityX(xInput * MaxSpeed)
-        .withVelocityY(yInput * MaxSpeed)
-        .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+        return drive
+            .withVelocityX(xInput * MaxSpeed)
+            .withVelocityY(yInput * MaxSpeed)
+            .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
  
     }
+
+    @Override
+    protected boolean getBrakeRequestConditions () {
+        return false;
+    }
+
+    @Override
+    protected void doBrakeLogic (Pose2d currentPose, Translation2d targetTranslation) {}
 }
