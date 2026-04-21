@@ -48,7 +48,7 @@ public class CMD_Shuttle extends CMD_AimBotBase {
      * @param translationYSupplier Supplier for Y translation input
      */
     public CMD_Shuttle (CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Shooter shooter, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
-        super(drivetrain, photonVision, index, shooter);
+        super(drivetrain, photonVision, shooter, index);
         this.translationXSupplier = translationXSupplier;
         this.translationYSupplier = translationYSupplier;
     }
