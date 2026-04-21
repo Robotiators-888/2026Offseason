@@ -70,6 +70,12 @@ public class CMD_Shuttle extends CMD_AimBotBase {
                 )).orElse(
                     drivetrain.getPose()
                 );
+        
+        ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+            drivetrain.getCurrentRobotChassisSpeeds(), 
+            currentPose.getRotation()
+        );
+        
         // 1. Calculate base distance and initial Time of Flight (TOF)
         double distanceToHub = currentPose.getTranslation().getDistance(tempPose.getTranslation());
         double tof = shooter.getExpectedTOF(distanceToHub);
