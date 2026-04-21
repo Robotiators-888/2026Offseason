@@ -1,7 +1,6 @@
 package frc.robot.utils;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 
 // This class was created to provide a dynamic array implementation that is able to return a regular array
 // This is to ensure that we can easily pass arrays to SmartDashboard
@@ -21,8 +20,8 @@ public class Vector <T> {
 
   private static <T> T[] createArray(int size, T defaultValue) {
     // Terrible casting needed because of runtime objects and rules against generic arrays
-    T[] array = (T[]) Array.newInstance(defaultValue.getClass(), size); // TODO: Is this okay?
-    Arrays.fill(array, defaultValue);
+    @SuppressWarnings("unchecked")
+    T[] array = (T[]) Array.newInstance(defaultValue.getClass(), size); 
     return array;
   }
 
@@ -49,7 +48,7 @@ public class Vector <T> {
             storage[i] = tempStorage[i];
         }
         // Fills the rest of the array with the default value
-        for (i=i;i<storage.length;i++) {
+        for (;i<storage.length;i++) {
             storage[i] = defaultVal;
         }
         // Inserts data

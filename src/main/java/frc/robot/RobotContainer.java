@@ -111,8 +111,6 @@ public class RobotContainer {
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(2.0,-2.0,0.0);
-        private boolean isTeleop = false;
-        private boolean isShaking = false; 
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -580,7 +578,6 @@ public class RobotContainer {
         }
 
         public void autonomousPeriodic() {
-                isTeleop = false;
                 photonPoseUpdate();
         }
 
@@ -589,7 +586,6 @@ public class RobotContainer {
         }
 
         public void testPeriodic() {
-                isTeleop = false;
                 photonPoseUpdate();
         }
 
@@ -602,7 +598,6 @@ public class RobotContainer {
         }
 
         public void teleopPeriodic() {
-                isTeleop = true;
                 photonPoseUpdate();
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
                 SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
@@ -635,7 +630,6 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
-                isTeleop = false;
                 newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
                 if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
@@ -727,13 +721,12 @@ public class RobotContainer {
         private Command getShakeyCommand () {
                 
                 Command c = new ParallelCommandGroup(
-                                new InstantCommand(()->{isShaking=true;}),
                                 new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE/4.0), roller),
                                 new SequentialCommandGroup(
                                         new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
                                         new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
                                 ).repeatedly()
-                        ).finallyDo(()->{isShaking=false;});
+                        );
                 return c;
         }
 

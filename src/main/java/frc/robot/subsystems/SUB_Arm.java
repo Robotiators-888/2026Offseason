@@ -21,7 +21,6 @@ public class SUB_Arm extends SubsystemBase {
     private boolean stickDown = false;
     private int periodicCountFault = 0;
     private static SUB_Arm INSTANCE = null;
-    private boolean intakeArmAndRollersUntil = false;
     public static SUB_Arm getInstance (){
         if (INSTANCE == null) {
             INSTANCE = new SUB_Arm();

@@ -36,7 +36,7 @@ public class SUB_Index extends SubsystemBase {
         SparkMaxConfig indexConfig = new SparkMaxConfig();
         indexConfig.smartCurrentLimit(50,25); //sets current limit for index
         indexConfig.inverted(true); //makes index motor inverted
-        index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); //sets sparkmax to persist mode so it wont lose settings
+        index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); //TODO: Deal with depracation for the 2027 Season
         SparkMaxConfig meteringConfig = new SparkMaxConfig(); //sets up config for metering wheel
         meteringConfig.smartCurrentLimit(50,30); // sets current limit
         double kP = 0.00005; // Super Aggressive P to get metering wheel to speed FAST
@@ -45,10 +45,10 @@ public class SUB_Index extends SubsystemBase {
         double kFF = 0.0021; // NEO Nominal RPM at 12V is ~5676. Max Wheel RPM is 5676. Since we measure the wheel, not the flywheel reduction: 1/5676 = 0.000176
         meteringConfig.closedLoop.pid(kP, kI, kD); //Applys PIDs
         meteringConfig.closedLoop.velocityFF(kFF); //applies Kff
-        meteringConfig.encoder.uvwMeasurementPeriod(8);// TODO: Sidh Comment
+        // Decrease reading averaging for better reaction from the PID leading to the wheel responding in around 5-10 ms instead fo 150 ms
+        meteringConfig.encoder.uvwMeasurementPeriod(8); 
         meteringConfig.encoder.uvwAverageDepth(2);
-        meteringWheel.configure(meteringConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters); // Sets SparkMax to persist mode so it wont lose settings
-        meteringController = meteringWheel.getClosedLoopController();
+        meteringWheel.configure(meteringConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);  //TODO: Deal with depracation for the 2027 Season
     }
     
     //Creates method to set index motor speed
