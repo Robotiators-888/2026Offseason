@@ -124,7 +124,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
   public void execute() {
     // Set up poses
     Pose2d currentPose = drivetrain.getPose();
-    Translation2d targetTranslation = getTargetTranslation();
+    Translation2d targetTranslation = getTargetTranslation(currentPose);
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
@@ -213,7 +213,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
   }
 
   // Override this for a different target translation which is used for SOTM
-  protected Translation2d getTargetTranslation () {
+  protected Translation2d getTargetTranslation (Pose2d currentPose) {
     return targetPose.getTranslation();
   }
 
