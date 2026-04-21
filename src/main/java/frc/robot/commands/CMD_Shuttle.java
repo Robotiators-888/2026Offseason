@@ -53,7 +53,7 @@ public class CMD_Shuttle extends CMD_AimBotBase {
         this.translationYSupplier = translationYSupplier;
     }
 
-    @Overrid
+    @Override
     protected Translation2d getTargetTranslation (Pose2d currentPose) {
         // Calculate a target pose shifted away from the hub for shuttling/passing
         Pose2d tempPose = photonVision.at_field.getTagPose(
