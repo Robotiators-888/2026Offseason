@@ -156,7 +156,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
 
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
     SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
-    double distance = getDistanceFromTarget();
+    double distance = getDistanceFromTarget(shooterFieldPosition, targetTranslation);
     SmartDashboard.putNumber("CMD_AimBot/Distance (m)", distance);
     shooter.shootMeters(distance);
 
@@ -236,7 +236,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
   }
 
   // Override this in case the target isn't the hub
-  protected double getDistanceFromTarget () {
+  protected double getDistanceFromTarget (Translation2d shooterFieldPosition, Translation2d targetTranslation) {
     return drivetrain.getPose().getTranslation().getDistance(
             SUB_PhotonVision.getInstance().at_field.getTagPose(
                     DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
