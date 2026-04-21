@@ -135,7 +135,6 @@ public abstract class CMD_AimBotBase extends RunCommand {
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
 
-    // SOTM doesn't have this for some reason
     targetRotation = targetRotation.plus(shooterThetaOffset);
 
     // Update telemetry
@@ -155,7 +154,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
 
     isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
-    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
+    SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect); // Maybe also report if is at desired RPM
     double distance = getDistanceFromTarget(shooterFieldPosition, targetTranslation);
     SmartDashboard.putNumber("CMD_AimBot/Distance (m)", distance);
     shooter.shootMeters(distance);
@@ -228,7 +227,7 @@ public abstract class CMD_AimBotBase extends RunCommand {
   }
 
   // Get a drive request, override this for controller inputs
-  protected SwerveRequest getDriveRequest(double omegaSpeed) {
+  protected SwerveRequest getDriveRequest (double omegaSpeed) {
     return drive
       .withVelocityX(0)
       .withVelocityY(0)
