@@ -97,7 +97,7 @@ public class CMD_Shuttle extends CMD_AimBotBase {
         return drive
             .withVelocityX(xInput * MaxSpeed)
             .withVelocityY(yInput * MaxSpeed)
-            .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+            .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate));
  
     }
 
