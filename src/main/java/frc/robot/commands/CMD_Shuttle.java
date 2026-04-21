@@ -92,8 +92,7 @@ public class CMD_Shuttle extends CMD_AimBotBase {
         double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
         double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
 
-        // Apply swerve drive request with PID-calculated rotation
-        drivetrain.setControl(
+        // Return swerve drive request with PID-calculated rotation
         return drive
             .withVelocityX(xInput * MaxSpeed)
             .withVelocityY(yInput * MaxSpeed)
