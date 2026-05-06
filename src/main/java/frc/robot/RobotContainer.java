@@ -480,7 +480,6 @@ public class RobotContainer {
                         SmartDashboard.putData("Drivetrain/Field", field);
                         SmartDashboard.putNumber(autoName, listIndex);
                         SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);                        
-                        checkAlerts();
                 }
                 if (highShouldAlert) {
                         SmartDashboard.putNumber("Stat/Battery Voltage", powerDistribution.getVoltage());
@@ -489,7 +488,7 @@ public class RobotContainer {
                         autoField.setRobotPose(drivetrain.getPose());
                         drivetrain.robotPosePublisher.set(drivetrain.getPose());
                         SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-                        
+                        checkAlerts();
                 }
         }
 
