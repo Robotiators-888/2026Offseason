@@ -474,7 +474,6 @@ public class RobotContainer {
 
                 drivetrain.selectedTestPathPublisher.set(closestPose);
                 SmartDashboard.putString("Trough/Closest", closestTrough);
-                logDrivetrain();
                 if (slowShouldAlert) {
                         field.setRobotPose(drivetrain.getPose());
                         SmartDashboard.putData("Drivetrain/Field", field);
@@ -488,6 +487,7 @@ public class RobotContainer {
                         autoField.setRobotPose(drivetrain.getPose());
                         drivetrain.robotPosePublisher.set(drivetrain.getPose());
                         SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                        logDrivetrain();
                         checkAlerts();
                 }
         }
