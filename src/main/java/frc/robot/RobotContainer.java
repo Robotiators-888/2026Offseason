@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -416,6 +417,7 @@ public class RobotContainer {
         public void robotInit() {
                 Pathfinding.setPathfinder(new LocalADStar());
                 powerDistribution.setSwitchableChannel(true);
+                RobotController.setBrownoutVoltage(5.5);
         }
 
         /**
