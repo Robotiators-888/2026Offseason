@@ -118,7 +118,7 @@ public class RobotContainer {
         private PathPlannerPath pathNeutralToLeft;
         private PathPlannerPath pathRightToNeutral;
         private PathPlannerPath pathNeutralToRight;
-        private boolean fieldRelative = true;
+        private boolean fieldRelative = false;
         private Command trenchAlign = Commands.none();
         private boolean trenchAligning = false;
         private int periodicCounter = 0;
@@ -156,13 +156,13 @@ public class RobotContainer {
                                 double yInput = yLimiter.calculate(MathUtil.applyDeadband(-Driver1.getLeftX(), Operator.kDriveDeadband));
                                 double rotInput = rotLimiter.calculate(MathUtil.applyDeadband(-Driver1.getRightX(), Operator.kDriveDeadband));
                                 if (fieldRelative) {
-                                        return drive.withVelocityX(xInput*MaxSpeed)
-                                                .withVelocityY(yInput*MaxSpeed)
-                                                .withRotationalRate(rotInput*MaxAngularRate);
+                                        return drive.withVelocityX(xInput*0.25*MaxSpeed)
+                                                .withVelocityY(yInput*0.25*MaxSpeed)
+                                                .withRotationalRate(rotInput*0.25*MaxAngularRate);
                                 } else {
-                                        return driveRobot.withVelocityX(xInput*MaxSpeed)
-                                                .withVelocityY(yInput*MaxSpeed)
-                                                .withRotationalRate(rotInput*MaxAngularRate);
+                                        return driveRobot.withVelocityX(xInput*0.25*MaxSpeed)
+                                                .withVelocityY(yInput*0.25*MaxSpeed)
+                                                .withRotationalRate(rotInput*0.25*MaxAngularRate);
                                 }
                         })
                 );
@@ -301,19 +301,19 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                Driver1.leftTrigger().whileTrue(
-                        new ParallelCommandGroup(
-                                new CMD_PredictiveAim(
-                                        drivetrain, 
-                                        photonVision, 
-                                        shooter, 
-                                        index,
-                                        () -> -(Driver1.getLeftY()),
-                                        () -> -(Driver1.getLeftX()) 
-                                ),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller)
-                        )
-                );
+                // Driver1.leftTrigger().whileTrue(
+                //         new ParallelCommandGroup(
+                //                 new CMD_PredictiveAim(
+                //                         drivetrain, 
+                //                         photonVision, 
+                //                         shooter, 
+                //                         index,
+                //                         () -> -(Driver1.getLeftY()),
+                //                         () -> -(Driver1.getLeftX()) 
+                //                 ),
+                //                 new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller)
+                //         )
+                // );
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
                         Pose2d currentPose = drivetrain.getPose();
@@ -354,26 +354,27 @@ public class RobotContainer {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         arm.intakeArmDownRoller();
                 }, roller, arm).repeatedly());
-                Driver1.rightTrigger().whileTrue(
-                        new ParallelCommandGroup(
-                                new CMD_AimBotSpecialLock(
-                                        drivetrain, 
-                                        photonVision, 
-                                        shooter, 
-                                        index,
-                                        () -> -(Driver1.getLeftY()),
-                                        () -> -(Driver1.getLeftX()) 
-                                ),
-                                // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
-                                // Commands.either would cause the command to not start even if the button was released
-                                getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
+                Driver1.rightTrigger().whileTrue(getShakeyCommand());
+                // Driver1.rightTrigger().whileTrue(
+                //         new ParallelCommandGroup(
+                //                 new CMD_AimBotSpecialLock(
+                //                         drivetrain, 
+                //                         photonVision, 
+                //                         shooter, 
+                //                         index,
+                //                         () -> -(Driver1.getLeftY()),
+                //                         () -> -(Driver1.getLeftX()) 
+                //                 ),
+                //                 // Commands.either(Commands.none(), NamedCommands.getCommand("IntakeAgitate"), ()->Driver2.leftStick().getAsBoolean())
+                //                 // Commands.either would cause the command to not start even if the button was released
+                //                 getCancellableShakeyCommand(()->Driver2.leftStick().getAsBoolean())
                                 
-                        )
-                );
-                Driver1.leftStick().onTrue(new InstantCommand(() -> {
-                        fieldRelative = !fieldRelative;
-                }
-                ));
+                //         )
+                // );
+                // Driver1.leftStick().onTrue(new InstantCommand(() -> {
+                //         fieldRelative = !fieldRelative;
+                // }
+                // ));
                 // =========================================================
                 // DRIVER 2
                 // =========================================================
@@ -395,20 +396,20 @@ public class RobotContainer {
                         arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
                 }, arm));
 
-                Driver2.b().whileTrue(
-                        new CMD_Shuttle(drivetrain, photonVision, index, shooter,
-                                () -> -(Driver1.getLeftY()),
-                                () -> -(Driver1.getLeftX())
-                        )
-                );
-                Driver2.x().onTrue(new InstantCommand(() -> targetRPM = shooter.getDistanceRPM(
-                        drivetrain.getPose().getTranslation().getDistance(
-                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                        new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                        )).orElse(drivetrain.getPose().getTranslation())
-                ))));
+                // Driver2.b().whileTrue(
+                //         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
+                //                 () -> -(Driver1.getLeftY()),
+                //                 () -> -(Driver1.getLeftX())
+                //         )
+                // );
+                // Driver2.x().onTrue(new InstantCommand(() -> targetRPM = shooter.getDistanceRPM(
+                //         drivetrain.getPose().getTranslation().getDistance(
+                //                 SUB_PhotonVision.getInstance().at_field.getTagPose(
+                //                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                //                 ).map(pose -> pose.toPose2d().getTranslation().plus(
+                //                         new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+                //         )).orElse(drivetrain.getPose().getTranslation())
+                // ))));
                 // Driver2.leftStick().whileTrue(NamedCommands.getCommand("IntakeAgitate"));
         }
 
