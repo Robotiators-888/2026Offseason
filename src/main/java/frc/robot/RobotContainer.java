@@ -92,7 +92,7 @@ public class RobotContainer {
         // The robot's subsystems and commands are defined here...
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
-        private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+        private double MaxSpeed = 0.5 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         private final SendableChooser<Command> autoChooser;
         public static final SUB_LEDs leds = SUB_LEDs.getInstance();
@@ -511,7 +511,7 @@ public class RobotContainer {
                         int driveMotorId = driveMotor.getDeviceID();
                         int steerMotorId = steerMotor.getDeviceID();
                         if (highShouldAlert) {
-                                SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
+                               SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Stator Current", driveMotor.getStatorCurrent().getValueAsDouble());
                                 SmartDashboard.putNumber("Drivetrain/Motors/Current/Steer Motor ID " + steerMotorId + " Stator Current", steerMotor.getStatorCurrent().getValueAsDouble());
 
                                 SmartDashboard.putNumber("Drivetrain/Motors/Current/Drive Motor ID " + driveMotorId + " Supply Current", driveMotor.getSupplyCurrent().getValueAsDouble());
