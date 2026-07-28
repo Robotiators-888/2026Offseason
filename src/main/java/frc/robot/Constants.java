@@ -4,8 +4,12 @@
 
 package frc.robot;
 
+import java.util.Map;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -123,5 +127,11 @@ public final class Constants {
 
         public static class Hood {
                 public static final int kHoodCanId = 0; // Change this!!!!!
+                public static final InterpolatingDoubleTreeMap kHoodMap = InterpolatingDoubleTreeMap
+                    .ofEntries(
+                        Map.entry(0.0, 0.0),
+                        Map.entry(0.0, 0.0)
+                    );
+                public static final PIDController kHoodPidController = new PIDController(4, 0.5, 0.025);
         }
 }
