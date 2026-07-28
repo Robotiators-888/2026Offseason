@@ -21,8 +21,10 @@ public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
 
     /** Subsystem hardware and control state */
-    private TalonFX topFlywheel;
-    private TalonFX bottomFlywheel;
+    private TalonFX MotorOne;
+    private TalonFX MotorTwo;
+    private TalonFX MotorThree;
+    private TalonFX MotorFour;
     private final VoltageOut voltageRequest = new VoltageOut(0);
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
@@ -47,8 +49,10 @@ public class SUB_Shooter extends SubsystemBase {
 
     private SUB_Shooter() {
         // Initialize dual flywheel motors
-        topFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_topFlywheel_MOTOR_CANID); 
-        bottomFlywheel = new TalonFX(Constants.Shooter.kSHOOTER_bottomFlywheel_MOTOR_CANID);
+        MotorOne = new TalonFX(Constants.Shooter.kSHOOTER_MotorOne_MOTOR_CANID); 
+        MotorTwo = new TalonFX(Constants.Shooter.kSHOOTER_MotorTwo_MOTOR_CANID);
+        MotorThree = new TalonFX(Constants.Shooter.kSHOOTER_MotorThree_MOTOR_CANID);
+        MotorFour = new TalonFX(Constants.Shooter.kSHOOTER_MotorFour_MOTOR_CANID);
 
         // Populate distance-to-RPM look-up table (meters -> RPM)
         distanceToRPM.put(2.49493587092, 1250.0);
@@ -56,7 +60,7 @@ public class SUB_Shooter extends SubsystemBase {
         distanceToRPM.put(1.6346195276, 1075.0-25);
         distanceToRPM.put(4.10526503, 1575.0+25);
         distanceToRPM.put(5.34766117, 1750.0+40);
-        distanceToRPM.put(10.5, 2400.0); // TODO: Field test required
+        distanceToRPM.put(10.5, 2400.0); // TODO: REDO
         
         configFlywheel();
     }
@@ -80,30 +84,34 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
         shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
 
-        topFlywheel.getConfigurator().apply(shooterConfig);
-        bottomFlywheel.getConfigurator().apply(shooterConfig);
+        MotorOne.getConfigurator().apply(shooterConfig);
+        MotorTwo.getConfigurator().apply(shooterConfig);
+        MotorThree.getConfigurator().apply(shooterConfig);
+        MotorFour.getConfigurator().apply(shooterConfig);
         
         // Synchronize bottom flywheel to top flywheel
-        bottomFlywheel.setControl(new Follower(topFlywheel.getDeviceID(), MotorAlignmentValue.Aligned));
+        MotorTwo.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
+        MotorThree.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
+        MotorFour.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
     
     @Deprecated
     public void set(double speed) {
-        topFlywheel.set(speed);
+        MotorOne.set(speed);
         isShooting = speed!=0;
     }
 
     /** @param rpm Target velocity for both flywheels */
     public void setRPM(double rpm) {
         this.desiredSpeed = rpm;
-        topFlywheel.setControl(m_request.withVelocity(rpm / 60.0));
+        MotorOne.setControl(m_request.withVelocity(rpm / 60.0));
         isShooting = rpm!=0;
     }
 
     /** @return Average current RPM of both flywheels */
     public double flywheelRPM() {
-        return (topFlywheel.getVelocity().getValue().in(RPM) + bottomFlywheel.getVelocity().getValue().in(RPM)) / 2;
+        return (MotorOne.getVelocity().getValue().in(RPM) + MotorTwo.getVelocity().getValue().in(RPM) + MotorThree.getVelocity().getValue().in(RPM) + MotorFour.getVelocity().getValue().in(RPM)) / 4;
     }
   
     /** @return true if flywheels are within the tolerance of the target RPM */
@@ -132,12 +140,12 @@ public class SUB_Shooter extends SubsystemBase {
     /** Stops both flywheels */
     public void stop() {
         this.desiredSpeed = 0;
-        topFlywheel.setControl(voltageRequest.withOutput(0));
+        MotorOne.setControl(voltageRequest.withOutput(0));
     }
 
     /** @param volts Direct voltage output for manual testing */
     public void setVolts(double volts) {
-        topFlywheel.setControl(voltageRequest.withOutput(volts));
+        MotorOne.setControl(voltageRequest.withOutput(volts));
         isShooting = volts!=0;
     }
 
@@ -147,28 +155,53 @@ public class SUB_Shooter extends SubsystemBase {
       // Telemetry logging for dashboard and diagnostics
       SmartDashboard.putNumber("Shooter/Fuel Shot", fuelShot);
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
-      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", topFlywheel.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", bottomFlywheel.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", topFlywheel.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", bottomFlywheel.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", topFlywheel.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", bottomFlywheel.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Voltage", topFlywheel.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", bottomFlywheel.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", topFlywheel.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", bottomFlywheel.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", topFlywheel.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", bottomFlywheel.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", topFlywheel.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", bottomFlywheel.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", topFlywheel.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", bottomFlywheel.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", topFlywheel.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", bottomFlywheel.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", MotorOne.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", MotorTwo.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", MotorThree.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", MotorFour.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", MotorOne.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", MotorTwo.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", MotorThree.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", MotorFour.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", MotorOne.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", MotorTwo.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", MotorThree.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", MotorFour.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Voltage", MotorOne.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", MotorTwo.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Voltage", MotorThree.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", MotorFour.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", MotorOne.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", MotorTwo.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", MotorThree.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", MotorFour.getPosition().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", MotorOne.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", MotorTwo.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", MotorThree.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", MotorFour.getTorqueCurrent().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", MotorOne.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", MotorTwo.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", MotorThree.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", MotorFour.getDeviceTemp().getValueAsDouble());
+
+
+      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", MotorOne.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", MotorTwo.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", MotorThree.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", MotorFour.getProcessorTemp().getValueAsDouble());
+
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", MotorOne.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", MotorTwo.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", MotorThree.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", MotorFour.getVelocity().getValue().in(RPM));
+
+
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
       
-      Alert.alertKraken(topFlywheel);
-      Alert.alertKraken(bottomFlywheel);
+      Alert.alertKraken(MotorOne);
+      Alert.alertKraken(MotorTwo);
     }
 
     private void updateFuelShot () {
