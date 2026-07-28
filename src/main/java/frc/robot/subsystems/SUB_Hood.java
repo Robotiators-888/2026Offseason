@@ -4,9 +4,11 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class SUB_Hood {
+public class SUB_Hood extends SubsystemBase {
     private static SUB_Hood INSTANCE = null;
     private final TalonFX hood;
     public static SUB_Hood getInstance () {
@@ -32,5 +34,12 @@ public class SUB_Hood {
     }
     public void setToDistance (double position) {
         setToPosition(Constants.Hood.kHoodMap.get(position));
+    }
+    public double getPosition () {
+        return hood.getPosition().getValueAsDouble();
+    }
+    @Override
+    public void periodic () {
+        SmartDashboard.putNumber("Hood/Position", getPosition());
     }
 }
