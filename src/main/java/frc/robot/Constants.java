@@ -120,4 +120,8 @@ public final class Constants {
                 public static final double kParty_Palette_Twinkles = -0.53;
                 public static final double kAllianceColor = (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)== DriverStation.Alliance.Blue) ? 0.0 : 0.5;
         }
+
+        public static class Hood {
+                public static final int kHoodCanId = 0; // Change this!!!!!
+        }
 }
