@@ -2,9 +2,12 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -12,7 +15,8 @@ import frc.robot.utils.Alert;
 
 public class SUB_Roller extends SubsystemBase {
     /** Subsystem hardware components */
-    private TalonFX roller;
+    private TalonFX LeftRollerMotor;
+    private TalonFX RightRollerMotor;
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
     private static SUB_Roller INSTANCE = null;
@@ -29,7 +33,8 @@ public class SUB_Roller extends SubsystemBase {
 
     private SUB_Roller () {
         // Defines motor with ID from Constants
-        roller = new TalonFX(Constants.Roller.kINTAKE_MOTOR_CANID);
+        LeftRollerMotor = new TalonFX(Constants.Roller.kINTAKE_LEFTMOTOR_CANID);
+        RightRollerMotor = new TalonFX(Constants.Roller.kINTAKE_RIGHTMOTOR_CANID);
         configureMotors();
     }
 
@@ -41,39 +46,57 @@ public class SUB_Roller extends SubsystemBase {
         talonConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
         talonConfig.CurrentLimits.SupplyCurrentLowerTime = 2.2;
         talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        roller.getConfigurator().apply(talonConfig);
+        LeftRollerMotor.getConfigurator().apply(talonConfig);
+        RightRollerMotor.getConfigurator().apply(talonConfig);
+
+        RightRollerMotor.setControl(new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     }
 
 
     /** @param speed Target voltage for the roller motor */
     public void setVolts(double speed){
-        roller.setControl(voltageRequest.withOutput(speed));
+        LeftRollerMotor.setControl(voltageRequest.withOutput(speed));
     }
 
     /** @param speed Target percent output for the roller motor [-1.0, 1.0] */
     public void set(double speed){
-        roller.setControl(dutyCycleRequest.withOutput(speed));
+        LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
     }
 
     /** @return Current velocity of the roller in RPM */
     public double rollerRPM(){
-        return roller.getVelocity().getValue().baseUnitMagnitude();
+        return LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude();
     }
 
     @Override
     public void periodic() {
         // Telemetry logging for dashboard
         SmartDashboard.putNumber("Roller/RollerRPM", rollerRPM());
-        SmartDashboard.putNumber("Roller/Roller Encoder Pos", roller.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Stator Current", roller.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Supply Current", roller.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Torque Current", roller.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Supply Voltage", roller.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Motor Voltage", roller.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Device Temp", roller.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Processor Temp", roller.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Encoder Pos", LeftRollerMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Encoder Pos", RightRollerMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Stator Current", LeftRollerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Stator Current", RightRollerMotor.getStatorCurrent().getValueAsDouble());
 
-        Alert.alertKraken(roller);
+        SmartDashboard.putNumber("Roller/Roller Supply Current", LeftRollerMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Supply Current", RightRollerMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Torque Current", LeftRollerMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Torque Current", RightRollerMotor.getTorqueCurrent().getValueAsDouble());
+
+        SmartDashboard.putNumber("Roller/Roller Supply Voltage", LeftRollerMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Supply Voltage", RightRollerMotor.getSupplyVoltage().getValueAsDouble());
+
+        SmartDashboard.putNumber("Roller/Roller Motor Voltage", LeftRollerMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Motor Voltage", RightRollerMotor.getMotorVoltage().getValueAsDouble());
+
+        SmartDashboard.putNumber("Roller/Roller Device Temp", LeftRollerMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Device Temp", RightRollerMotor.getDeviceTemp().getValueAsDouble());
+
+        SmartDashboard.putNumber("Roller/Roller Processor Temp", LeftRollerMotor.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Processor Temp", RIghtRollerMotor.getProcessorTemp().getValueAsDouble());
+
+
+        Alert.alertKraken(LeftRollerMotor);
+        Alert.alertKraken(RightRollerMotor);
     }
 
     

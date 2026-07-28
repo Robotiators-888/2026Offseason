@@ -52,7 +52,8 @@ public final class Constants {
 
         /** Intake roller motor configuration */
         public static final class Roller {
-                public static final int kINTAKE_MOTOR_CANID = 30; 
+                public static final int kINTAKE_LEFTMOTOR_CANID = 30; 
+                public static final int kINTAKE_RIGHTMOTOR_CANID = 31;
                 public static final double kROLLER_MOTOR_SPEED = 0.9;
                 public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; 
         }
