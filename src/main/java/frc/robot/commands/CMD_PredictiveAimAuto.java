@@ -140,11 +140,11 @@ public class CMD_PredictiveAimAuto extends Command {
 
         // 7. Auto-Fire Logic
         if (isThetaCorrect && isRotationalDisplacementSafe) {
-            index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+            
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
         } else {
             index.setVolts(0);
-            index.setMeteringRPM(-1000); 
+            
         }
     }
 

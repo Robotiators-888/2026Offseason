@@ -65,34 +65,34 @@ public class SUB_Roller extends SubsystemBase {
 
     /** @return Current velocity of the roller in RPM */
     public double rollerRPM(){
-        return LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude();
+        return (LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude()+ RightRollerMotor.getVelocity().getValue().baseUnitMagnitude())/2;
     }
 
     @Override
     public void periodic() {
         // Telemetry logging for dashboard
-        SmartDashboard.putNumber("Roller/RollerRPM", rollerRPM());
-        SmartDashboard.putNumber("Roller/Roller Encoder Pos", LeftRollerMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Encoder Pos", RightRollerMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Stator Current", LeftRollerMotor.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Stator Current", RightRollerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("RollerRPM", rollerRPM());
+        SmartDashboard.putNumber("Left Roller Encoder Pos", LeftRollerMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Encoder Pos", RightRollerMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Stator Current", LeftRollerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Stator Current", RightRollerMotor.getStatorCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Supply Current", LeftRollerMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Supply Current", RightRollerMotor.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Torque Current", LeftRollerMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Torque Current", RightRollerMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Supply Current", LeftRollerMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Supply Current", RightRollerMotor.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Torque Current", LeftRollerMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Torque Current", RightRollerMotor.getTorqueCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Supply Voltage", LeftRollerMotor.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Supply Voltage", RightRollerMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Supply Voltage", LeftRollerMotor.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Supply Voltage", RightRollerMotor.getSupplyVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Motor Voltage", LeftRollerMotor.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Motor Voltage", RightRollerMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Motor Voltage", LeftRollerMotor.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Motor Voltage", RightRollerMotor.getMotorVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Device Temp", LeftRollerMotor.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Device Temp", RightRollerMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Device Temp", LeftRollerMotor.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Device Temp", RightRollerMotor.getDeviceTemp().getValueAsDouble());
 
-        SmartDashboard.putNumber("Roller/Roller Processor Temp", LeftRollerMotor.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Processor Temp", RightRollerMotor.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Left Roller Processor Temp", LeftRollerMotor.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Right Roller Processor Temp", RightRollerMotor.getProcessorTemp().getValueAsDouble());
 
 
         Alert.alertKraken(LeftRollerMotor);

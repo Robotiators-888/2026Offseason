@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -13,8 +15,8 @@ import frc.robot.utils.Alert;
 
 public class SUB_Index extends SubsystemBase {
     /** Subsystem hardware components */
-    private SparkMax index;
-    private SparkMax meteringWheel;
+    private SparkMax LeftIndexer;
+    private SparkMax RightIndexer;
     private SparkClosedLoopController meteringController;
     
     private double targetMeteringRPM = 0;
@@ -31,14 +33,19 @@ public class SUB_Index extends SubsystemBase {
     
     private SUB_Index () {
         // Defines motors for indexing and metering
-        index = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
-        meteringWheel = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
+        LeftIndexer = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
+        RightIndexer = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
         
         // Configure main indexer motor
-        SparkMaxConfig indexConfig = new SparkMaxConfig();
-        indexConfig.smartCurrentLimit(60);
-        indexConfig.inverted(true);
-        index.configure(indexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
+        LeftIndexConfig.smartCurrentLimit(60);
+        LeftIndexConfig.follow(RightIndexer, true);
+        LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
+        RightIndexConfig.smartCurrentLimit(60);
+        RightIndexConfig.inverted(true);
+        RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        
         
         // Configure high-speed metering wheel with aggressive PID
         SparkMaxConfig meteringConfig = new SparkMaxConfig();
@@ -53,73 +60,50 @@ public class SUB_Index extends SubsystemBase {
         meteringConfig.closedLoop.velocityFF(kFF);
         meteringConfig.encoder.uvwMeasurementPeriod(8);
         meteringConfig.encoder.uvwAverageDepth(2);
-        meteringWheel.configure(meteringConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+
         
-        meteringController = meteringWheel.getClosedLoopController();
     }
     
     /** @param speed Target percent output for indexing [-1.0, 1.0] */
     public void set(double speed){
-        index.set(speed);
+        RightIndexer.set(speed);
     }
     
     /** @return Current velocity of the indexer in RPM */
     public double indexRPM(){
-        return index.getEncoder().getVelocity();
+        return (RightIndexer.getEncoder().getVelocity() + LeftIndexer.getEncoder().getVelocity())/2;
     }
     
-    /** @return Current velocity of the metering wheel in RPM */
-    public double intakeMeteringRPM(){
-        return meteringWheel.getEncoder().getVelocity(); 
-    }
 
-    /** @param speed Target percent output for metering [-1.0, 1.0] */
-    public void setMeteringSpeed(double speed) {
-        targetMeteringRPM = -1;
-        meteringWheel.set(speed);
-    }
 
     /** @param volts Target voltage for the index motor */
     public void setVolts(double volts) {
-        index.setVoltage(volts);
+        RightIndexer.setVoltage(volts);
     }
 
-    /** @param volts Target voltage for the metering motor */
-    public void setMeteringVolts(double volts) {
-        targetMeteringRPM = -1;
-        meteringWheel.setVoltage(volts);
-    }
 
-    /** @param wheelRPM Target velocity for the metering wheel in RPM */
-    public void setMeteringRPM(double wheelRPM) {
-        targetMeteringRPM = wheelRPM;
-        meteringController.setReference(wheelRPM, ControlType.kVelocity);
-    }
-    
-    /** Stops the metering wheel entirely */
-    public void stopMetering() {
-        targetMeteringRPM = 0;
-        meteringWheel.set(0);
-    }
+
 
     @Override
     public void periodic() {
         // Telemetry logging for dashboard
-        SmartDashboard.putNumber("Index/Index RPM", indexRPM());
-        SmartDashboard.putNumber("Index/Index Output Current", index.getOutputCurrent());
-        SmartDashboard.putNumber("Index/Metering Output Current", meteringWheel.getOutputCurrent());
-        SmartDashboard.putNumber("Index/Metering RPM", intakeMeteringRPM());
-        SmartDashboard.putNumber("Index/Metering Target RPM", targetMeteringRPM);
-        SmartDashboard.putNumber("Index/Metering Bus Voltage", meteringWheel.getBusVoltage());
-        SmartDashboard.putNumber("Index/Index Bus Voltage", index.getBusVoltage());
-        SmartDashboard.putNumber("Index/Metering Encoder Pos", meteringWheel.getEncoder().getPosition());
-        SmartDashboard.putNumber("Index/Index Encoder Pos", index.getEncoder().getPosition());
-        SmartDashboard.putNumber("Index/Metering Motor Temp", meteringWheel.getMotorTemperature());
-        SmartDashboard.putNumber("Index/Index Motor Temp", index.getMotorTemperature());
+        SmartDashboard.putNumber("Index RPM", indexRPM());
+        SmartDashboard.putNumber("Right Index Output Current", RightIndexer.getOutputCurrent());
+        SmartDashboard.putNumber("Left Index Output Current", LeftIndexer.getOutputCurrent());
 
-        Alert.alertNeoFaults(index);
-        Alert.alertNeoWarnings(index);
-        Alert.alertNeoFaults(meteringWheel);
-        Alert.alertNeoWarnings(meteringWheel);
+        SmartDashboard.putNumber("Right Index Bus Voltage", RightIndexer.getBusVoltage());
+        SmartDashboard.putNumber("Left Index Bus Voltage", LeftIndexer.getBusVoltage());
+
+        SmartDashboard.putNumber("Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
+        SmartDashboard.putNumber("Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
+
+        SmartDashboard.putNumber("Right Index Motor Temp", RightIndexer.getMotorTemperature());
+        SmartDashboard.putNumber("Left Index Motor Temp", LeftIndexer.getMotorTemperature());
+
+        Alert.alertNeoFaults(RightIndexer);
+        Alert.alertNeoWarnings(RightIndexer);
+        Alert.alertNeoFaults(LeftIndexer);
+        Alert.alertNeoWarnings(LeftIndexer);
+
     }
 }

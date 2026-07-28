@@ -155,47 +155,47 @@ public class SUB_Shooter extends SubsystemBase {
       // Telemetry logging for dashboard and diagnostics
       SmartDashboard.putNumber("Shooter/Fuel Shot", fuelShot);
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
-      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", MotorOne.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", MotorTwo.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Stator Current", MotorThree.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Stator Current", MotorFour.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", MotorOne.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", MotorTwo.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Current", MotorThree.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Current", MotorFour.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", MotorOne.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", MotorTwo.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Supply Voltage", MotorThree.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Supply Voltage", MotorFour.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Voltage", MotorOne.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", MotorTwo.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Voltage", MotorThree.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Voltage", MotorFour.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", MotorOne.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", MotorTwo.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Encoder Pos", MotorThree.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Encoder Pos", MotorFour.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Stator Current", MotorOne.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Stator Current", MotorTwo.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Stator Current", MotorThree.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Stator Current", MotorFour.getStatorCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Supply Current", MotorOne.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Supply Current", MotorTwo.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Supply Current", MotorThree.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("SMotor Four Supply Current", MotorFour.getSupplyCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Supply Voltage", MotorOne.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Supply Voltage", MotorTwo.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Supply Voltage", MotorThree.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Supply Voltage", MotorFour.getSupplyVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Voltage", MotorOne.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Voltage", MotorTwo.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Voltage", MotorThree.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Voltage", MotorFour.getMotorVoltage().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Encoder Pos", MotorOne.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Encoder Pos", MotorTwo.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Encoder Pos", MotorThree.getPosition().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Encoder Pos", MotorFour.getPosition().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", MotorOne.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", MotorTwo.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Torque Current", MotorThree.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Torque Current", MotorFour.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Torque Current", MotorOne.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Torque Current", MotorTwo.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Torque Current", MotorThree.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Torque Current", MotorFour.getTorqueCurrent().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", MotorOne.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", MotorTwo.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Device Temp", MotorThree.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Device Temp", MotorFour.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Device Temp", MotorOne.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Device Temp", MotorTwo.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Device Temp", MotorThree.getDeviceTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Device Temp", MotorFour.getDeviceTemp().getValueAsDouble());
 
 
-      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", MotorOne.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", MotorTwo.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Top Motor Processor Temp", MotorThree.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Bottom Motor Processor Temp", MotorFour.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor One Processor Temp", MotorOne.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Two Processor Temp", MotorTwo.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Three Processor Temp", MotorThree.getProcessorTemp().getValueAsDouble());
+      SmartDashboard.putNumber("Motor Four Processor Temp", MotorFour.getProcessorTemp().getValueAsDouble());
 
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", MotorOne.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", MotorTwo.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Top)", MotorThree.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Bottom)", MotorFour.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (One)", MotorOne.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Two)", MotorTwo.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Three)", MotorThree.getVelocity().getValue().in(RPM));
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Four)", MotorFour.getVelocity().getValue().in(RPM));
 
 
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
