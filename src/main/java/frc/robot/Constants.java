@@ -127,7 +127,7 @@ public final class Constants {
         }
 
         public static class Hood {
-                public static final int kHoodCanId = 0; // Change this!!!
+                public static final int kHoodCanId = 47;
                 public static final InterpolatingDoubleTreeMap kHoodMap = InterpolatingDoubleTreeMap // Change entries!!!
                     .ofEntries(
                         Map.entry(0.0, 0.0),
