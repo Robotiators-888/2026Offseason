@@ -127,12 +127,12 @@ public final class Constants {
         }
 
         public static class Hood {
-                public static final int kHoodCanId = 0; // Change this!!!!!
-                public static final InterpolatingDoubleTreeMap kHoodMap = InterpolatingDoubleTreeMap
+                public static final int kHoodCanId = 0; // Change this!!!
+                public static final InterpolatingDoubleTreeMap kHoodMap = InterpolatingDoubleTreeMap // Change entries!!!
                     .ofEntries(
                         Map.entry(0.0, 0.0),
                         Map.entry(0.0, 0.0)
                     );
-                public static final PIDController kHoodPidController = new PIDController(4, 0.5, 0.025);
+                public static final PIDController kHoodPidController = new PIDController(4, 0.5, 0.025); // Change the values!!!
         }
 }
