@@ -92,7 +92,7 @@ public class SUB_Roller extends SubsystemBase {
         SmartDashboard.putNumber("Roller/Roller Device Temp", RightRollerMotor.getDeviceTemp().getValueAsDouble());
 
         SmartDashboard.putNumber("Roller/Roller Processor Temp", LeftRollerMotor.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Roller/Roller Processor Temp", RIghtRollerMotor.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Roller/Roller Processor Temp", RightRollerMotor.getProcessorTemp().getValueAsDouble());
 
 
         Alert.alertKraken(LeftRollerMotor);
