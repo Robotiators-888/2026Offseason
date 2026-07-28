@@ -1,10 +1,8 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkClosedLoopController;
+
 import com.revrobotics.spark.SparkMax;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.revrobotics.spark.SparkBase.ControlType;
+
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -17,9 +15,7 @@ public class SUB_Index extends SubsystemBase {
     /** Subsystem hardware components */
     private SparkMax LeftIndexer;
     private SparkMax RightIndexer;
-    private SparkClosedLoopController meteringController;
-    
-    private double targetMeteringRPM = 0;
+
 
     private static SUB_Index INSTANCE = null;
 
@@ -31,6 +27,7 @@ public class SUB_Index extends SubsystemBase {
         return INSTANCE;
     }
     
+    @SuppressWarnings("removal")
     private SUB_Index () {
         // Defines motors for indexing and metering
         LeftIndexer = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
@@ -47,19 +44,7 @@ public class SUB_Index extends SubsystemBase {
         RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         
         
-        // Configure high-speed metering wheel with aggressive PID
-        SparkMaxConfig meteringConfig = new SparkMaxConfig();
-        meteringConfig.smartCurrentLimit(60);
-        
-        double kP = 0.00005; // Aggressive P for rapid speed ramp
-        double kI = 0.0;
-        double kD = 0.0; 
-        double kFF = 0.0021; // Based on NEO nominal RPM at 12V
-        
-        meteringConfig.closedLoop.pid(kP, kI, kD);
-        meteringConfig.closedLoop.velocityFF(kFF);
-        meteringConfig.encoder.uvwMeasurementPeriod(8);
-        meteringConfig.encoder.uvwAverageDepth(2);
+
 
         
     }
