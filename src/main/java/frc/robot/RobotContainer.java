@@ -178,7 +178,7 @@ public class RobotContainer {
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
                         index.set(0);
-                        index.setMeteringSpeed(0);
+                        
                 }, index));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
@@ -284,13 +284,13 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                        
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
-                        index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
+                        
                         shooter.setVolts(-2.5);
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));

@@ -158,11 +158,11 @@ public class CMD_AimBot extends RunCommand {
      // Keep metering wheel spinning
     boolean isShooterReady = shooter.atDesiredRPM();
     if (isThetaErrorCorrect && isShooterReady) {
-      index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+      
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
-        index.setMeteringRPM(-1000);
+        
     }
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));

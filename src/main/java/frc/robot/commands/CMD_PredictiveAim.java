@@ -177,11 +177,11 @@ public class CMD_PredictiveAim extends RunCommand {
     
     // Automatic indexing when ready
     if (isReadyToShoot) {
-      index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+      
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else {
       index.setVolts(0);
-      index.setMeteringRPM(-1000);
+      
     }
 
     // double xInput = 0.0;//xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));

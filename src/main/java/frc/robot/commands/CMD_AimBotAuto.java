@@ -134,16 +134,16 @@ public class CMD_AimBotAuto extends RunCommand {
     );
     shooter.shootMeters(distance);
     
-    index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM); // Keep metering wheel spinning
+    
     
     // Automated firing trigger
     boolean isShooterReady = shooter.atDesiredRPM();
-    boolean isMeteringReady = Math.abs(index.intakeMeteringRPM() - Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100;
+    
     if (isThetaErrorCorrect && isShooterReady) {
         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
-        index.setMeteringRPM(-1000);
+        
     }
     
     // Drive request with PID rotation (no translation in static auto aim)

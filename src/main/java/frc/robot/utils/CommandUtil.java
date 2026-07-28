@@ -75,7 +75,7 @@ public class CommandUtil {
                 Commands.run(() -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM), shooter).until(() -> shooter.atDesiredRPM()),
                 Commands.run(() -> {
                         shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-                        index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                        
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 }, shooter, index)
                 ));
@@ -118,11 +118,11 @@ public class CommandUtil {
                                                         )).orElse(drivetrain.getPose().getTranslation())
                                                 );
                                                 shooter.shootMeters(distance);
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                
                                                 index.setVolts(-1.0);
-                                        },shooter,index).until(() -> shooter.atDesiredRPM()&&Math.abs(index.intakeMeteringRPM()-Constants.Index.kINDEX_METERING_MOTOR_RPM) < 100),
+                                        },shooter,index).until(() -> shooter.atDesiredRPM()),
                                         Commands.run(()->{
-                                                index.setMeteringRPM(Constants.Index.kINDEX_METERING_MOTOR_RPM);
+                                                
                                                 index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                                         },shooter,index)
                                 ));
@@ -130,7 +130,7 @@ public class CommandUtil {
                 NamedCommands.registerCommand("StopShooting", Commands.parallel(
                                 new InstantCommand(() -> {
                                         index.set(0);
-                                        index.setMeteringSpeed(0);
+                                        
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
     }
