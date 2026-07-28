@@ -19,19 +19,19 @@ import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
-import frc.robot.subsystems.SUB_Arm;
+import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Roller;
 
 public class CommandUtil {
     private CommandSwerveDrivetrain drivetrain;
-    private SUB_Arm arm;
+    private SUB_Linear linear;
     private SUB_Roller roller;
     private SUB_Index index;
     private SUB_PhotonVision photonVision;
     private SUB_Shooter shooter;
-    public CommandUtil (CommandSwerveDrivetrain drivetrain, SUB_Arm arm, SUB_Roller roller, SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter){
+    public CommandUtil (CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller, SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter){
         this.drivetrain = drivetrain;
-        this.arm = arm;
+        this.linear = linear;
         this.roller = roller;
         this.index = index;
         this.photonVision = photonVision;
@@ -50,22 +50,25 @@ public class CommandUtil {
 
                 NamedCommands.registerCommand("Intake",
                         new RunCommand(() -> {
-                                arm.intakeArmTest();
+                                linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         }
                                 
-                        ,arm,roller)
+                        ,linear,roller)
                 );
 
 
                 NamedCommands.registerCommand("StopIntake",
                                 Commands.parallel(
-                                        new InstantCommand(() -> roller.set(0), roller),
-                                        new InstantCommand(() -> arm.setArm(0), arm)
+                                        new InstantCommand(() -> roller.set(0), roller)
+                                        // TODO: Check?
+                                        // Not needed?
+                                        // new InstantCommand(() -> linear.set(0), linear)
                                 )
                 );
 
-                NamedCommands.registerCommand("DeployIntakeEncoder", new InstantCommand(() -> arm.intakeArmDown(), arm));
+                // TODO: Check
+                NamedCommands.registerCommand("DeployIntakeEncoder", new InstantCommand(() -> linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ManualShoot", Commands.sequence(
@@ -102,7 +105,7 @@ public class CommandUtil {
                 // );
                 
                 NamedCommands.registerCommand("IntakeAgitate",
-                        getShakeyCommand()
+                        getLinearCompress()
                 );
 
                 NamedCommands.registerCommand("ShootDistance", new SequentialCommandGroup(
@@ -131,15 +134,8 @@ public class CommandUtil {
                                 }, index),
                                 new InstantCommand(() -> shooter.stop(), shooter)));
     }
-    private Command getShakeyCommand () {
-                
-                Command c = new ParallelCommandGroup(
-                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                        new SequentialCommandGroup(
-                                new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4),
-                                new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4)
-                        ).repeatedly()
-                );
-                return c;
+        public Command getLinearCompress () {
+                // TODO: check this
+                return new RunCommand(() -> linear.backward(Constants.Linear.kLINEAR_SLOW_PID_CONTROLLER), linear);
         }
 }

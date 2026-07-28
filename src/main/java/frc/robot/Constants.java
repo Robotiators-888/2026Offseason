@@ -59,13 +59,14 @@ public final class Constants {
         }
 
         /** Intake arm motor configuration and relative setpoints (NEO 2.0 Encoder) */
-        public static final class Arm {
-                public static final int kARM_MOTOR_CANID = 31; 
-                public static final int kARM_FOLLOWER_MOTOR_CANID = 32; 
-                public static final double kARM_MOTOR_SPEED = 0.1; 
-                public static final double kARM_BOTTOM_SETPOINT = -209; // Degrees (Relative)
-                public static final double kARM_TOP_SETPOINT = 0;       // Degrees (Relative)
-                public static final double kARM_FAULT_AMPS = 30;       // Stall detection threshold
+        public static final class Linear {
+                public static final int kLINEAR_MOTOR_CANID = 31; 
+                public static final double kLINEAR_MOTOR_SPEED = 0.1; 
+                public static final double kLINEAR_BOTTOM_SETPOINT = -209; // Degrees (Relative)
+                public static final double kLINEAR_TOP_SETPOINT = 0;       // Degrees (Relative)
+                public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
+                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -127,12 +128,12 @@ public final class Constants {
         }
 
         public static class Hood {
-                public static final int kHoodCanId = 47;
-                public static final InterpolatingDoubleTreeMap kHoodMap = InterpolatingDoubleTreeMap // Change entries!!!
+                public static final int KHOOD_CAN_ID = 47;
+                public static final InterpolatingDoubleTreeMap kHOOD_MAP = InterpolatingDoubleTreeMap // Change entries!!!
                     .ofEntries(
                         Map.entry(0.0, 0.0),
                         Map.entry(0.0, 0.0)
                     );
-                public static final PIDController kHoodPidController = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
         }
 }

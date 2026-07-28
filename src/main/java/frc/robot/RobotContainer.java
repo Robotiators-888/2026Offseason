@@ -69,7 +69,7 @@ import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.SUB_Arm;
+import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
@@ -100,10 +100,10 @@ public class RobotContainer {
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
-        public static final SUB_Arm arm = SUB_Arm.getInstance();
+        public static final SUB_Linear linear = SUB_Linear.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        public final CommandUtil commandUtil = new CommandUtil(drivetrain, arm, roller, index, photonVision, shooter);
+        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
         private final SendableChooser<Command> autoChooser;
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
@@ -170,9 +170,9 @@ public class RobotContainer {
                         roller.set(0);
                 }, roller));
 
-                arm.setDefaultCommand(new RunCommand(() -> {
-                        arm.setArm(0);
-                }, arm));
+                linear.setDefaultCommand(new RunCommand(() -> {
+                        linear.set(0);
+                }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
                         shooter.stop();
                 }, shooter));
@@ -246,8 +246,8 @@ public class RobotContainer {
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        arm.intakeArmTest();
-                }, roller, arm));
+                        linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
+                }, roller, linear));
                 Driver1.leftTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_PredictiveAim(
@@ -271,7 +271,7 @@ public class RobotContainer {
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
-                                getCancellableShakeyCommand(() -> Driver2.leftStick().getAsBoolean())
+                                commandUtil.getLinearCompress()
                         )
                 );
                 Driver1.leftStick().onTrue(new InstantCommand(() -> {
@@ -293,11 +293,11 @@ public class RobotContainer {
                         index.setMeteringVolts(-Constants.Index.kINDEX_METERING_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, index, shooter));
-                Driver2.povDown().onTrue(Commands.run(()->arm.intakeArmDown(),arm));
-                Driver2.povUp().onTrue(Commands.run(()->arm.intakeArmUp(),arm));
+                Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
+                Driver2.povUp().onTrue(Commands.run(()->linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
                 Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                        arm.setArm(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Arm.kARM_MOTOR_SPEED);
-                }, arm));
+                        linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
+                }, linear));
 
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
@@ -512,16 +512,4 @@ public class RobotContainer {
                         }
                 }
         }
-
-        private Command getCancellableShakeyCommand (BooleanSupplier condition) {
-                Command c = new ParallelCommandGroup(
-                        new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller),
-                        new SequentialCommandGroup(
-                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(.15), arm).withTimeout(.4), condition),
-                                Commands.either(new RunCommand(()->arm.setArm(0), arm).withTimeout(.4), new RunCommand(()->arm.setArm(-.13), arm).withTimeout(.4), condition)
-                        ).repeatedly()
-                );
-                return c;
-        }
-
 }
