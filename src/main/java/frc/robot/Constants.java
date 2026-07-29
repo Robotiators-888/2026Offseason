@@ -62,8 +62,8 @@ public final class Constants {
         public static final class Linear {
                 public static final int kLINEAR_MOTOR_CANID = 31; 
                 public static final double kLINEAR_MOTOR_SPEED = 0.1; 
-                public static final double kLINEAR_BOTTOM_SETPOINT = -209; // Degrees (Relative)
-                public static final double kLINEAR_TOP_SETPOINT = 0;       // Degrees (Relative)
+                public static final double kLINEAR_FORWARD_SETPOINT = -209; // Degrees (Relative)
+                public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
                 public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
                 public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!

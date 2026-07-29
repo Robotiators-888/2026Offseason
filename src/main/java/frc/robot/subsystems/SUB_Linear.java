@@ -45,10 +45,10 @@ public class SUB_Linear extends SubsystemBase {
     @Override
     public void periodic() {
         // Telemetry logging for dashboard
-        SmartDashboard.putNumber("Arm/Arm Encoder Pos", linear.getEncoder().getPosition());
-        SmartDashboard.putNumber("Arm/Arm Output Current", linear.getOutputCurrent());
-        SmartDashboard.putNumber("Arm/Arm Bus Voltage", linear.getBusVoltage());
-        SmartDashboard.putNumber("Arm/Arm Motor Temp", linear.getMotorTemperature());
+        SmartDashboard.putNumber("Linear/Linear Encoder Pos", linear.getEncoder().getPosition());
+        SmartDashboard.putNumber("Linear/Linear Output Current", linear.getOutputCurrent());
+        SmartDashboard.putNumber("Linear/Linear Bus Voltage", linear.getBusVoltage());
+        SmartDashboard.putNumber("Linear/Linear Motor Temp", linear.getMotorTemperature());
 
         Alert.alertNeoFaults(linear);
         Alert.alertNeoWarnings(linear);
@@ -58,22 +58,20 @@ public class SUB_Linear extends SubsystemBase {
         return extended;
     }
 
-    /** Drives the arm to the bottom setpoint using PID */
     public void forward(PIDController controller) {
-        linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BOTTOM_SETPOINT)); 
+        linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT)); 
     }
 
-    /** Drives the arm to the top setpoint using PID */
     public void backward(PIDController controller) {
-        linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_TOP_SETPOINT)); 
+        linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT)); 
     }
 
     public boolean isForward() {
-        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_BOTTOM_SETPOINT) < 3.0;
+        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_FORWARD_SETPOINT) < 3.0;
     }
 
     public boolean isBackward() {
-        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_TOP_SETPOINT) < 3.0;
+        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_BACKWARD_SETPOINT) < 3.0;
     }
 
     public void set(double speed) {
