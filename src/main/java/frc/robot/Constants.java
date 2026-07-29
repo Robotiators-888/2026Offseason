@@ -38,6 +38,10 @@ public final class Constants {
                 public static final int kSHOOTER_MotorTwo_MOTOR_CANID = 44;
                 public static final int kSHOOTER_MotorOne_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+
+                //Physical Specs
+                public static final double ShooterDiameter = 3;
+                public static final double CompressionValue = 0.8; //TODO: find real compression
                 
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
@@ -135,5 +139,6 @@ public final class Constants {
                         Map.entry(0.0, 0.0)
                     );
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final double ScoreHeight = 55;
         }
 }

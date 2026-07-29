@@ -4,6 +4,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -37,6 +38,42 @@ public class SUB_Hood extends SubsystemBase {
     }
     public double getPosition () {
         return hood.getPosition().getValueAsDouble();
+    }
+
+        public double findoptimalangle(double distance) {
+        double lowestrpm = Double.MAX_VALUE;
+        double optimalangle = 0;
+        double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        double minexitrange = Units.radiansToDegrees(Math.atan2(2*height,distance));
+        double maxexitrange = 85;
+        for (int i = (int)Math.ceil(minexitrange); i < maxexitrange; i ++) {
+            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(i)-height)));
+            double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
+            if (exitRPM < lowestrpm) {
+                lowestrpm = exitRPM;
+                optimalangle = i;
+            }
+
+        }
+        return optimalangle;
+    }
+
+    public double findoptimalRPM(double distance) {
+        double lowestrpm = Double.MAX_VALUE;
+        double optimalangle = 0;
+        double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        double minexitrange = Units.radiansToDegrees(Math.atan2(2*height,distance));
+        double maxexitrange = 85;
+        for (int i = (int)Math.ceil(minexitrange); i < maxexitrange; i ++) {
+            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(i)-height)));
+            double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
+            if (exitRPM < lowestrpm) {
+                lowestrpm = exitRPM;
+                optimalangle = i;
+            }
+
+        }
+        return lowestrpm;
     }
     @Override
     public void periodic () {
