@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -87,7 +88,13 @@ public class SUB_Shooter extends SubsystemBase {
         MotorTwo.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    
+    public static double findoptimalRPM(double distance, double angle) {
+        double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(angle)-height)));
+        double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
+        return exitRPM;
+    }
+
     @Deprecated
     public void set(double speed) {
         MotorOne.set(speed);
