@@ -13,7 +13,7 @@ import frc.robot.utils.Alert;
 public class SUB_Linear extends SubsystemBase {
     /** Subsystem state and configuration constants */
     public static boolean extended;
-    private SparkMax linear;
+    private final SparkMax linear;
     private static SUB_Linear INSTANCE = null;
 
     /**

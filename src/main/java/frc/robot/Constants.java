@@ -33,8 +33,6 @@ public final class Constants {
 
         /** Shooter motor IDs and PID/Feedforward tuning (Manually Tuned) */
         public static final class Shooter {
-                public static final int kSHOOTER_MotorFour_MOTOR_CANID = 46;
-                public static final int kSHOOTER_MotorThree_MOTOR_CANID = 45;
                 public static final int kSHOOTER_MotorTwo_MOTOR_CANID = 44;
                 public static final int kSHOOTER_MotorOne_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
@@ -132,8 +130,12 @@ public final class Constants {
         }
 
         public static class Hood {
-                public static final int KHOOD_CAN_ID = 47;
+                public static final int kHOOD_CAN_ID = 47;
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
                 public static final double ScoreHeight = 55;
+        }
+        public static class Metering {
+                public static final int kMETERING_MOTOR_ONE_CAN_ID = 45;
+                public static final int kMETERING_MOTOR_TWO_CAN_ID = 46;
         }
 }

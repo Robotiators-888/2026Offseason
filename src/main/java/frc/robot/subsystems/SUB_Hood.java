@@ -27,7 +27,7 @@ public class SUB_Hood extends SubsystemBase {
                 .withSupplyCurrentLimit(25)
                 .withSupplyCurrentLowerLimit(15)
                 .withSupplyCurrentLowerTime(.5));
-        hood = new TalonFX(Constants.Hood.KHOOD_CAN_ID);
+        hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
         hood.getConfigurator().apply(config);
     }
     public void setToPosition (double angle) {
