@@ -33,9 +33,6 @@ public class SUB_Hood extends SubsystemBase {
     public void setToPosition (double angle) {
         hood.set(Constants.Hood.kHOOD_PID_CONTROLLER.calculate(hood.getPosition().getValueAsDouble(), angle));
     }
-    public void setToDistance (double position) {
-        setToPosition(Constants.Hood.kHOOD_MAP.get(position));
-    }
     public double getPosition () {
         return hood.getPosition().getValueAsDouble();
     }
