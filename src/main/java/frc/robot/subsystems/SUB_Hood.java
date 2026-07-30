@@ -12,12 +12,14 @@ import frc.robot.Constants;
 public class SUB_Hood extends SubsystemBase {
     private static SUB_Hood INSTANCE = null;
     private final TalonFX hood;
+
     public static SUB_Hood getInstance () {
         if (INSTANCE == null) {
             INSTANCE = new SUB_Hood();
         }
         return INSTANCE;
     }
+
     private SUB_Hood () {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
@@ -30,14 +32,16 @@ public class SUB_Hood extends SubsystemBase {
         hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
         hood.getConfigurator().apply(config);
     }
+
     public void setToPosition (double angle) {
         hood.set(Constants.Hood.kHOOD_PID_CONTROLLER.calculate(hood.getPosition().getValueAsDouble(), angle));
     }
+
     public double getPosition () {
         return hood.getPosition().getValueAsDouble();
     }
 
-        public double findoptimalangle(double distance) {
+    public double findoptimalangle(double distance) {
         double lowestrpm = Double.MAX_VALUE;
         double optimalangle = 0;
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
@@ -61,10 +65,12 @@ public class SUB_Hood extends SubsystemBase {
         double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
         return exitRPM;
     }
+
     // Reset the hood to the origional position while including checks for motor stalling
     public void resetSafe () {
         setToPosition(0); // TODO: Actually make this safe maybe by using a high I PID and detected when the current gets high
     }
+
     @Override
     public void periodic () {
         SmartDashboard.putNumber("Hood/Position", getPosition());
