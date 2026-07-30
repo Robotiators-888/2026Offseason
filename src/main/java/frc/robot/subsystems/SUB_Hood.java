@@ -58,22 +58,11 @@ public class SUB_Hood extends SubsystemBase {
         return optimalangle;
     }
 
-    public double findoptimalRPM(double distance) {
-        double lowestrpm = Double.MAX_VALUE;
-        double optimalangle = 0;
+    public double findoptimalRPM(double distance, double angle) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-        double minexitrange = Units.radiansToDegrees(Math.atan2(2*height,distance));
-        double maxexitrange = 85;
-        for (int i = (int)Math.ceil(minexitrange); i < maxexitrange; i ++) {
-            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(i)-height)));
-            double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
-            if (exitRPM < lowestrpm) {
-                lowestrpm = exitRPM;
-                optimalangle = i;
-            }
-
-        }
-        return lowestrpm;
+        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(angle)-height)));
+        double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
+        return exitRPM;
     }
     @Override
     public void periodic () {
