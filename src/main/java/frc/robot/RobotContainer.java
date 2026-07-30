@@ -70,6 +70,8 @@ import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Linear;
+import frc.robot.subsystems.SUB_Metering;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
@@ -102,6 +104,8 @@ public class RobotContainer {
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Linear linear = SUB_Linear.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
+        public static final SUB_Hood hood = SUB_Hood.getInstance();
+        public static final SUB_Metering metering = SUB_Metering.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
         private final SendableChooser<Command> autoChooser;
@@ -165,12 +169,10 @@ public class RobotContainer {
                                 }
                         })
                 );
-
                 roller.setDefaultCommand(new RunCommand(() -> {
                         roller.set(0);
                 }, roller));
-
-                linear.setDefaultCommand(new RunCommand(() -> {
+                linear.setDefaultCommand(new InstantCommand(() -> { // Could make it go forward and make it an instant command
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
@@ -178,8 +180,13 @@ public class RobotContainer {
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
                         index.set(0);
-                        
                 }, index));
+                metering.setDefaultCommand(new InstantCommand(() -> {
+                        metering.set(0);
+                }, metering));
+                hood.setDefaultCommand(new RunCommand(() -> {
+                        hood.resetSafe();
+                }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();

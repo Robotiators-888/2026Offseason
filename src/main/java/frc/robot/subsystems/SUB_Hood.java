@@ -61,6 +61,10 @@ public class SUB_Hood extends SubsystemBase {
         double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
         return exitRPM;
     }
+    // Reset the hood to the origional position while including checks for motor stalling
+    public void resetSafe () {
+        setToPosition(0); // TODO: Actually make this safe maybe by using a high I PID and detected when the current gets high
+    }
     @Override
     public void periodic () {
         SmartDashboard.putNumber("Hood/Position", getPosition());

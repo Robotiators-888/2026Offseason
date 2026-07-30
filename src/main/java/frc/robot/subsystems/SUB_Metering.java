@@ -6,11 +6,12 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class SUB_Metering {
-    private final TalonFX motorOne;
-    private final TalonFX motorTwo;
+public class SUB_Metering extends SubsystemBase {
+    private final TalonFX metering;
+    private final TalonFX meteringFollower;
     private static SUB_Metering INSTANCE = null;
     public static SUB_Metering getInstance () {
         if (INSTANCE == null) {
@@ -19,8 +20,8 @@ public class SUB_Metering {
         return INSTANCE;
     }
     private SUB_Metering() {
-        motorOne = new TalonFX(Constants.Metering.kMETERING_MOTOR_ONE_CAN_ID);
-        motorTwo = new TalonFX(Constants.Metering.kMETERING_MOTOR_TWO_CAN_ID);
+        metering = new TalonFX(Constants.Metering.kMETERING_MOTOR_CAN_ID);
+        meteringFollower = new TalonFX(Constants.Metering.kMETERING_MOTOR_FOLLOWER_CAN_ID);
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimitEnable(true)
@@ -29,11 +30,11 @@ public class SUB_Metering {
                 .withSupplyCurrentLimit(40)
                 .withSupplyCurrentLowerLimit(60)
                 .withSupplyCurrentLowerTime(.5));
-        motorOne.getConfigurator().apply(config);
-        motorTwo.getConfigurator().apply(config);
-        motorTwo.setControl(new Follower(motorOne.getDeviceID(), MotorAlignmentValue.Aligned));
+        metering.getConfigurator().apply(config);
+        meteringFollower.getConfigurator().apply(config);
+        meteringFollower.setControl(new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
     }
     public void set (double speed) {
-        motorOne.set(speed);
+        metering.set(speed);
     }
 }

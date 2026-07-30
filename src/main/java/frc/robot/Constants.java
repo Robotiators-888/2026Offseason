@@ -135,7 +135,7 @@ public final class Constants {
                 public static final double ScoreHeight = 55;
         }
         public static class Metering {
-                public static final int kMETERING_MOTOR_ONE_CAN_ID = 45;
-                public static final int kMETERING_MOTOR_TWO_CAN_ID = 46;
+                public static final int kMETERING_MOTOR_CAN_ID = 45;
+                public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;
         }
 }
