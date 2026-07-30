@@ -8,6 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.utils.Alert;
 
 public class SUB_Hood extends SubsystemBase {
     private static SUB_Hood INSTANCE = null;
@@ -67,5 +68,14 @@ public class SUB_Hood extends SubsystemBase {
     @Override
     public void periodic () {
         SmartDashboard.putNumber("Hood/Position", getPosition());
+        SmartDashboard.putNumber("Hood/Stator Current", hood.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Supply Current", hood.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Supply Voltage", hood.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Motor Voltage", hood.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Torque Current", hood.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Device Temp", hood.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Processor Temp", hood.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Hood/Velocity", hood.getVelocity().getValueAsDouble());
+        Alert.alertKraken(hood);
     }
 }
