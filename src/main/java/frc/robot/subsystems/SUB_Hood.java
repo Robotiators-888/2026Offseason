@@ -49,7 +49,7 @@ public class SUB_Hood extends SubsystemBase {
         double minexitrange = Units.radiansToDegrees(Math.atan2(2*height,distance));
         double maxexitrange = 85;
         for (int i = (int)Math.ceil(minexitrange); i < maxexitrange; i ++) {
-            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(i)-height)));
+            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(Units.degreesToRadians(i))-height)));
             double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
             if (exitRPM < lowestrpm) {
                 lowestrpm = exitRPM;

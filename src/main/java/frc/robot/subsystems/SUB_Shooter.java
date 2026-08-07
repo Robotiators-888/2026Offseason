@@ -90,7 +90,7 @@ public class SUB_Shooter extends SubsystemBase {
 
     public static double findoptimalRPM(double distance, double angle) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(angle)-height)));
+        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(Units.degreesToRadians(angle))-height)));
         double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
         return exitRPM;
     }
