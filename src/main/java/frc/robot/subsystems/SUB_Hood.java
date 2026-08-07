@@ -43,21 +43,9 @@ public class SUB_Hood extends SubsystemBase {
     }
 
     public static double findoptimalangle(double distance) {
-        double lowestrpm = Double.MAX_VALUE;
-        double optimalangle = 0;
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-        double minexitrange = Units.radiansToDegrees(Math.atan2(2*height,distance));
-        double maxexitrange = 85;
-        for (int i = (int)Math.ceil(minexitrange); i < maxexitrange; i ++) {
-            double exitvelocity = (1/Math.cos(Units.degreesToRadians(i)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(i)-height)));
-            double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
-            if (exitRPM < lowestrpm) {
-                lowestrpm = exitRPM;
-                optimalangle = i;
-            }
-
-        }
-        return optimalangle;
+        double optimalAngleRadians = Math.PI / 4.0 + 0.5 * Math.atan2(height, distance);
+        return Units.radiansToDegrees(optimalAngleRadians);
     }
 
     // Reset the hood to the origional position while including checks for motor stalling
