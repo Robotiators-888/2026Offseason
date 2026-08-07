@@ -4,12 +4,9 @@
 
 package frc.robot;
 
-import java.util.Map;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -33,11 +30,13 @@ public final class Constants {
 
         /** Shooter motor IDs and PID/Feedforward tuning (Manually Tuned) */
         public static final class Shooter {
-                public static final int kSHOOTER_MotorFour_MOTOR_CANID = 46;
-                public static final int kSHOOTER_MotorThree_MOTOR_CANID = 45;
                 public static final int kSHOOTER_MotorTwo_MOTOR_CANID = 44;
                 public static final int kSHOOTER_MotorOne_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
+
+                //Physical Specs
+                public static final double ShooterDiameter = 3;
+                public static final double CompressionValue = 0.8; //TODO: find real compression
                 
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
@@ -62,11 +61,11 @@ public final class Constants {
         public static final class Linear {
                 public static final int kLINEAR_MOTOR_CANID = 31; 
                 public static final double kLINEAR_MOTOR_SPEED = 0.1; 
-                public static final double kLINEAR_BOTTOM_SETPOINT = -209; // Degrees (Relative)
-                public static final double kLINEAR_TOP_SETPOINT = 0;       // Degrees (Relative)
+                public static final double kLINEAR_FORWARD_SETPOINT = -209; // Degrees (Relative)
+                public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
                 public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
-                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0.5, 0.015); // Change the values!!!
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -128,12 +127,12 @@ public final class Constants {
         }
 
         public static class Hood {
-                public static final int KHOOD_CAN_ID = 47;
-                public static final InterpolatingDoubleTreeMap kHOOD_MAP = InterpolatingDoubleTreeMap // Change entries!!!
-                    .ofEntries(
-                        Map.entry(0.0, 0.0),
-                        Map.entry(0.0, 0.0)
-                    );
+                public static final int kHOOD_CAN_ID = 47;
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final double ScoreHeight = 55;
+        }
+        public static class Metering {
+                public static final int kMETERING_MOTOR_CAN_ID = 45;
+                public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;
         }
 }

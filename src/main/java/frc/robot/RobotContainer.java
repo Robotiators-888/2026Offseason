@@ -12,17 +12,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
@@ -37,14 +34,9 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.NTSendableBuilder;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -55,21 +47,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
-import frc.robot.Constants.LEDs;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
-import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_AimBotSpecialLock;
 import frc.robot.commands.CMD_PredictiveAim;
-import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Linear;
+import frc.robot.subsystems.SUB_Metering;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
@@ -78,8 +66,6 @@ import frc.robot.utils.Alert;
 import frc.robot.utils.AllianceFlipUtil;
 import frc.robot.utils.CommandUtil;
 import frc.robot.utils.Elastic;
-import frc.robot.utils.Elastic.Notification;
-import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import frc.robot.utils.Hub;
 import frc.robot.utils.RobotTelemetry;
 
@@ -102,6 +88,8 @@ public class RobotContainer {
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Linear linear = SUB_Linear.getInstance();
         public static final SUB_Index index = SUB_Index.getInstance();
+        public static final SUB_Hood hood = SUB_Hood.getInstance();
+        public static final SUB_Metering metering = SUB_Metering.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
         public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
         private final SendableChooser<Command> autoChooser;
@@ -165,12 +153,10 @@ public class RobotContainer {
                                 }
                         })
                 );
-
                 roller.setDefaultCommand(new RunCommand(() -> {
                         roller.set(0);
                 }, roller));
-
-                linear.setDefaultCommand(new RunCommand(() -> {
+                linear.setDefaultCommand(new InstantCommand(() -> { // Could make it go forward and make it an instant command
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
@@ -178,8 +164,13 @@ public class RobotContainer {
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
                         index.set(0);
-                        
                 }, index));
+                metering.setDefaultCommand(new InstantCommand(() -> {
+                        metering.set(0);
+                }, metering));
+                hood.setDefaultCommand(new RunCommand(() -> {
+                        hood.resetSafe();
+                }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();
