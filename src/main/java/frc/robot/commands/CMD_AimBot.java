@@ -30,6 +30,7 @@ import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -114,6 +115,7 @@ public class CMD_AimBot extends RunCommand {
     );
     isLocked = false;
     running = true;
+    SUB_Shooter.isShooting = true;
   }
 
   @Override
@@ -189,6 +191,7 @@ public class CMD_AimBot extends RunCommand {
   @Override
   public void end(boolean interrupted) {
     running = false;
+    SUB_Shooter.isShooting=false;
   }
 
   @Override

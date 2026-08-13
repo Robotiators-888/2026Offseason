@@ -28,11 +28,8 @@ public class SUB_Shooter extends SubsystemBase {
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
-    private double fuelShot = 0;
-    private double lastRPM = 0;
-    private double dipRPM = 0;
-    private boolean hasGoneDown = false;
-    private boolean isShooting;
+    private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
+    public static boolean isShooting;
     
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
@@ -81,6 +78,23 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
         shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
 
+        shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        shooterLowConfig.CurrentLimits.StatorCurrentLimit = 100;
+        shooterLowConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        shooterLowConfig.CurrentLimits.SupplyCurrentLimit = 10;
+        shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
+        shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
+        shooterLowConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        shooterLowConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+        // Configure PID control loop coefficients
+        shooterLowConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
+        shooterLowConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV;
+        shooterLowConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
+        shooterLowConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
+        shooterLowConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
+        shooterLowConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
+
         MotorOne.getConfigurator().apply(shooterConfig);
         MotorTwo.getConfigurator().apply(shooterConfig);
         
@@ -98,14 +112,12 @@ public class SUB_Shooter extends SubsystemBase {
     @Deprecated
     public void set(final double speed) {
         MotorOne.set(speed);
-        isShooting = speed!=0;
     }
 
     /** @param rpm Target velocity for both flywheels */
     public void setRPM(final double rpm) {
         this.desiredSpeed = rpm;
         MotorOne.setControl(m_request.withVelocity(rpm / 60.0));
-        isShooting = rpm!=0;
     }
 
     /** @return Average current RPM of both flywheels */
@@ -145,14 +157,11 @@ public class SUB_Shooter extends SubsystemBase {
     /** @param volts Direct voltage output for manual testing */
     public void setVolts(final double volts) {
         MotorOne.setControl(voltageRequest.withOutput(volts));
-        isShooting = volts!=0;
     }
 
     @Override
     public void periodic() {
-      updateFuelShot();
       // Telemetry logging for dashboard and diagnostics
-      SmartDashboard.putNumber("Shooter/Fuel Shot", fuelShot);
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
       SmartDashboard.putNumber("Shooter/Motor One Stator Current", MotorOne.getStatorCurrent().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor Two Stator Current", MotorTwo.getStatorCurrent().getValueAsDouble());
@@ -181,31 +190,16 @@ public class SUB_Shooter extends SubsystemBase {
       
       Alert.alertKraken(MotorOne);
       Alert.alertKraken(MotorTwo);
+
+      if (SUB_Shooter.isShooting) {
+        MotorOne.getConfigurator().apply(shooterConfig);
+        MotorTwo.getConfigurator().apply(shooterConfig);
+      } else {
+        MotorOne.getConfigurator().apply(shooterLowConfig);
+        MotorTwo.getConfigurator().apply(shooterLowConfig);
+      }
     }
 
-    private void updateFuelShot () {
-        double currentAmps = desiredSpeed - flywheelRPM();
-        if (isShooting) {
-            if (!hasGoneDown && currentAmps > lastRPM) {
-                hasGoneDown = true;
-                dipRPM += currentAmps - dipRPM;
-            }
-            if (hasGoneDown && currentAmps > lastRPM) {
-                dipRPM += currentAmps - dipRPM;
-            }
-            if (hasGoneDown && currentAmps < lastRPM) {
-                hasGoneDown = false;
-                if (dipRPM > 100)
-                    fuelShot++;
-                dipRPM = 0;
-            }
-        }
-        else {
-            dipRPM = 0;
-            hasGoneDown = false;
-        }
-        lastRPM = currentAmps;
-    }
 
     /** 
      * Calculates time-of-flight based on projectile physics.
