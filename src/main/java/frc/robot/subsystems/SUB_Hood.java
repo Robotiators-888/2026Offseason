@@ -11,6 +11,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.OptionalDouble;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
@@ -22,6 +23,12 @@ import frc.robot.utils.Alert;
  * and the conversion to radians happens here and nowhere else. Callers never see rotations.
  */
 public class SUB_Hood extends SubsystemBase {
+    /**
+     * Slack on the trajectory quadratic's discriminant, in meters squared. Absorbs rounding at the
+     * maximum-range boundary where the two arcs coincide.
+     */
+    private static final double kDiscriminantTolerance = 1e-9;
+
     private static SUB_Hood INSTANCE = null;
     private final TalonFX hood;
     private final PositionVoltage positionRequest = new PositionVoltage(0).withSlot(0);
@@ -109,6 +116,63 @@ public class SUB_Hood extends SubsystemBase {
     public static double findoptimalangle(final double distance) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
         return (Math.PI / 4.0) + 0.5 * Math.atan2(height, distance);
+    }
+
+    /**
+     * Hood angle that lands a shot at {@code distance} when the flywheel is held at
+     * {@code launchSpeed}, in m/s.
+     *
+     * <p>This is the inverse of the usual solve. Substituting {@code sec^2 = 1 + tan^2} into the
+     * trajectory equation turns it into a quadratic in {@code tan(theta)}:
+     *
+     * <pre>k*tan^2(theta) - d*tan(theta) + (h + k) = 0,  where k = g*d^2 / (2*v^2)</pre>
+     *
+     * <p>Its two roots are the flat and lobbed arcs that both reach the same point. The steeper one
+     * is returned: it drops the ball into the goal at a better entry angle, and it continues the
+     * hood in the direction it already sweeps as range closes. The roots merge at the maximum range
+     * the speed can reach, beyond which the discriminant goes negative and there is no solution.
+     *
+     * @param distance Horizontal range in meters
+     * @param launchSpeed Ball exit speed in m/s
+     * @return Launch angle in radians, or empty if the speed cannot reach that range
+     */
+    public static OptionalDouble angleForLaunchSpeed (final double distance, final double launchSpeed) {
+        final double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        final double k = (Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance)
+            / (2 * launchSpeed * launchSpeed);
+
+        double discriminant = distance * distance - 4 * k * (height + k);
+
+        // At exactly the maximum range the two arcs merge and the discriminant is mathematically
+        // zero, so rounding can land it just either side. Treat a hair below zero as the grazing
+        // case rather than declaring the shot impossible.
+        if (discriminant < -kDiscriminantTolerance) {
+            return OptionalDouble.empty();
+        }
+        discriminant = Math.max(discriminant, 0);
+
+        final double steeperRoot = (distance + Math.sqrt(discriminant)) / (2 * k);
+        return OptionalDouble.of(Math.atan(steeperRoot));
+    }
+
+    /**
+     * Hood angle for a shot at {@code distance} with the flywheel held at {@code rpm}.
+     *
+     * <p>The RPM is converted to a launch speed by scaling the minimum-energy speed for this range
+     * by how far the commanded RPM exceeds the tuned table value — the same ratio trick
+     * {@link SUB_Shooter#requiredRPM} uses, and for the same reason: the absolute RPM-to-speed
+     * transfer is unreliable, but ratios taken near a calibrated point are sound.
+     *
+     * @return Launch angle in radians, or empty if that RPM cannot reach that range
+     */
+    public static OptionalDouble angleForRPM (final double distance, final double rpm, final double tunedRpm) {
+        if (tunedRpm <= 0 || rpm < tunedRpm) {
+            // Below the tuned value there is no angle at all — the table already sits at the
+            // minimum-energy angle, which is the cheapest way to reach this range.
+            return OptionalDouble.empty();
+        }
+        final double launchSpeed = SUB_Shooter.minLaunchSpeed(distance) * (rpm / tunedRpm);
+        return angleForLaunchSpeed(distance, launchSpeed);
     }
 
     /** Retracts the hood to its stowed angle using the position loop and soft limits. */

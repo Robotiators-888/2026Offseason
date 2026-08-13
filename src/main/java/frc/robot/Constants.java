@@ -51,6 +51,31 @@ public final class Constants {
                 public static final double kSHOOTER_COMPRESSION_RATIO = .8; // Todo find ratio
 
                 public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
+
+                /**
+                 * Standing flywheel speeds, ascending. The shooter holds the lowest band that can
+                 * still reach the target and lets the hood cover everything inside that band, so a
+                 * range change costs a hood move rather than a flywheel spin-up.
+                 *
+                 * <p>Values are RPM from the tuned look-up table: 1200 covers out to roughly 2.3 m,
+                 * 1500 to roughly 3.5 m, 1800 to roughly 5.4 m. Past that the table itself is
+                 * uncalibrated — its 10.5 m entry is still marked TODO.
+                 *
+                 * <p>A single-entry array gives literal fixed-RPM behaviour. It is deliberately not
+                 * the default: at 1800 RPM and 1.6 m the only hood solutions are about 85 degrees
+                 * (near-vertical lob) or 45 degrees (flat and fast), because the flywheel is
+                 * massively overpowered for that range. Banding keeps the hood near the
+                 * minimum-energy angle where the shot is least sensitive to error.
+                 *
+                 * <p>With these three bands the hood sweeps about 52 to 78 degrees across 1.5 m to
+                 * 5.5 m, and the flywheel changes speed at only two distances (~2.3 m and ~3.5 m)
+                 * instead of continuously. Adding bands shrinks the hood sweep and adds spin-up
+                 * events; removing them does the reverse.
+                 */
+                public static final double[] kREADY_RPM_BANDS = {1200, 1500, 1800};
+
+                /** How far past a band's reach the robot must go before stepping down a band. */
+                public static final double kBAND_HYSTERESIS = 0.90;
         }
 
         /** Intake roller motor configuration */
@@ -201,7 +226,14 @@ public final class Constants {
                  */
                 public static final double kHOOD_ANGLE_AT_ZERO_RADS = 0.0;
 
-                /** Travel limits of the hood, as mechanism angles in radians. MEASURE THESE. */
+                /**
+                 * Travel limits of the hood, as mechanism angles in radians. MEASURE THESE.
+                 *
+                 * <p>The banded-RPM scheme in {@link Constants.Shooter#kREADY_RPM_BANDS} needs the
+                 * hood to cover roughly <b>52 to 78 degrees</b> to shoot from 1.5 m to 5.5 m. If the
+                 * real mechanism has less travel than that, widen the bands (more, closer-spaced
+                 * entries shrink the hood sweep) rather than clipping the range.
+                 */
                 public static final double kHOOD_MIN_ANGLE_RADS = 0.0;
                 public static final double kHOOD_MAX_ANGLE_RADS = Math.PI / 2.0;
 

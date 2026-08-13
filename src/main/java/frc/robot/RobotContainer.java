@@ -163,13 +163,12 @@ public class RobotContainer {
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
-                        // Idle at the speed the current range would need, so a shot only has to wait
-                        // out the last few hundred RPM. With no hub in the layout there is nothing
-                        // sensible to pre-spin to, so coast instead.
+                        // Hold the standing band for the current range rather than tracking an exact
+                        // per-distance RPM. Inside a band the flywheel never changes speed, so a
+                        // shot is available the moment the hood arrives. With no hub in the layout
+                        // there is nothing sensible to pre-spin to, so coast.
                         Hub.getDistanceToGoal(drivetrain.getPose()).ifPresentOrElse(
-                                distance -> shooter.setRPM(SUB_Shooter.findoptimalRPM(
-                                        distance,
-                                        SUB_Hood.findoptimalangle(distance))),
+                                shooter::holdReadyBand,
                                 shooter::stop);
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {

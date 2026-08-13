@@ -41,6 +41,9 @@ public class SUB_Shooter extends SubsystemBase {
     /** Tracks which limit profile is currently on the motors so we only touch CAN on a change. */
     private boolean highPower = false;
 
+    /** Index into {@link Constants.Shooter#kREADY_RPM_BANDS}, held with hysteresis. */
+    private int currentBand = 0;
+
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
@@ -141,6 +144,103 @@ public class SUB_Shooter extends SubsystemBase {
      * @param angle Launch angle in radians (see {@link SUB_Hood#findoptimalangle})
      * @return Required flywheel RPM, or 0 if the shot is not physically reachable
      */
+    /**
+     * Lowest launch speed, in m/s, that can reach a target {@code distance} away and
+     * {@link Constants.Hood#ScoreHeight} above the shooter: {@code sqrt(g*(h + hypot(h, d)))}.
+     *
+     * <p>This is the speed the {@link SUB_Hood#findoptimalangle} launch angle corresponds to, which
+     * makes it the anchor point the RPM look-up table was tuned at.
+     */
+    public static double minLaunchSpeed(final double distance) {
+        final double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        return Math.sqrt(Constants.Shooter.kGRAVITATIONAL_CONSTANT
+            * (height + Math.hypot(height, distance)));
+    }
+
+    /**
+     * Launch speed, in m/s, needed to reach {@code distance} at a given launch {@code angle} in
+     * radians. Returns {@link Double#NaN} for a shot no speed can make.
+     */
+    public static double requiredLaunchSpeed(final double distance, final double angle) {
+        final double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        final double denominator = 2 * (distance * Math.tan(angle) - height);
+        if (denominator <= 0) {
+            return Double.NaN;
+        }
+        return (1 / Math.cos(angle))
+            * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance) / denominator);
+    }
+
+    /**
+     * Flywheel RPM needed to reach {@code distance} at a given hood {@code angle} in radians.
+     *
+     * <p>Anchored on the tuned look-up table rather than on absolute physics. The table is sampled
+     * along the minimum-energy angle, so this scales its value by the <em>ratio</em> of the speed
+     * this angle needs to the speed that angle needs:
+     *
+     * <pre>rpm(d, theta) = lut(d) * requiredLaunchSpeed(d, theta) / minLaunchSpeed(d)</pre>
+     *
+     * <p>Taking a ratio at nearly the same operating point cancels most of the wheel-to-ball
+     * transfer error. That matters here: fitting the table against ideal projectile motion gives
+     * RPM-per-m/s rising from ~178 at 1.6 m to ~221 at 10.5 m, while {@link #findoptimalRPM}
+     * assumes a flat 313. The slip is real and speed-dependent, so absolute predictions from the
+     * analytic model are not usable — but ratios near a calibrated point are.
+     *
+     * @return Required RPM, or {@link Double#NaN} if the shot is unreachable at that angle
+     */
+    public double requiredRPM(final double distance, final double angle) {
+        final double needed = requiredLaunchSpeed(distance, angle);
+        if (Double.isNaN(needed)) {
+            return Double.NaN;
+        }
+        return distanceToRPM.get(distance) * (needed / minLaunchSpeed(distance));
+    }
+
+    /**
+     * Lowest standing RPM band that can still reach {@code distance}.
+     *
+     * <p>A band is viable when it is at least the table's tuned RPM for that range — below that no
+     * hood angle exists, since the tuned value already sits at the minimum-energy angle. Bands are
+     * held with hysteresis so a robot hovering on a boundary does not oscillate between two
+     * flywheel speeds.
+     */
+    public double readyRPM(final double distance) {
+        final double[] bands = Constants.Shooter.kREADY_RPM_BANDS;
+        final double needed = distanceToRPM.get(distance);
+
+        // Stay in the current band while it still reaches, minus a margin, so the boundary has to
+        // be cleared properly before stepping down.
+        if (bands[currentBand] >= needed
+            && (currentBand == 0
+                || bands[currentBand - 1] < needed * Constants.Shooter.kBAND_HYSTERESIS)) {
+            return bands[currentBand];
+        }
+
+        for (int i = 0; i < bands.length; i++) {
+            if (bands[i] >= needed) {
+                currentBand = i;
+                return bands[i];
+            }
+        }
+        // Out of range of every band: run the top one and let the caller see the shot is short.
+        currentBand = bands.length - 1;
+        return bands[currentBand];
+    }
+
+    /** @return The RPM most recently commanded, which the hood solves its angle against */
+    public double getTargetRPM() {
+        return desiredSpeed;
+    }
+
+    /**
+     * Purely analytic RPM solve.
+     *
+     * @deprecated Its absolute predictions do not match the robot — fitting {@link #distanceToRPM}
+     *     against ideal projectile motion shows the wheel-to-ball transfer varies with speed, while
+     *     this assumes it is constant. Kept for reference and unit tests. Use {@link #requiredRPM}
+     *     or {@link #shootMeters}, both of which are anchored on the tuned table.
+     */
+    @Deprecated
     public static double findoptimalRPM(final double distance, final double angle) {
         final double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
 
@@ -180,13 +280,31 @@ public class SUB_Shooter extends SubsystemBase {
         return Math.abs(flywheelRPM() - desiredSpeed) < 75;
     }
 
-    /** 
+    /**
      * Sets target RPM based on distance to hub.
      * @param meters Distance to target in meters
      */
     public void shootMeters(final double meters) {
         double targetRPM = distanceToRPM.get(meters);
         setRPM(targetRPM);
+    }
+
+    /**
+     * Holds the standing band for this range instead of chasing an exact per-distance RPM.
+     *
+     * <p>The hood covers the difference — see {@link SUB_Hood#angleForRPM}. Within a band a range
+     * change costs a hood move rather than a flywheel spin-up, so consecutive shots at different
+     * distances do not each pay a settling delay.
+     *
+     * @param meters Distance to target in meters
+     */
+    public void holdReadyBand(final double meters) {
+        setRPM(readyRPM(meters));
+    }
+
+    /** @return The tuned table RPM for this range, which is the band solve's floor */
+    public double tunedRPM(final double meters) {
+        return distanceToRPM.get(meters);
     }
 
     /** 

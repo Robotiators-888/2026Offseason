@@ -175,7 +175,14 @@ public class CMD_AimBot extends RunCommand {
     SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
 
     double distance = shooterFieldPosition.getDistance(goal);
-    hood.setAngle(SUB_Hood.findoptimalangle(distance));
+
+    // The flywheel holds a standing band (see SUB_Shooter.holdReadyBand), so the hood is what
+    // actually aims. Solve the angle against the RPM currently commanded; fall back to the
+    // minimum-energy angle if that RPM cannot reach, which is also the angle the band floor
+    // corresponds to.
+    hood.setAngle(SUB_Hood.angleForRPM(distance, shooter.getTargetRPM(), shooter.tunedRPM(distance))
+        .orElseGet(() -> SUB_Hood.findoptimalangle(distance)));
+    SmartDashboard.putNumber("CMD_AimBot/Distance (m)", distance);
     metering.set(1);
 
     // Only feed once the robot is pointed AND the flywheel is up to speed — feeding into a

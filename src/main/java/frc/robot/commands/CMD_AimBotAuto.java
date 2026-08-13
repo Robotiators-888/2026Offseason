@@ -149,8 +149,9 @@ public class CMD_AimBotAuto extends RunCommand {
     isThetaErrorCorrect = thetaErrorRads <= kAlignedToleranceRads && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= kMaxYawRateDegPerSec;
 
     double distance = shooterFieldPosition.getDistance(goal);
-    shooter.shootMeters(distance);
-    hood.setAngle(SUB_Hood.findoptimalangle(distance));
+    shooter.holdReadyBand(distance);
+    hood.setAngle(SUB_Hood.angleForRPM(distance, shooter.getTargetRPM(), shooter.tunedRPM(distance))
+        .orElseGet(() -> SUB_Hood.findoptimalangle(distance)));
     metering.set(1);
 
     // Automated firing trigger
