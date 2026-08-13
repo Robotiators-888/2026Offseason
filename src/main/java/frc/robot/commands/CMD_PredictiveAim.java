@@ -51,7 +51,7 @@ public class CMD_PredictiveAim extends RunCommand {
   private final SUB_Index index;
 
   /** Physical offsets for targeting calibration */
-  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
   
   /** Motion profiling constraints for rotation */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(

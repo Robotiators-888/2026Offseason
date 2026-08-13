@@ -46,7 +46,7 @@ public class CMD_AimBot extends RunCommand {
   private boolean isLocked;
 
   /** Physical offsets for targeting calibration */
-  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
   Rotation2d shooterThetaOffset = new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
   
   /** Motion profiling constraints for rotation */
