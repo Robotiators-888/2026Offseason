@@ -29,10 +29,10 @@ public class SUB_Metering extends SubsystemBase {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimit(100)
+                .withStatorCurrentLimit(120)
                 .withSupplyCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(40)
-                .withSupplyCurrentLowerLimit(60)
+                .withSupplyCurrentLimit(60)
+                .withSupplyCurrentLowerLimit(25)
                 .withSupplyCurrentLowerTime(.5));
         metering.getConfigurator().apply(config);
         meteringFollower.getConfigurator().apply(config);

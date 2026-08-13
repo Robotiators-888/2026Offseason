@@ -16,7 +16,6 @@ public class SUB_Index extends SubsystemBase {
     private final SparkMax LeftIndexer;
     private final SparkMax RightIndexer;
 
-
     private static SUB_Index INSTANCE = null;
 
     /** @return Single instance of the SUB_Index subsystem */
@@ -35,18 +34,13 @@ public class SUB_Index extends SubsystemBase {
         
         // Configure main indexer motor
         SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
-        LeftIndexConfig.smartCurrentLimit(60);
+        LeftIndexConfig.smartCurrentLimit(15);
         LeftIndexConfig.follow(RightIndexer, true);
         LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
         SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
-        RightIndexConfig.smartCurrentLimit(60);
+        RightIndexConfig.smartCurrentLimit(15);
         RightIndexConfig.inverted(true);
         RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        
-        
-
-
-        
     }
     
     /** @param speed Target percent output for indexing [-1.0, 1.0] */
@@ -65,9 +59,6 @@ public class SUB_Index extends SubsystemBase {
     public void setVolts(double volts) {
         RightIndexer.setVoltage(volts);
     }
-
-
-
 
     @Override
     public void periodic() {
@@ -89,6 +80,5 @@ public class SUB_Index extends SubsystemBase {
         Alert.alertNeoWarnings(RightIndexer);
         Alert.alertNeoFaults(LeftIndexer);
         Alert.alertNeoWarnings(LeftIndexer);
-
     }
 }

@@ -35,9 +35,7 @@ public class SUB_Linear extends SubsystemBase {
     private void configureMotors(){
         // Creates config for motor and encoder (23:1 cycloidal gearbox)
         SparkMaxConfig config = new SparkMaxConfig();
-        config.encoder.positionConversionFactor(360.0 / 23); // Converts rotations to degrees
-        config.encoder.velocityConversionFactor((360.0 / 23) / 60.0); // Converts RPM to deg/sec
-        config.smartCurrentLimit(35); // Sets stall limit in amps
+        config.smartCurrentLimit(35, 5); // Sets stall limit in amps
         config.inverted(true);
         linear.configure(config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
     }

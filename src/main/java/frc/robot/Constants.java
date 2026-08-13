@@ -35,9 +35,7 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
 
                 //Physical Specs
-                public static final double ShooterDiameter = 3;
-                public static final double CompressionValue = 0.8; //TODO: find real compression
-                
+                public static final double ShooterDiameter = 3;                
                 // Feedforward constants (Manual tuning in progress)
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.14; 
@@ -47,6 +45,10 @@ public final class Constants {
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.5;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0;
+
+                public static final double kSHOOTER_COMPRESSION_RATIO = .8; // Todo find ratio
+
+                public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
         }
 
         /** Intake roller motor configuration */
@@ -61,7 +63,7 @@ public final class Constants {
         public static final class Linear {
                 public static final int kLINEAR_MOTOR_CANID = 31; 
                 public static final double kLINEAR_MOTOR_SPEED = 0.1; 
-                public static final double kLINEAR_FORWARD_SETPOINT = -209; // Degrees (Relative)
+                public static final double kLINEAR_FORWARD_SETPOINT = 360.0*4.2; // Degrees (Relative)
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
                 public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0, 0); // Change the values!!!

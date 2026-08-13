@@ -160,7 +160,17 @@ public class RobotContainer {
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
-                        shooter.stop();
+                        final double distance = drivetrain.getPose().getTranslation().getDistance(
+                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
+                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
+                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
+                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
+                                        )).orElse(drivetrain.getPose().getTranslation())
+                                );
+                        shooter.setRPM(SUB_Shooter.findoptimalRPM(
+                                distance,
+                                SUB_Hood.findoptimalangle(distance)
+                        ));
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
                         index.set(0);
