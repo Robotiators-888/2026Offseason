@@ -1,92 +1,74 @@
 package frc.robot.utils;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
+/**
+ * Central alert surface. Messages are deduplicated and counted, published to SmartDashboard as
+ * three string arrays plus a check-engine colour, and toasted to Elastic on first occurrence only.
+ *
+ * <p>Each severity is a single LinkedHashMap from message to occurrence count. This replaces a
+ * parallel Vector + HashMap pair that had to be kept in sync by hand: a miss in the lookup returned
+ * -1, which was fed straight into an unchecked array write and threw
+ * {@code ArrayIndexOutOfBoundsException} out of {@code robotPeriodic()}. Insertion order is
+ * preserved, so the dashboard ordering is unchanged.
+ */
 public class Alert {
-  // ArrayList required akward casting to work so I created Vector
-  // Hashmaps to check if keys are present in O(1) time!
-  private static Elastic.Notification notification = new Elastic.Notification(); // Creates one notification object that can be method chained on to increase garbage collection performance
-  private static Vector<String> error = new Vector<String>(new String());
-  private static Vector<String> warning = new Vector<String>(new String());
-  private static Vector<String> info = new Vector<String>(new String());
-  private static HashMap<String, Integer> errorMap = new HashMap<String, Integer>();
-  private static HashMap<String, Integer> warningMap = new HashMap<String, Integer>();
-  private static HashMap<String, Integer> infoMap = new HashMap<String, Integer>();
+  private static final Elastic.Notification notification = new Elastic.Notification(); // Creates one notification object that can be method chained on to increase garbage collection performance
+  private static final Map<String, Integer> errors = new LinkedHashMap<>();
+  private static final Map<String, Integer> warnings = new LinkedHashMap<>();
+  private static final Map<String, Integer> infos = new LinkedHashMap<>();
   private static Color alertColor = new Color(0, 255, 0); // Green
   private static final double connectedTimeout = .5; // Seconds
-
-  public Alert() {
-  }
 
   public static void setup () {
     updateSmartDashboard();
   }
 
   public static void registerError (String alert) {
-    // Makes sure there are no duplicates using the hashmap
-    if (!errorMap.containsKey(alert)) {
-      errorMap.put(alert, 0);
-      error.add(alert + " 0");
+    if (record(errors, alert)) {
       notifyError(alert);
-      updateSmartDashboard();
-      // triggerStop();
     }
-    else {
-      // Stores the value at the hashmap of the alert
-      Integer mapVal = errorMap.get(alert);
-      // Updates the hashmap value
-      errorMap.put(alert, mapVal+1);
-      // Finds the alert in the vector and then updates it
-      error.set(error.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
-      // Doesn't notify elastic as this would spam notifications
-      updateSmartDashboard();
-    }
+    updateSmartDashboard();
   }
 
   public static void registerWarning (String alert) {
-    // Makes sure there are no duplicates using the hashmap
-    if (!warningMap.containsKey(alert)) {
-      warningMap.put(alert, 0);
-      warning.add(alert + " 0");
+    if (record(warnings, alert)) {
       notifyWarning(alert);
-      updateSmartDashboard();
     }
-    else {
-      // Stores the value at the hashmap of the alert
-      Integer mapVal = warningMap.get(alert);
-      // Updates the hashmap value
-      warningMap.put(alert, mapVal+1);
-      // Finds the alert in the vector and then updates it
-      warning.set(warning.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
-      // Doesn't notify elastic as this would spam notifications
-      updateSmartDashboard();
-    }
+    updateSmartDashboard();
   }
 
   public static void registerInfo (String alert) {
-    // Makes sure there are no duplicates using the hashmap
-    if (!infoMap.containsKey(alert)) {
-      infoMap.put(alert, 0);
-      info.add(alert + " 0");
+    if (record(infos, alert)) {
       notifyInfo(alert);
-      updateSmartDashboard();
     }
-    else {
-      // Stores the value at the hashmap of the alert
-      Integer mapVal = infoMap.get(alert);
-      // Updates the hashmap value
-      infoMap.put(alert, mapVal+1);
-      // Finds the alert in the vector and then updates it
-      info.set(info.findFirst(comparees -> comparees.get_0().equals(comparees.get_1()), alert + " " + mapVal), alert + " " + (mapVal + 1));
-      // Doesn't notify elastic as this would spam notifications
-      updateSmartDashboard();
-    }
+    updateSmartDashboard();
+  }
+
+  /**
+   * Counts an occurrence of {@code alert}.
+   *
+   * @return true if this is the first time the message has been seen, i.e. it warrants a toast.
+   *     Repeats only bump the counter, otherwise a flapping fault would spam the dashboard.
+   */
+  private static boolean record (final Map<String, Integer> into, final String alert) {
+    final Integer previous = into.put(alert, into.getOrDefault(alert, -1) + 1);
+    return previous == null;
+  }
+
+  /** Renders a severity's map as the "<message> <count>" array the dashboard expects. */
+  private static String[] render (final Map<String, Integer> from) {
+    return from.entrySet().stream()
+        .map(entry -> entry.getKey() + " " + entry.getValue())
+        .toArray(String[]::new);
   }
 
   // Don't use direct notifications on things that spam them use them for things like telop init, things that happen multiple times, infrequently
@@ -116,10 +98,10 @@ public class Alert {
 
   // Sets the single color elastic object to the highest severity level (severity level meaning either info, error or warning) that the robot has at least one alert for (check engine light)
   private static void registerColor () {
-    if (!error.isEmpty()) {
+    if (!errors.isEmpty()) {
       alertColor = new Color(255, 0, 0); // Red
     }
-    else if (!warning.isEmpty()) {
+    else if (!warnings.isEmpty()) {
       alertColor = new Color(255, 255, 0); // Yellow
     }
     else {
@@ -128,19 +110,10 @@ public class Alert {
     SmartDashboard.putString("Alert/Alerts", alertColor.toHexString());
   }
 
-  // public static void triggerStop () { // Stops the robot from running if it has errors (This will not be used because errors shouldn't kill the robot)
-    // Todo: implement this
-  // }
-
-  // private static void testcalls () {
-  //   registerWarning("There may be an issue");
-  //   notifyWarning("Photonvision has optional type idk");
-  // }
-
   private static void updateSmartDashboard () {
-    SmartDashboard.putStringArray("Alert/errors", error.toArray());
-    SmartDashboard.putStringArray("Alert/warnings", warning.toArray());
-    SmartDashboard.putStringArray("Alert/info", info.toArray());
+    SmartDashboard.putStringArray("Alert/errors", render(errors));
+    SmartDashboard.putStringArray("Alert/warnings", render(warnings));
+    SmartDashboard.putStringArray("Alert/info", render(infos));
     registerColor();
   }
 
@@ -203,41 +176,44 @@ public class Alert {
 
   public static void alertNeoFaults (SparkMax neo) {
     int neoId = neo.getDeviceId();
-    if (neo.getFaults().can)
+    // One read of the struct rather than eight round trips to the controller.
+    final SparkBase.Faults faults = neo.getFaults();
+    if (faults.can)
       registerError("Motor " + neoId + " Fault: can");
-    if (neo.getFaults().escEeprom)
+    if (faults.escEeprom)
       registerError("Motor " + neoId + " Fault: escEeprom");
-    if (neo.getFaults().firmware)
+    if (faults.firmware)
       registerError("Motor " + neoId + " Fault: firmware");
-    if (neo.getFaults().gateDriver)
+    if (faults.gateDriver)
       registerError("Motor " + neoId + " Fault: gateDriver");
-    if (neo.getFaults().motorType)
+    if (faults.motorType)
       registerError("Motor " + neoId + " Fault: motorType");
-    if (neo.getFaults().other)
+    if (faults.other)
       registerError("Motor " + neoId + " Fault: other");
-    if (neo.getFaults().sensor)
+    if (faults.sensor)
       registerError("Motor " + neoId + " Fault: sensor");
-    if (neo.getFaults().temperature)
+    if (faults.temperature)
       registerError("Motor " + neoId + " Fault: temperature");
   }
 
   public static void alertNeoWarnings (SparkMax neo) {
     int neoId = neo.getDeviceId();
-    if (neo.getWarnings().brownout)
+    final SparkBase.Warnings warnings = neo.getWarnings();
+    if (warnings.brownout)
       registerWarning("Motor " + neoId + " Warning: brownout");
-    if (neo.getWarnings().escEeprom)
+    if (warnings.escEeprom)
       registerWarning("Motor " + neoId + " Warning: escEeprom");
-    if (neo.getWarnings().extEeprom)
+    if (warnings.extEeprom)
       registerWarning("Motor " + neoId + " Warning: extEeprom");
-    if (neo.getWarnings().hasReset)
+    if (warnings.hasReset)
       registerWarning("Motor " + neoId + " Warning: hasReset");
-    if (neo.getWarnings().other)
+    if (warnings.other)
       registerWarning("Motor " + neoId + " Warning: other");
-    if (neo.getWarnings().overcurrent)
+    if (warnings.overcurrent)
       registerWarning("Motor " + neoId + " Warning: overcurrent");
-    if (neo.getWarnings().sensor)
+    if (warnings.sensor)
       registerWarning("Motor " + neoId + " Warning: sensor");
-    if (neo.getWarnings().stall)
+    if (warnings.stall)
       registerWarning("Motor " + neoId + " Warning: stall");
   }
 }

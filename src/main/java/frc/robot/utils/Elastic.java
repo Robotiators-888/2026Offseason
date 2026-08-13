@@ -12,6 +12,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringTopic;
+import edu.wpi.first.wpilibj.DriverStation;
 
 public final class Elastic {
   private static final StringTopic notificationTopic =
@@ -34,7 +35,10 @@ public final class Elastic {
     try {
       notificationPublisher.set(objectMapper.writeValueAsString(notification));
     } catch (JsonProcessingException e) {
-      e.printStackTrace();
+      // Deviation from upstream: surface this to the driver station instead of a stack trace that
+      // nobody reads. Deliberately not Alert.registerError — Alert calls into this method, so that
+      // would recurse.
+      DriverStation.reportError("Elastic notification failed to serialize: " + e.getMessage(), false);
     }
   }
 
