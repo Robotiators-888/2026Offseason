@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBotAuto;
-import frc.robot.commands.CMD_PredictiveAimAuto;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
@@ -81,15 +80,6 @@ public class CommandUtil {
 
                 NamedCommands.registerCommand("ShootAutoAim", 
                         new CMD_AimBotAuto(
-                                drivetrain, 
-                                photonVision, 
-                                shooter, 
-                                index
-                        )
-                );
-
-                NamedCommands.registerCommand("ShootAndMove", 
-                        new CMD_PredictiveAimAuto(
                                 drivetrain, 
                                 photonVision, 
                                 shooter, 

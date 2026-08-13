@@ -52,7 +52,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
-import frc.robot.commands.CMD_PredictiveAim;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Linear;
@@ -249,19 +248,6 @@ public class RobotContainer {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
                 }, roller, linear));
-                Driver1.leftTrigger().whileTrue(
-                        new ParallelCommandGroup(
-                                new CMD_PredictiveAim(
-                                        drivetrain, 
-                                        photonVision, 
-                                        shooter, 
-                                        index,
-                                        () -> -(Driver1.getLeftY()),
-                                        () -> -(Driver1.getLeftX()) 
-                                ),
-                                new RunCommand(()->roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE), roller)
-                        )
-                );
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
                                 new CMD_AimBot(
