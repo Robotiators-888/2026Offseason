@@ -31,7 +31,7 @@ import frc.robot.subsystems.SUB_Shooter;
 
 public class CMD_Shuttle extends RunCommand{
     /** Physical offsets for targeting calibration */
-    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+    Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
     /** Subsystems and state variables for shuttle targeting */
     private SUB_Index index;
     private SUB_Shooter shooter;

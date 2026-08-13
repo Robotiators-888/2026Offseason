@@ -30,7 +30,7 @@ public class CMD_PredictiveAimAuto extends Command {
     private final SUB_Index index;
     
     private Translation2d staticTargetTranslation;
-    private final Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+    private final Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
     
     // The maximum allowed sideways drift of the shooter during the ball's flight (in meters)
     private final double MAX_ALLOWED_TANGENTIAL_DISPLACEMENT = 0.15; // 15 cm threshold

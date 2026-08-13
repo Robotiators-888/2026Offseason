@@ -38,7 +38,7 @@ public class CMD_AimBotAuto extends RunCommand {
   private final SUB_Index index;
 
   /** Physical offset from robot center to shooter exit */
-  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(-10), Units.inchesToMeters(-5));
+  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
   
   /** Motion profiling constraints for rotation (narrower for auto) */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
