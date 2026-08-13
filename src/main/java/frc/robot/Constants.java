@@ -64,8 +64,8 @@ public final class Constants {
                 public static final double kLINEAR_FORWARD_SETPOINT = -209; // Degrees (Relative)
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
-                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
-                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0.5, 0.015); // Change the values!!!
+                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0, 0); // Change the values!!!
+                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0, 0); // Change the values!!!
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -128,7 +128,7 @@ public final class Constants {
 
         public static class Hood {
                 public static final int kHOOD_CAN_ID = 47;
-                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0.5, 0.025); // Change the values!!!
+                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4,0,0); // Change the values!!!
                 public static final double ScoreHeight = 55;
         }
         public static class Metering {

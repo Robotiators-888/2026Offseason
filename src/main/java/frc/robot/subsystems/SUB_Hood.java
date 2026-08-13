@@ -25,10 +25,10 @@ public class SUB_Hood extends SubsystemBase {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimit(50)
+                .withStatorCurrentLimit(25)
                 .withSupplyCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(25)
-                .withSupplyCurrentLowerLimit(15)
+                .withSupplyCurrentLimit(7)
+                .withSupplyCurrentLowerLimit(5)
                 .withSupplyCurrentLowerTime(.5));
         hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
         hood.getConfigurator().apply(config);
