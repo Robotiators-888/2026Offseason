@@ -42,7 +42,7 @@ public class SUB_Hood extends SubsystemBase {
         return hood.getPosition().getValueAsDouble();
     }
 
-    public static double findoptimalangle(double distance) {
+    public static double findoptimalangle(final double distance) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
         return (Math.PI / 4.0) + 0.5 * Math.atan2(height, distance);
     }

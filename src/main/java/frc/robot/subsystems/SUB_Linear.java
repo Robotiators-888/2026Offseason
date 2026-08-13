@@ -58,11 +58,11 @@ public class SUB_Linear extends SubsystemBase {
         return extended;
     }
 
-    public void forward(PIDController controller) {
+    public void forward(final PIDController controller) {
         linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT)); 
     }
 
-    public void backward(PIDController controller) {
+    public void backward(final PIDController controller) {
         linear.set(controller.calculate(linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT)); 
     }
 

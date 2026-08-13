@@ -13,8 +13,8 @@ import frc.robot.utils.Alert;
 
 public class SUB_Index extends SubsystemBase {
     /** Subsystem hardware components */
-    private SparkMax LeftIndexer;
-    private SparkMax RightIndexer;
+    private final SparkMax LeftIndexer;
+    private final SparkMax RightIndexer;
 
 
     private static SUB_Index INSTANCE = null;

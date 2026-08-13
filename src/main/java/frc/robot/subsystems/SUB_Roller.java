@@ -15,8 +15,8 @@ import frc.robot.utils.Alert;
 
 public class SUB_Roller extends SubsystemBase {
     /** Subsystem hardware components */
-    private TalonFX LeftRollerMotor;
-    private TalonFX RightRollerMotor;
+    private final TalonFX LeftRollerMotor;
+    private final TalonFX RightRollerMotor;
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
     private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
     private static SUB_Roller INSTANCE = null;

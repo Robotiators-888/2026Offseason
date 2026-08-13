@@ -22,12 +22,12 @@ public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
 
     /** Subsystem hardware and control state */
-    private TalonFX MotorOne;
-    private TalonFX MotorTwo;
+    private final TalonFX MotorOne;
+    private final TalonFX MotorTwo;
     private final VoltageOut voltageRequest = new VoltageOut(0);
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
-    private TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
+    private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private double fuelShot = 0;
     private double lastRPM = 0;
     private double dipRPM = 0;
@@ -88,7 +88,7 @@ public class SUB_Shooter extends SubsystemBase {
         MotorTwo.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    public static double findoptimalRPM(double distance, double angle) {
+    public static double findoptimalRPM(final double distance, final double angle) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
         double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((9.8*distance*distance)/(2*(distance*Math.tan(angle)-height)));
         double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.CompressionValue * Math.PI);
@@ -96,13 +96,13 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     @Deprecated
-    public void set(double speed) {
+    public void set(final double speed) {
         MotorOne.set(speed);
         isShooting = speed!=0;
     }
 
     /** @param rpm Target velocity for both flywheels */
-    public void setRPM(double rpm) {
+    public void setRPM(final double rpm) {
         this.desiredSpeed = rpm;
         MotorOne.setControl(m_request.withVelocity(rpm / 60.0));
         isShooting = rpm!=0;
@@ -122,7 +122,7 @@ public class SUB_Shooter extends SubsystemBase {
      * Sets target RPM based on distance to hub.
      * @param meters Distance to target in meters
      */
-    public void shootMeters(double meters) {
+    public void shootMeters(final double meters) {
         double targetRPM = distanceToRPM.get(meters);
         setRPM(targetRPM);
     }
@@ -132,7 +132,7 @@ public class SUB_Shooter extends SubsystemBase {
      * @param meters Distance to target in meters
      * @return Required RPM from the look-up table
      */
-    public double getDistanceRPM (double meters) {
+    public double getDistanceRPM (final double meters) {
         return distanceToRPM.get(meters);
     }
 
@@ -143,7 +143,7 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     /** @param volts Direct voltage output for manual testing */
-    public void setVolts(double volts) {
+    public void setVolts(final double volts) {
         MotorOne.setControl(voltageRequest.withOutput(volts));
         isShooting = volts!=0;
     }
@@ -212,7 +212,7 @@ public class SUB_Shooter extends SubsystemBase {
      * @param distanceMeters Distance to target
      * @return Estimated seconds until impact
      */
-    public double getExpectedTOF(double distanceMeters) {
+    public double getExpectedTOF(final double distanceMeters) {
         return distanceMeters*0.215298795+0.753755412;
     }
 

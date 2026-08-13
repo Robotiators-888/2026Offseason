@@ -39,7 +39,7 @@ public class SUB_Metering extends SubsystemBase {
         meteringFollower.setControl(new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    public void set (double speed) {
+    public void set (final double speed) {
         metering.set(speed);
     }
 
