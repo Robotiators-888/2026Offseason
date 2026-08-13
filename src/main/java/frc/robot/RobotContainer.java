@@ -267,8 +267,9 @@ public class RobotContainer {
                                 new CMD_AimBot(
                                         drivetrain, 
                                         photonVision, 
-                                        shooter, 
                                         index,
+                                        hood,
+                                        metering,
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),

@@ -26,9 +26,10 @@ import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.Constants.Operator;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
-import frc.robot.subsystems.SUB_Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -41,8 +42,9 @@ public class CMD_AimBot extends RunCommand {
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
-  private final SUB_Shooter shooter;
   private final SUB_Index index;
+  private final SUB_Hood hood;
+  private final SUB_Metering metering;
   private boolean isLocked;
 
   /** Physical offsets for targeting calibration */
@@ -78,16 +80,17 @@ public class CMD_AimBot extends RunCommand {
    * @param translationXSupplier Supplier for X translation input
    * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Hood hood, SUB_Metering metering, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
-    this.shooter = shooter;
     this.index = index;
+    this.hood = hood;
+    this.metering = metering;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
     
-    addRequirements(drivetrain, shooter, index);
+    addRequirements(drivetrain, metering, index, hood);
   }
 
   @Override
@@ -153,16 +156,13 @@ public class CMD_AimBot extends RunCommand {
                     new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
             )).orElse(drivetrain.getPose().getTranslation())
     );
-    shooter.shootMeters(distance);
+    hood.setToPosition(SUB_Hood.findoptimalangle(distance));
+    metering.set(1);
     
-     // Keep metering wheel spinning
-    boolean isShooterReady = shooter.atDesiredRPM();
-    if (isThetaErrorCorrect && isShooterReady) {
-      
+    if (isThetaErrorCorrect) {
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
     } else if (!isThetaErrorCorrect) {
         index.setVolts(0);
-        
     }
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
