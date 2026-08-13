@@ -15,6 +15,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.PhotonVision;
 import frc.robot.utils.Alert;
 
@@ -42,8 +43,8 @@ public class SUB_PhotonVision extends SubsystemBase {
   }
 
   private SUB_PhotonVision() {
-    // Load the 2026 field layout
-    at_field =  AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+    // Shared with Constants.Field, so the tag poses and the field dimensions can never disagree.
+    at_field = Constants.Field.kTagLayout;
 
     // Initialize cameras and pose estimators with MULTI_TAG_PNP strategy
     cam1.setPipelineIndex(0);

@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -90,7 +91,7 @@ public class RobotContainer {
         public static final SUB_Hood hood = SUB_Hood.getInstance();
         public static final SUB_Metering metering = SUB_Metering.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
+        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
         private final SendableChooser<Command> autoChooser;
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
@@ -119,6 +120,9 @@ public class RobotContainer {
         public static Field2d autoField = new Field2d();
         public int listIndex = 0;
         public double targetRPM = 1000;
+
+        /** Ceiling for the manual RPM trim on Driver 2's Y/A buttons. */
+        private static final double kMaxManualRPM = 4000;
         Field2d field;
         private final RobotTelemetry robotTelemetry;
 
@@ -159,17 +163,14 @@ public class RobotContainer {
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
-                        final double distance = drivetrain.getPose().getTranslation().getDistance(
-                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                                        )).orElse(drivetrain.getPose().getTranslation())
-                                );
-                        shooter.setRPM(SUB_Shooter.findoptimalRPM(
-                                distance,
-                                SUB_Hood.findoptimalangle(distance)
-                        ));
+                        // Idle at the speed the current range would need, so a shot only has to wait
+                        // out the last few hundred RPM. With no hub in the layout there is nothing
+                        // sensible to pre-spin to, so coast instead.
+                        Hub.getDistanceToGoal(drivetrain.getPose()).ifPresentOrElse(
+                                distance -> shooter.setRPM(SUB_Shooter.findoptimalRPM(
+                                        distance,
+                                        SUB_Hood.findoptimalangle(distance))),
+                                shooter::stop);
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> {
                         index.set(0);
@@ -178,7 +179,7 @@ public class RobotContainer {
                         metering.set(0);
                 }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> {
-                        hood.resetSafe();
+                        hood.stow();
                 }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
@@ -210,27 +211,10 @@ public class RobotContainer {
                 // =========================================================
                 Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
                         trenchAligning = true;
-                        Pose2d currentPose = drivetrain.getPose();
-                        
-                        Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-
-                        double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
-                        double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
-                        double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
-                        double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
-
-                        double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
-                        PathPlannerPath selectedPath = pathNeutralToRight;
-
-                        if (minD == d1) {
-                                selectedPath = pathLeftToNeutral;
-                        } else if (minD == d2) {
-                                selectedPath = pathNeutralToLeft;
-                        } else if (minD == d3) {
-                                selectedPath = pathRightToNeutral;
+                        PathPlannerPath selectedPath = nearestTrenchPath();
+                        if (selectedPath == null) {
+                                Alert.registerError("No trench paths loaded, cannot align");
+                                return;
                         }
 
                         try {
@@ -239,14 +223,14 @@ public class RobotContainer {
                                 trenchAlign = AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).until(()->{
                                         return !trenchAligning;
                                 });
-                                trenchAlign.schedule();
+                                CommandScheduler.getInstance().schedule(trenchAlign);
                         } catch (Exception e) {
                                 Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
                         }
                 })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
+                        linear.forward();
                 }, roller, linear));
                 Driver1.rightTrigger().whileTrue(
                         new ParallelCommandGroup(
@@ -256,6 +240,7 @@ public class RobotContainer {
                                         index,
                                         hood,
                                         metering,
+                                        shooter,
                                         () -> -(Driver1.getLeftY()),
                                         () -> -(Driver1.getLeftX()) 
                                 ),
@@ -274,33 +259,34 @@ public class RobotContainer {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                         
                 }, index));
-                Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
-                Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
+                // Clamped so holding the button cannot walk the setpoint into a reverse spin-up.
+                Driver2.y().onTrue(new InstantCommand(() -> targetRPM = MathUtil.clamp(targetRPM + 25, 0, kMaxManualRPM)));
+                Driver2.a().onTrue(new InstantCommand(() -> targetRPM = MathUtil.clamp(targetRPM - 25, 0, kMaxManualRPM)));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, index, shooter));
-                Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
-                Driver2.povUp().onTrue(Commands.run(()->linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
+                Driver2.povDown().whileTrue(Commands.run(()->linear.forward(),linear));
+                Driver2.povUp().whileTrue(Commands.run(()->linear.backward(),linear));
                 // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
                 //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
                 // }, linear));
-                Driver2.rightTrigger().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                // Manual hood jog + re-zero. This used to share Driver2.rightTrigger() with the
+                // indexer feed above, so every feed also nudged the hood down and silently
+                // redefined its zero on release.
+                Driver2.povLeft().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                         .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+
+                // Proper current-sensing home, bounded by a timeout.
+                Driver2.povRight().onTrue(hood.homeCommand());
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
                                 () -> -(Driver1.getLeftY()),
                                 () -> -(Driver1.getLeftX())
                         )
                 );
-                Driver2.x().onTrue(new InstantCommand(() -> targetRPM = shooter.getDistanceRPM(
-                        drivetrain.getPose().getTranslation().getDistance(
-                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                        new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                        )).orElse(drivetrain.getPose().getTranslation())
-                ))));
+                Driver2.x().onTrue(new InstantCommand(() -> Hub.getDistanceToGoal(drivetrain.getPose())
+                        .ifPresent(distance -> targetRPM = shooter.getDistanceRPM(distance))));
         }
 
         public void robotInit() {
@@ -317,52 +303,88 @@ public class RobotContainer {
                 return autoChooser.getSelected();
         }
 
+        /** The four trench-crossing paths, alliance-flipped. Null entries mean the file failed to load. */
+        private PathPlannerPath[] trenchPaths() {
+                return new PathPlannerPath[] {
+                        pathLeftToNeutral, pathNeutralToLeft, pathRightToNeutral, pathNeutralToRight
+                };
+        }
+
+        private static final String[] kTrenchNames = {
+                "Left Trough -> Neutral Zone",
+                "Neutral Zone -> Left Trough",
+                "Right Trough -> Neutral Zone",
+                "Neutral Zone -> Right Trough"
+        };
+
+        /**
+         * Index of the trench path whose start pose is closest to the robot, or -1 if none loaded.
+         *
+         * <p>Paths that failed to load are skipped rather than being substituted with the origin,
+         * which used to make the field origin the "nearest" pose and silently mis-select.
+         */
+        private int nearestTrenchIndex() {
+                Translation2d here = drivetrain.getPose().getTranslation();
+                PathPlannerPath[] paths = trenchPaths();
+                int best = -1;
+                double bestDistance = Double.MAX_VALUE;
+
+                for (int i = 0; i < paths.length; i++) {
+                        if (paths[i] == null) {
+                                continue;
+                        }
+                        Optional<Pose2d> start = paths[i].getStartingHolonomicPose();
+                        if (start.isEmpty()) {
+                                continue;
+                        }
+                        double distance = here.getDistance(
+                                        AllianceFlipUtil.apply(start.get()).getTranslation());
+                        if (distance < bestDistance) {
+                                bestDistance = distance;
+                                best = i;
+                        }
+                }
+                return best;
+        }
+
+        /** @return The trench path nearest the robot, or null if none are loaded. */
+        private PathPlannerPath nearestTrenchPath() {
+                int index = nearestTrenchIndex();
+                return index < 0 ? null : trenchPaths()[index];
+        }
+
+        /** Dashboard preview of which trench path the left bumper would pick. */
+        private void publishTrenchPreview() {
+                PathPlannerPath[] paths = trenchPaths();
+                StructPublisher<Pose2d>[] publishers = drivetrain.testPathPublishers();
+
+                for (int i = 0; i < paths.length; i++) {
+                        Pose2d start = paths[i] == null
+                                        ? new Pose2d()
+                                        : AllianceFlipUtil.apply(paths[i].getStartingHolonomicPose().orElse(new Pose2d()));
+                        publishers[i].set(start);
+                }
+
+                int nearest = nearestTrenchIndex();
+                if (nearest < 0) {
+                        SmartDashboard.putString("Trough/Closest", "none loaded");
+                        return;
+                }
+                drivetrain.selectedTestPathPublisher.set(
+                                AllianceFlipUtil.apply(paths[nearest].getStartingHolonomicPose().orElse(new Pose2d())));
+                SmartDashboard.putString("Trough/Closest", kTrenchNames[nearest]);
+        }
+
         public void robotPeriodic() {
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 field.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putData("Drivetrain/Field", field);
-                SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
-                Pose2d currentPose = drivetrain.getPose();
-                
-                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
 
-                drivetrain.testPath1Publisher.set(p1);
-                drivetrain.testPath2Publisher.set(p2);
-                drivetrain.testPath3Publisher.set(p3);
-                drivetrain.testPath4Publisher.set(p4);
-
-                double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
-                double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
-                double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
-                double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
-
-                double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
-                String closestTrough = "";
-                Pose2d closestPose = p1;
-
-                if (minD == d1) {
-                        closestTrough = "Left Trough -> Neutral Zone";
-                        closestPose = p1;
-                } else if (minD == d2) {
-                        closestTrough = "Neutral Zone -> Left Trough";
-                        closestPose = p2;
-                } else if (minD == d3) {
-                        closestTrough = "Right Trough -> Neutral Zone";
-                        closestPose = p3;
-                } else {
-                        closestTrough = "Neutral Zone -> Right Trough";
-                        closestPose = p4;
-                }
-
-                drivetrain.selectedTestPathPublisher.set(closestPose);
-                SmartDashboard.putString("Trough/Closest", closestTrough);
+                publishTrenchPreview();
                 robotTelemetry.update();
         }
 
@@ -400,6 +422,8 @@ public class RobotContainer {
         }
 
         public void teleopInit() {
+                // Otherwise robot-centric mode set in a previous session persists into this match.
+                fieldRelative = true;
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification = new Elastic.Notification(
                                 Elastic.Notification.NotificationLevel.INFO, "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
@@ -413,7 +437,12 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
-                newAutoName = getAutonomousCommand().getName();
+                final Command selectedAuto = getAutonomousCommand();
+                if (selectedAuto == null) {
+                        photonPoseUpdate();
+                        return;
+                }
+                newAutoName = selectedAuto.getName();
                 alliance = DriverStation.getAlliance();
                 if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
                         autoName = newAutoName;
@@ -469,35 +498,47 @@ public class RobotContainer {
 
         private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
                         StructPublisher<Pose3d> publisher) {
-                if (poseOptional.isPresent()) {
-                        EstimatedRobotPose estimatedPose = poseOptional.get();
-                        Pose3d photonPose = estimatedPose.estimatedPose;
+                if (poseOptional.isEmpty()) {
+                        return;
+                }
+                EstimatedRobotPose estimatedPose = poseOptional.get();
+                Pose3d photonPose = estimatedPose.estimatedPose;
 
-                        if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
-                                        && !estimatedPose.targetsUsed.isEmpty()) {
+                if (estimatedPose.targetsUsed.isEmpty()) {
+                        return;
+                }
 
-                                double minDist = Double.MAX_VALUE;
-                                for (var target : estimatedPose.targetsUsed) {
-                                        if (target.getPoseAmbiguity()>0.2) continue;
-                                        double dist = target.getBestCameraToTarget().getTranslation().getNorm();
-                                        if (dist < minDist)
-                                                minDist = dist;
-                                }
+                // On the field, in the plane of the floor. The Z check was missing entirely, so a
+                // solution floating a metre above the carpet used to be fused as if it were real.
+                boolean inBounds = photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
+                                && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
+                                && Math.abs(photonPose.getZ()) <= Constants.PhotonVision.kMaxZError;
+                if (!inBounds) {
+                        return;
+                }
 
-                                if (minDist<4.0) {
-                                        double xyStddev = Math.pow(minDist, 2) / 16.0;
-                                        double rotStddev = Units.degreesToRadians(120.0);
-                                        SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
-                                        drivetrain.addVisionMeasurement(
-                                                        photonPose.toPose2d(),
-                                                        estimatedPose.timestampSeconds,
-                                                        VecBuilder.fill(xyStddev,xyStddev,rotStddev));
-                                        publisher.set(photonPose);
-                                }
-
-                                
+                // Reject the whole frame if any tag that fed the solve is too ambiguous. The old
+                // loop used `continue`, which only skipped that tag in the distance search — the
+                // pose had already been solved using it, so an ambiguous tag still got through.
+                double minDist = Double.MAX_VALUE;
+                for (var target : estimatedPose.targetsUsed) {
+                        if (target.getPoseAmbiguity() > Constants.PhotonVision.kMaxAmbiguity) {
+                                return;
                         }
+                        double dist = target.getBestCameraToTarget().getTranslation().getNorm();
+                        if (dist < minDist)
+                                minDist = dist;
+                }
+
+                if (minDist < Constants.PhotonVision.kMaxDistance) {
+                        double xyStddev = Math.pow(minDist, 2) / 16.0;
+                        double rotStddev = Units.degreesToRadians(120.0);
+                        SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
+                        drivetrain.addVisionMeasurement(
+                                        photonPose.toPose2d(),
+                                        estimatedPose.timestampSeconds,
+                                        VecBuilder.fill(xyStddev,xyStddev,rotStddev));
+                        publisher.set(photonPose);
                 }
         }
 }

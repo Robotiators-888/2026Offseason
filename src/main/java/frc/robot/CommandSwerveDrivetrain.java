@@ -9,6 +9,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -35,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.utils.Alert;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -54,7 +56,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
-    private final SwerveRequest.ApplyRobotSpeeds autoRequest = new SwerveRequest.ApplyRobotSpeeds();
+    // Velocity (closed-loop) so autos track the same way teleop drives; the default was open-loop
+    // voltage, which is why path following felt different from the driver's stick.
+    private final SwerveRequest.ApplyRobotSpeeds autoRequest = new SwerveRequest.ApplyRobotSpeeds()
+        .withDriveRequestType(DriveRequestType.Velocity);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -149,7 +154,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public final StructPublisher<Pose2d> testPath4Publisher = NetworkTableInstance.getDefault()
         .getStructTopic("SmartDashboard/Drivetrain/TestPath4", Pose2d.struct).publish();
     public final StructPublisher<Pose2d> selectedTestPathPublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/SelectedTestPath", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/SelectedTestPath", Pose2d.struct).publish();
+
+    /** The four trench-path publishers, indexable so callers can loop instead of unrolling. */
+    @SuppressWarnings("unchecked")
+    public StructPublisher<Pose2d>[] testPathPublishers() {
+        return new StructPublisher[] {
+            testPath1Publisher, testPath2Publisher, testPath3Publisher, testPath4Publisher
+        };
+    }
 
     public final StructArrayPublisher<SwerveModuleState> swerveModuleStatesPublisher = NetworkTableInstance.getDefault()
     .getStructArrayTopic("SmartDashboard/Drivetrain/SwerveModuleStates", SwerveModuleState.struct).publish();
@@ -245,7 +258,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         try {
             config = RobotConfig.fromGUISettings();
         } catch (Exception e) {
-            e.printStackTrace();
+            // Leaving AutoBuilder unconfigured makes buildAutoChooser() throw during construction,
+            // so this has to be loud rather than a stack trace nobody reads at the field.
+            Alert.registerError("PathPlanner RobotConfig failed to load, autos are DISABLED: "
+                + e.getMessage());
             return;
         }
 
@@ -253,7 +269,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             () -> this.getState().Pose, // Supplier of current robot pose
             this::resetPose,  // Consumer for seeding pose against auto
             this::getCurrentRobotChassisSpeeds,
-            (speeds, feedforwards) -> this.setControl(autoRequest.withSpeeds(speeds)), // Consumer of ChassisSpeeds to drive the robot
+            // Pass the wheel-force feedforwards through instead of discarding them, and drive the
+            // modules closed-loop so autos track the same way teleop does.
+            (speeds, feedforwards) -> this.setControl(
+                autoRequest.withSpeeds(speeds)
+                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
             new PPHolonomicDriveController(
                 new PIDConstants(10, 0, 0),
                 new PIDConstants(10, 0, 0)

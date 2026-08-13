@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -28,6 +29,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
+import frc.robot.utils.Hub;
 
 public class CMD_Shuttle extends RunCommand{
     /** Physical offsets for targeting calibration */
@@ -62,6 +64,44 @@ public class CMD_Shuttle extends RunCommand{
     private Pose2d targetPose = new Pose2d();
     private boolean isThetaErrorCorrect;
 
+    /** Inside this error the heading output is zeroed so the robot can settle. */
+    private static final double kHeadingToleranceRads = Units.degreesToRadians(0.75);
+
+    /** Shuttling is a lob, so it tolerates far more heading error than an aimed shot. */
+    private static final double kAlignedToleranceRads = Units.degreesToRadians(14);
+
+    private static final double kMaxYawRateDegPerSec = 40;
+    private static final double kStictionFeedforwardRadsPerSec = Units.degreesToRadians(9);
+
+    /** How far from the hub, along each axis, the shuttle aim point sits. */
+    private static final double kShuttleOffsetMeters = Units.inchesToMeters(100);
+
+    /**
+     * Offset from the hub to the shuttle aim point: back toward our own end of the field, and
+     * toward the sideline the robot is currently closest to.
+     */
+    private Translation2d shuttleOffset () {
+        final boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+        final double halfField = photonVision.at_field.getFieldWidth() / 2.0;
+        final double x = isRed ? -kShuttleOffsetMeters : kShuttleOffsetMeters;
+        final double y = drivetrain.getPose().getY() < halfField
+            ? kShuttleOffsetMeters
+            : -kShuttleOffsetMeters;
+        return new Translation2d(x, y);
+    }
+
+    /**
+     * See {@link CMD_AimBot#rotationalRate}. Clamped rather than scaled by MaxAngularRate, with the
+     * stiction term suppressed inside the tolerance band.
+     */
+    private double rotationalRate (final double omegaSpeed, final double thetaErrorRads) {
+        final double clamped = MathUtil.clamp(omegaSpeed, -MaxAngularRate, MaxAngularRate);
+        if (thetaErrorRads <= kHeadingToleranceRads) {
+            return 0.0;
+        }
+        return clamped + Math.copySign(kStictionFeedforwardRadsPerSec, clamped);
+    }
+
     /**
      * Constructs a new CMD_Shuttle command for long-range scoring or passing.
      * @param drivetrain The swerve drivetrain subsystem
@@ -92,27 +132,35 @@ public class CMD_Shuttle extends RunCommand{
             drivetrain.getPose().getRotation().getRadians(),
             drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
         );
+        isThetaErrorCorrect = false;
+        xSlewRateLimiter.reset(0.0);
+        ySlewRateLimiter.reset(0.0);
+        shooter.setHighPower(true);
+    }
+
+    @Override
+    public void end (boolean interrupted) {
+        isThetaErrorCorrect = false;
+        index.setVolts(0);
+        shooter.setHighPower(false);
     }
 
     @Override
     public void execute () {
-        // Calculate a target pose shifted away from the hub for shuttling/passing
-        targetPose = photonVision.at_field.getTagPose(
-                    DriverStation.getAlliance().orElse(
-                        Alliance.Blue
-                    ) == Alliance.Red ? 10 : 26
-            ).map(
-                pose -> pose.toPose2d().relativeTo(
-                    new Pose2d(
-                        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -Units.inchesToMeters(100) : Units.inchesToMeters(100),
-                        (drivetrain.getPose().getY()<4) ? Units.inchesToMeters(100): -Units.inchesToMeters(100),
-                        Rotation2d.fromDegrees(0)
-                    )
-                )).orElse(
-                    drivetrain.getPose()
-                );
-        
         Pose2d currentPose = drivetrain.getPose();
+
+        // Shuttle target: the hub, shifted toward our side of the field and toward whichever
+        // sideline the robot is nearer. This used to use Pose2d.relativeTo(), which re-expresses
+        // the tag in the offset's frame — with a zero-rotation offset that degenerates to a
+        // subtraction, so the target moved the opposite way from what the signs implied.
+        Optional<Translation2d> goal = Hub.getGoalTranslation().map(hub -> hub.plus(shuttleOffset()));
+        if (goal.isEmpty()) {
+            isThetaErrorCorrect = false;
+            index.setVolts(0);
+            return;
+        }
+        targetPose = new Pose2d(goal.get(), new Rotation2d());
+
         ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
             drivetrain.getCurrentRobotChassisSpeeds(), 
             currentPose.getRotation()
@@ -147,7 +195,7 @@ public class CMD_Shuttle extends RunCommand{
 
         // Check if the rotation error is within an acceptable threshold for firing
         double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
-        isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(14) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 40;
+        isThetaErrorCorrect = thetaErrorRads <= kAlignedToleranceRads && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= kMaxYawRateDegPerSec;
         
         double distance = shooterFieldPosition.getDistance(virtualTargetTranslation);
         shooter.shootMeters(distance);
@@ -158,7 +206,7 @@ public class CMD_Shuttle extends RunCommand{
         
         if (isThetaErrorCorrect && isShooterReady) {
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-        } else if (!isThetaErrorCorrect) {
+        } else {
             index.setVolts(0);
         }
 
@@ -169,7 +217,7 @@ public class CMD_Shuttle extends RunCommand{
         drivetrain.setControl(
         drive.withVelocityX(xInput * MaxSpeed)
         .withVelocityY(yInput * MaxSpeed)
-        .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+        .withRotationalRate(rotationalRate(omegaSpeed, thetaErrorRads)));
  
     }
 }

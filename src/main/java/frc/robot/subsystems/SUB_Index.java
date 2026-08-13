@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -26,7 +28,6 @@ public class SUB_Index extends SubsystemBase {
         return INSTANCE;
     }
     
-    @SuppressWarnings("removal")
     private SUB_Index () {
         // Defines motors for indexing and metering
         LeftIndexer = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
@@ -36,11 +37,11 @@ public class SUB_Index extends SubsystemBase {
         SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
         LeftIndexConfig.smartCurrentLimit(15);
         LeftIndexConfig.follow(RightIndexer, true);
-        LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        LeftIndexer.configure(LeftIndexConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
         SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
         RightIndexConfig.smartCurrentLimit(15);
         RightIndexConfig.inverted(true);
-        RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
+        RightIndexer.configure(RightIndexConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
     }
     
     /** @param speed Target percent output for indexing [-1.0, 1.0] */
@@ -48,9 +49,14 @@ public class SUB_Index extends SubsystemBase {
         RightIndexer.set(speed);
     }
     
-    /** @return Current velocity of the indexer in RPM */
+    /**
+     * @return Current velocity of the indexer in RPM
+     *
+     * <p>Reads the leader only. Averaging the two used to return roughly zero: the left indexer
+     * follows inverted, so its encoder reports the opposite sign and the two cancelled.
+     */
     public double indexRPM(){
-        return (RightIndexer.getEncoder().getVelocity() + LeftIndexer.getEncoder().getVelocity())/2;
+        return RightIndexer.getEncoder().getVelocity();
     }
     
 

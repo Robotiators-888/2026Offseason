@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -28,9 +29,18 @@ public class SUB_Shooter extends SubsystemBase {
     private final VelocityVoltage m_request = new VelocityVoltage(0);
     private double desiredSpeed = 0;
     private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
-    private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
-    public static boolean isShooting;
-    
+
+    /**
+     * Current limits applied while actively shooting vs. idling. Only these differ between the two
+     * states, so runtime switching applies a CurrentLimitsConfigs rather than the whole
+     * TalonFXConfiguration.
+     */
+    private final CurrentLimitsConfigs highPowerLimits = new CurrentLimitsConfigs();
+    private final CurrentLimitsConfigs lowPowerLimits = new CurrentLimitsConfigs();
+
+    /** Tracks which limit profile is currently on the motors so we only touch CAN on a change. */
+    private boolean highPower = false;
+
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
@@ -60,13 +70,24 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     private void configFlywheel() {
-        // Configure current limits and neutral mode
-        shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        shooterConfig.CurrentLimits.StatorCurrentLimit = 100;
-        shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        shooterConfig.CurrentLimits.SupplyCurrentLimit = 60;
-        shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
+        // The two current-limit profiles. Stator, neutral mode, inversion and gains are identical
+        // between them, so only the supply limits are switched at runtime.
+        highPowerLimits.StatorCurrentLimitEnable = true;
+        highPowerLimits.StatorCurrentLimit = 100;
+        highPowerLimits.SupplyCurrentLimitEnable = true;
+        highPowerLimits.SupplyCurrentLimit = 60;
+        highPowerLimits.SupplyCurrentLowerLimit = 40;
+        highPowerLimits.SupplyCurrentLowerTime = 1.0;
+
+        lowPowerLimits.StatorCurrentLimitEnable = true;
+        lowPowerLimits.StatorCurrentLimit = 100;
+        lowPowerLimits.SupplyCurrentLimitEnable = true;
+        lowPowerLimits.SupplyCurrentLimit = 10;
+        lowPowerLimits.SupplyCurrentLowerLimit = 5;
+        lowPowerLimits.SupplyCurrentLowerTime = 1.0;
+
+        // Boot into the idle profile so it agrees with the initial value of highPower.
+        shooterConfig.CurrentLimits = lowPowerLimits;
         shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -74,39 +95,68 @@ public class SUB_Shooter extends SubsystemBase {
         shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
         shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV;
         shooterConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
-        shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
+        shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP;
         shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
-        shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
-
-        shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-        shooterLowConfig.CurrentLimits.StatorCurrentLimit = 100;
-        shooterLowConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-        shooterLowConfig.CurrentLimits.SupplyCurrentLimit = 10;
-        shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
-        shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
-        shooterLowConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        shooterLowConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-        // Configure PID control loop coefficients
-        shooterLowConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
-        shooterLowConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV;
-        shooterLowConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
-        shooterLowConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP; 
-        shooterLowConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
-        shooterLowConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD; 
+        shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
 
         MotorOne.getConfigurator().apply(shooterConfig);
         MotorTwo.getConfigurator().apply(shooterConfig);
-        
+
         // Synchronize bottom flywheel to top flywheel
         MotorTwo.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
+    /**
+     * Selects the shooting (high supply current) or idle (low supply current) limit profile.
+     *
+     * <p>Every command that spins the flywheel to score must call this with {@code true} in
+     * {@code initialize()} and {@code false} in {@code end()}. The call is edge-triggered, so
+     * repeating it costs nothing; only an actual change touches the CAN bus.
+     *
+     * @param enabled true while actively shooting
+     */
+    public void setHighPower(final boolean enabled) {
+        if (enabled == highPower) {
+            return;
+        }
+        highPower = enabled;
+        final CurrentLimitsConfigs limits = enabled ? highPowerLimits : lowPowerLimits;
+        MotorOne.getConfigurator().apply(limits);
+        MotorTwo.getConfigurator().apply(limits);
+    }
+
+    /**
+     * Flywheel speed needed to land a projectile launched at {@code angle} at horizontal range
+     * {@code distance}.
+     *
+     * <p>{@code angle} is in <b>radians</b> throughout — it previously went into
+     * {@code Units.degreesToRadians()} for the secant term while being used raw in the tangent term,
+     * so the same variable was read as two different units inside one expression.
+     *
+     * <p>The surface-speed to RPM conversion is {@code v * 60 / (pi * D)} with D in meters. Since
+     * {@link Constants.Shooter#ShooterDiameter} is in inches, the numerator carries the inches per
+     * meter factor; the old literal 720 was short by a factor of ~3.3.
+     *
+     * @param distance Horizontal range to the target, in meters
+     * @param angle Launch angle in radians (see {@link SUB_Hood#findoptimalangle})
+     * @return Required flywheel RPM, or 0 if the shot is not physically reachable
+     */
     public static double findoptimalRPM(final double distance, final double angle) {
-        double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT*distance*distance)/(2*(distance*Math.tan(angle)-height)));
-        double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI);
-        return exitRPM;
+        final double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+
+        // The projectile must still be rising to the target at this range; otherwise there is no
+        // real solution and the square root would produce NaN.
+        final double denominator = 2 * (distance * Math.tan(angle) - height);
+        if (denominator <= 0) {
+            return 0;
+        }
+
+        final double exitVelocity = (1 / Math.cos(angle))
+            * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance) / denominator);
+
+        final double inchesPerMinutePerMeterPerSecond = 60.0 * Units.metersToInches(1.0);
+        return (inchesPerMinutePerMeterPerSecond * exitVelocity)
+            / (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter);
     }
 
     @Deprecated
@@ -188,16 +238,10 @@ public class SUB_Shooter extends SubsystemBase {
 
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
       
+      SmartDashboard.putBoolean("Shooter/High Power Limits", highPower);
+
       Alert.alertKraken(MotorOne);
       Alert.alertKraken(MotorTwo);
-
-      if (SUB_Shooter.isShooting) {
-        MotorOne.getConfigurator().apply(shooterConfig);
-        MotorTwo.getConfigurator().apply(shooterConfig);
-      } else {
-        MotorOne.getConfigurator().apply(shooterLowConfig);
-        MotorTwo.getConfigurator().apply(shooterLowConfig);
-      }
     }
 
 

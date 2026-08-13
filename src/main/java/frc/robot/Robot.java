@@ -4,12 +4,11 @@
 
 package frc.robot;
 
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
 import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.utils.Alert;
@@ -20,7 +19,19 @@ import frc.robot.utils.Alert;
  * this project, you must also update the Main.java file in the project.
  */
 
-public class Robot extends LoggedRobot {
+/*
+ * This extended AdvantageKit's LoggedRobot and called Logger.start(), but with no data receivers,
+ * no recordMetadata, no replay source, and not one recordOutput call anywhere in src/ — so it paid
+ * LoggedRobot's per-loop cost and logged nothing. Logging actually comes from DataLogManager
+ * (.wpilog) and CTRE SignalLogger (.hoot), both started below.
+ *
+ * The AdvantageKit vendordep is left in place. To adopt it properly, switch back to LoggedRobot and
+ * register receivers BEFORE Logger.start():
+ *   Logger.recordMetadata("ProjectName", "2026Offseason");
+ *   Logger.addDataReceiver(new WPILOGWriter());
+ *   Logger.addDataReceiver(new NT4Publisher());
+ */
+public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
@@ -33,7 +44,6 @@ public class Robot extends LoggedRobot {
 
     DataLogManager.start();
     DriverStation.startDataLog(DataLogManager.getLog());
-    Logger.start();
     SignalLogger.start();
     
     // Instantiate our RobotContainer. This will perform all our button bindings, and put our
@@ -63,7 +73,12 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    // WPILib does not cancel commands on disable — the scheduler simply stops driving outputs, and
+    // whatever was running resumes on re-enable with its end() never having fired. Cancelling here
+    // is what guarantees every command's cleanup actually runs.
+    CommandScheduler.getInstance().cancelAll();
+  }
 
   @Override
   public void disabledPeriodic() {
@@ -77,7 +92,7 @@ public class Robot extends LoggedRobot {
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
     m_robotContainer.autonomousInit();
   }

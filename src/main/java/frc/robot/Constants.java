@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -53,7 +55,15 @@ public final class Constants {
 
         /** Intake roller motor configuration */
         public static final class Roller {
-                public static final int kINTAKE_LEFTMOTOR_CANID = 30; 
+                public static final int kINTAKE_LEFTMOTOR_CANID = 30;
+
+                /**
+                 * NOTE: shares ID 31 with {@link Linear#kLINEAR_MOTOR_CANID}. This does not collide
+                 * on the wire — FRC CAN arbitration includes the manufacturer and device type, so a
+                 * CTRE 31 and a REV 31 are distinct — but it is the only duplicate in the robot and
+                 * it will bite whoever next re-IDs hardware. Renumbering means physically re-IDing
+                 * the motor, so it is left alone rather than changed silently here.
+                 */
                 public static final int kINTAKE_RIGHTMOTOR_CANID = 31;
                 public static final double kROLLER_MOTOR_SPEED = 0.9;
                 public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; 
@@ -66,8 +76,11 @@ public final class Constants {
                 public static final double kLINEAR_FORWARD_SETPOINT = 360.0*4.2; // Degrees (Relative)
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
                 public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
-                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0, 0); // Change the values!!!
-                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0, 0); // Change the values!!!
+
+                // Gains, not controllers. SUB_Linear builds its own PIDController instances from
+                // these — a shared static controller carries mutable loop state between commands.
+                public static final double kLINEAR_FAST_kP = 4;
+                public static final double kLINEAR_SLOW_kP = 1;
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -84,16 +97,42 @@ public final class Constants {
 
         /** Standard field measurements in meters */
         public static final class Field {
-                public static final double fieldLength = 1653.2 / 100.0; 
-                public static final double fieldWidth = 800.1 / 100.0; 
+                /**
+                 * The one AprilTag layout the whole robot agrees on — vision, aiming, and alliance
+                 * flipping all resolve through this. Keeping a single reference is what stops the
+                 * field dimensions and the tag poses from drifting apart.
+                 */
+                public static final AprilTagFieldLayout kTagLayout =
+                                AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+
+                /**
+                 * Derived from the layout above rather than typed in. The previous literals
+                 * (16.532 x 8.001) matched no real field — they were ~14 mm long and ~42 mm narrow
+                 * against 2026 Rebuilt AndyMark, which skewed every red-alliance flip and clipped
+                 * valid vision poses near the field edge.
+                 */
+                public static final double fieldLength = kTagLayout.getFieldLength();
+                public static final double fieldWidth = kTagLayout.getFieldWidth();
         }
 
         /** Vision camera names and physical transformations on the robot */
         public static final class PhotonVision {
                 public static final String kCamName1 = "BackLeftCam";
+
+                // These three were declared but never referenced; the filter in
+                // RobotContainer.processCameraPose() hardcoded its own values instead. They are set
+                // here to the values that were actually running (0.2 ambiguity, 4.0 m) rather than
+                // the untested numbers that used to sit here, so wiring them up changes nothing
+                // about behaviour. kMaxZError is newly enforced — there was no Z check at all.
+
+                /** Max height above the floor, in meters, before a pose solution is discarded. */
                 public static final double kMaxZError = 0.2;
-                public static final double kMaxAmbiguity = 0.1;
-                public static final double kMaxDistance = 12.0;
+
+                /** Max per-tag pose ambiguity; any worse tag in the solve rejects the whole frame. */
+                public static final double kMaxAmbiguity = 0.2;
+
+                /** Max distance to the nearest tag used, in meters. */
+                public static final double kMaxDistance = 4.0;
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
@@ -125,13 +164,64 @@ public final class Constants {
                 public static final double kColorGreen = 0.77;
                 public static final double kColorRed = 0.61;
                 public static final double kParty_Palette_Twinkles = -0.53;
-                public static final double kAllianceColor = (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)== DriverStation.Alliance.Blue) ? 0.0 : 0.5;
+
+                /**
+                 * Blinkin value for our alliance colour.
+                 *
+                 * <p>This must stay a method. It used to be a {@code static final} field initialised
+                 * from {@link DriverStation#getAlliance()}, which runs at class load — long before
+                 * the FMS reports an alliance — so it always evaluated to blue.
+                 */
+                public static double allianceColor () {
+                        return DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
+                                        == DriverStation.Alliance.Blue ? 0.0 : 0.5;
+                }
         }
 
         public static class Hood {
                 public static final int kHOOD_CAN_ID = 47;
-                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4,0,0); // Change the values!!!
+
+                /** Height of the scoring target above the shooter exit, in inches. */
                 public static final double ScoreHeight = 55;
+
+                /**
+                 * Motor rotations per rotation of the hood mechanism. Feeding this to the TalonFX as
+                 * SensorToMechanismRatio makes getPosition() report mechanism rotations, so every
+                 * angle in code can be plain radians.
+                 *
+                 * <p>MEASURE THIS. 1.0 means "direct drive", which is almost certainly wrong; until
+                 * it is measured the hood will move by the wrong amount even though the units now
+                 * line up. Rotate the hood a known amount by hand and read Hood/Angle (Deg).
+                 */
+                public static final double kHOOD_GEAR_RATIO = 1.0;
+
+                /**
+                 * Mechanism angle, in radians, when the encoder reads zero — i.e. the hood sitting
+                 * against its retracted hard stop. MEASURE THIS TOO.
+                 */
+                public static final double kHOOD_ANGLE_AT_ZERO_RADS = 0.0;
+
+                /** Travel limits of the hood, as mechanism angles in radians. MEASURE THESE. */
+                public static final double kHOOD_MIN_ANGLE_RADS = 0.0;
+                public static final double kHOOD_MAX_ANGLE_RADS = Math.PI / 2.0;
+
+                /**
+                 * Slot0 gains for the on-motor position loop, in volts per mechanism rotation of
+                 * error. These are NOT the old duty-cycle gains — the previous kP of 4 was in a
+                 * different unit system and does not carry over. Tune on the bench.
+                 */
+                public static final double kHOOD_kP = 8.0;
+                public static final double kHOOD_kI = 0.0;
+                public static final double kHOOD_kD = 0.0;
+
+                /** Stator current above which the homing routine decides the hood has hit its stop. */
+                public static final double kHOOD_STALL_AMPS = 20.0;
+
+                /** Open-loop output used while homing toward the retracted stop. */
+                public static final double kHOOD_HOMING_OUTPUT = -0.08;
+
+                /** Give up homing after this long so a failed sensor cannot stall the motor forever. */
+                public static final double kHOOD_HOMING_TIMEOUT_SECONDS = 2.0;
         }
         public static class Metering {
                 public static final int kMETERING_MOTOR_CAN_ID = 45;

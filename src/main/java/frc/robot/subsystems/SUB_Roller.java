@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
@@ -63,9 +65,16 @@ public class SUB_Roller extends SubsystemBase {
         LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
     }
 
-    /** @return Current velocity of the roller in RPM */
+    /**
+     * @return Current velocity of the roller in RPM
+     *
+     * <p>Reads the leader only, in RPM. Averaging the two used to return roughly zero, since the
+     * right roller is an Opposed follower and reports the opposite sign; and
+     * {@code baseUnitMagnitude()} is rotations per second, so the old value was neither an average
+     * nor RPM.
+     */
     public double rollerRPM(){
-        return (LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude()+ RightRollerMotor.getVelocity().getValue().baseUnitMagnitude())/2;
+        return LeftRollerMotor.getVelocity().getValue().in(RPM);
     }
 
     @Override

@@ -1,11 +1,20 @@
 package frc.robot.utils;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.hal.PowerDistributionFaults;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.CommandSwerveDrivetrain;
 
 public class RobotTelemetry {
+    /**
+     * PDH channels that actually have something wired to them. Channels 12-14 and 23 are unused and
+     * would raise false breaker faults.
+     */
+    private static final int[] kMonitoredPdhChannels = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16, 17, 18, 19, 20, 21, 22
+    };
+
     private final CommandSwerveDrivetrain drivetrain;
     private final PowerDistribution powerDistribution;
 
@@ -60,62 +69,23 @@ public class RobotTelemetry {
                 SmartDashboard.putNumber("PDH/Total Energy Joules", powerDistribution.getTotalEnergy());
                 // Not supported on PDH
                 // SmartDashboard.putNumber("PDH/Total Watts", powerDistribution.getTotalPower());
-                if (powerDistribution.getFaults().Brownout)
+                // One read of the fault struct, not one per channel.
+                final PowerDistributionFaults faults = powerDistribution.getFaults();
+
+                if (faults.Brownout)
                         Alert.registerError("PDH Brownout!!");
-                if (powerDistribution.getFaults().CanWarning)
+                if (faults.CanWarning)
                         Alert.registerWarning("PDH CanWarning");
-                if (powerDistribution.getFaults().HardwareFault)
+                if (faults.HardwareFault)
                         Alert.registerError("PDH HardwareFault");
-                if (powerDistribution.getFaults().Channel0BreakerFault)
-                        Alert.registerError("PDH Channel0BreakerFault");
-                if (powerDistribution.getFaults().Channel10BreakerFault)
-                        Alert.registerError("PDH Channel10BreakerFault");
-                if (powerDistribution.getFaults().Channel11BreakerFault)
-                        Alert.registerError("PDH Channel11BreakerFault");
-                // We dont use these ports so they cause false errors
-                // if (powerDistribution.getFaults().Channel12BreakerFault)
-                //         Alert.registerError("PDH Channel12BreakerFault");
-                // if (powerDistribution.getFaults().Channel13BreakerFault)
-                //         Alert.registerError("PDH Channel13BreakerFault");
-                // if (powerDistribution.getFaults().Channel14BreakerFault)
-                //         Alert.registerError("PDH Channel14BreakerFault");
-                if (powerDistribution.getFaults().Channel15BreakerFault)
-                        Alert.registerError("PDH Channel15BreakerFault");
-                if (powerDistribution.getFaults().Channel16BreakerFault)
-                        Alert.registerError("PDH Channel16BreakerFault");
-                if (powerDistribution.getFaults().Channel17BreakerFault)
-                        Alert.registerError("PDH Channel17BreakerFault");
-                if (powerDistribution.getFaults().Channel18BreakerFault)
-                        Alert.registerError("PDH Channel18BreakerFault");
-                if (powerDistribution.getFaults().Channel19BreakerFault)
-                        Alert.registerError("PDH Channel19BreakerFault");
-                if (powerDistribution.getFaults().Channel1BreakerFault)
-                        Alert.registerError("PDH Channel1BreakerFault");
-                if (powerDistribution.getFaults().Channel20BreakerFault)
-                        Alert.registerError("PDH Channel20BreakerFault");
-                if (powerDistribution.getFaults().Channel21BreakerFault)
-                        Alert.registerError("PDH Channel21BreakerFault");
-                if (powerDistribution.getFaults().Channel22BreakerFault)
-                        Alert.registerError("PDH Channel22BreakerFault");
-                // Also unused
-                // if (powerDistribution.getFaults().Channel23BreakerFault)
-                //         Alert.registerError("PDH Channel23BreakerFault");
-                if (powerDistribution.getFaults().Channel2BreakerFault)
-                        Alert.registerError("PDH Channel2BreakerFault");
-                if (powerDistribution.getFaults().Channel3BreakerFault)
-                        Alert.registerError("PDH Channel3BreakerFault");
-                if (powerDistribution.getFaults().Channel4BreakerFault)
-                        Alert.registerError("PDH Channel4BreakerFault");
-                if (powerDistribution.getFaults().Channel5BreakerFault)
-                        Alert.registerError("PDH Channel5BreakerFault");
-                if (powerDistribution.getFaults().Channel6BreakerFault)
-                        Alert.registerError("PDH Channel6BreakerFault");
-                if (powerDistribution.getFaults().Channel7BreakerFault)
-                        Alert.registerError("PDH Channel7BreakerFault");
-                if (powerDistribution.getFaults().Channel18BreakerFault)
-                        Alert.registerError("PDH Channel18BreakerFault");
-                if (powerDistribution.getFaults().Channel9BreakerFault)
-                        Alert.registerError("PDH Channel19BreakerFault");
+
+                // Previously hand-written per channel, which had drifted: channel 18 was checked
+                // twice, channel 9's fault was reported as "Channel19BreakerFault", and channel 8
+                // was never checked at all.
+                for (final int channel : kMonitoredPdhChannels) {
+                        if (faults.getBreakerFault(channel))
+                                Alert.registerError("PDH Channel" + channel + "BreakerFault");
+                }
         }
 
     private void checkAlerts() {

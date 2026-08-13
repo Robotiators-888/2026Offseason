@@ -2,11 +2,16 @@ package frc.robot.utils;
 
 import java.util.Optional;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Elastic.Notification;
@@ -15,6 +20,53 @@ import frc.robot.utils.Elastic.Notification.NotificationLevel;
 public class Hub {
     private static Boolean lastActiveAlliance = true;
     private static String gameData = "";
+
+    /** AprilTag on the face of each alliance's hub. */
+    private static final int kRedHubTagId = 10;
+    private static final int kBlueHubTagId = 26;
+
+    /**
+     * Distance from the hub's face tag to the hub's center, along +X. Signed so that it always
+     * points from the tag into the middle of the field.
+     */
+    private static final double kTagToHubCenterMeters = Units.inchesToMeters(23.5);
+
+    /** @return The AprilTag ID on our alliance's hub. Defaults to blue when the alliance is unknown. */
+    public static int getGoalTagId () {
+        return DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                ? kRedHubTagId
+                : kBlueHubTagId;
+    }
+
+    /**
+     * Field-relative translation of the center of our alliance's hub, derived from the AprilTag
+     * layout rather than hardcoded coordinates.
+     *
+     * @return The hub center, or empty if the tag is missing from the loaded layout.
+     */
+    public static Optional<Translation2d> getGoalTranslation () {
+        final boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+        final double offsetX = isRed ? -kTagToHubCenterMeters : kTagToHubCenterMeters;
+
+        // Read the layout directly rather than through SUB_PhotonVision.getInstance(), which would
+        // construct camera objects as a side effect of asking a geometry question.
+        return Constants.Field.kTagLayout.getTagPose(getGoalTagId())
+                .map(Pose3d::toPose2d)
+                .map(pose -> pose.getTranslation().plus(new Translation2d(offsetX, 0)));
+    }
+
+    /**
+     * Distance from a robot pose to the center of our alliance's hub.
+     *
+     * <p>Returns empty rather than a silent zero when the hub tag is unavailable, so callers must
+     * decide what to do instead of aiming at themselves.
+     *
+     * @param robotPose Current robot pose on the field
+     * @return Distance in meters, or empty if the hub tag is missing from the layout
+     */
+    public static Optional<Double> getDistanceToGoal (final Pose2d robotPose) {
+        return getGoalTranslation().map(goal -> robotPose.getTranslation().getDistance(goal));
+    }
 
     public static Optional<Boolean> isAllianceHubActive () {
         if (getActiveAlliance().isEmpty()) {

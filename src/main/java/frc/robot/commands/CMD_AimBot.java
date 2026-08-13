@@ -31,6 +31,7 @@ import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
+import frc.robot.utils.Hub;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -39,13 +40,14 @@ public class CMD_AimBot extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
-  private Pose2d targetPose = new Pose2d();
+  private Optional<Translation2d> targetTranslation = Optional.empty();
   private final DoubleSupplier translationXSupplier;
   private final DoubleSupplier translationYSupplier;
   private static boolean running;
   private final SUB_Index index;
   private final SUB_Hood hood;
   private final SUB_Metering metering;
+  private final SUB_Shooter shooter;
   private boolean isLocked;
 
   /** Physical offsets for targeting calibration */
@@ -64,11 +66,24 @@ public class CMD_AimBot extends RunCommand {
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
+
+  /** Inside this error the heading output is zeroed so the robot can actually settle. */
+  private static final double kHeadingToleranceRads = Units.degreesToRadians(0.75);
+
+  /** Error band within which the shot is considered on-target. */
+  private static final double kAlignedToleranceRads = Units.degreesToRadians(5);
+
+  /** Yaw rate below which the robot is considered settled enough to fire, in degrees per second. */
+  private static final double kMaxYawRateDegPerSec = 20;
+
+  /** Constant term that breaks drivetrain stiction, applied only outside the tolerance band. */
+  private static final double kStictionFeedforwardRadsPerSec = Units.degreesToRadians(9);
+
   private final SwerveRequest.SwerveDriveBrake brakeRequest = new SwerveRequest.SwerveDriveBrake();
-  private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); 
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
+  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
+            .withDriveRequestType(DriveRequestType.Velocity);
   private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in X direction
   private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0,-8.0,0.0); // Limit acceleration to 3 m/s^2 in Y direction
   
@@ -81,12 +96,13 @@ public class CMD_AimBot extends RunCommand {
    * @param translationXSupplier Supplier for X translation input
    * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Hood hood, SUB_Metering metering, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.index = index;
     this.hood = hood;
     this.metering = metering;
+    this.shooter = shooter;
     this.translationXSupplier = translationXSupplier;
     this.translationYSupplier = translationYSupplier;
     robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
@@ -97,17 +113,11 @@ public class CMD_AimBot extends RunCommand {
   @Override
   public void initialize() {
     // Determine the correct target tag based on the current alliance
-    robotAngleController.setTolerance(Units.degreesToRadians(0.0));
-    
-    Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
-      ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
-      : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
-      
-    double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
-    Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
-    
-    targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
-    
+    robotAngleController.setTolerance(kHeadingToleranceRads);
+
+    // Latch the hub location once, here, rather than recomputing it every execute().
+    targetTranslation = Hub.getGoalTranslation();
+
     // Reset the PID controller to the current state of the robot
     robotAngleController.reset(
         drivetrain.getPose().getRotation().getRadians(),
@@ -115,29 +125,41 @@ public class CMD_AimBot extends RunCommand {
     );
     isLocked = false;
     running = true;
-    SUB_Shooter.isShooting = true;
+    isThetaErrorCorrect = false;
+    xSlewRateLimiter.reset(0.0);
+    ySlewRateLimiter.reset(0.0);
+    shooter.setHighPower(true);
   }
 
   @Override
   public void execute() {
-    // Set up poses
     Pose2d currentPose = drivetrain.getPose();
 
-    Translation2d targetTranslation = targetPose.getTranslation();
+    // Without a hub location there is nothing to aim at. Hold still rather than aiming at a
+    // fabricated target, which is what the old orElse(currentPose) fallback silently did.
+    if (targetTranslation.isEmpty()) {
+      isThetaErrorCorrect = false;
+      index.setVolts(0);
+      metering.set(0);
+      drivetrain.setControl(brakeRequest);
+      return;
+    }
+    Translation2d goal = targetTranslation.get();
+
     Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
         shooterOffset.rotateBy(currentPose.getRotation())
     );
 
     // 2. Calculate the angle directly from the SHOOTER to the target
     Rotation2d targetRotation = new Rotation2d(
-        targetTranslation.getX() - shooterFieldPosition.getX(),
-        targetTranslation.getY() - shooterFieldPosition.getY()
+        goal.getX() - shooterFieldPosition.getX(),
+        goal.getY() - shooterFieldPosition.getY()
     );
 
     targetRotation = targetRotation.plus(shooterThetaOffset);
 
     // Update telemetry
-    drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
+    drivetrain.publisher1.set(new Pose2d(goal, targetRotation));
 
     // 3. Calculate rotational velocity (omega) using the PID controller
     double omegaSpeed = robotAngleController.calculate(
@@ -148,23 +170,20 @@ public class CMD_AimBot extends RunCommand {
     // Calculate error for deadband checking
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
-    
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
+
+    isThetaErrorCorrect = thetaErrorRads <= kAlignedToleranceRads && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= kMaxYawRateDegPerSec;
     SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect",isThetaErrorCorrect);
-    double distance = drivetrain.getPose().getTranslation().getDistance(
-            SUB_PhotonVision.getInstance().at_field.getTagPose(
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-            ).map(pose -> pose.toPose2d().getTranslation().plus(
-                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-            )).orElse(drivetrain.getPose().getTranslation())
-    );
-    hood.setToPosition(SUB_Hood.findoptimalangle(distance));
+
+    double distance = shooterFieldPosition.getDistance(goal);
+    hood.setAngle(SUB_Hood.findoptimalangle(distance));
     metering.set(1);
-    
-    if (isThetaErrorCorrect) {
+
+    // Only feed once the robot is pointed AND the flywheel is up to speed — feeding into a
+    // spinning-up flywheel is what the auto and shuttle paths already guard against.
+    if (isThetaErrorCorrect && shooter.atDesiredRPM()) {
       index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-    } else if (!isThetaErrorCorrect) {
-        index.setVolts(0);
+    } else {
+      index.setVolts(0);
     }
     double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
     double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
@@ -173,7 +192,7 @@ public class CMD_AimBot extends RunCommand {
     if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
       isLocked = true;
     }
-    else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
+    else if (isLocked && thetaErrorRads >= kAlignedToleranceRads) {
       isLocked = false;
     }
 
@@ -184,14 +203,34 @@ public class CMD_AimBot extends RunCommand {
         drivetrain.setControl(
           drive.withVelocityX(xInput * MaxSpeed)
           .withVelocityY(yInput * MaxSpeed)
-          .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate))); // TODO: Comment
+          .withRotationalRate(rotationalRate(omegaSpeed, thetaErrorRads)));
     }
+  }
+
+  /**
+   * Turns the heading controller's output into a rotational rate command.
+   *
+   * <p>The controller already produces radians per second, so it is clamped rather than scaled by
+   * MaxAngularRate — multiplying by it, as this used to, inflated the command by ~4.7x on top of
+   * the proportional gain.
+   *
+   * <p>The static term breaks stiction, but it is gated on the error being outside the alignment
+   * band. Applying it unconditionally meant that at zero error {@code Math.copySign(x, 0.0)}
+   * returned +x and the robot kept creeping, so it could never settle.
+   */
+  private double rotationalRate(final double omegaSpeed, final double thetaErrorRads) {
+    final double clamped = MathUtil.clamp(omegaSpeed, -MaxAngularRate, MaxAngularRate);
+    if (thetaErrorRads <= kHeadingToleranceRads) {
+      return 0.0;
+    }
+    return clamped + Math.copySign(kStictionFeedforwardRadsPerSec, clamped);
   }
 
   @Override
   public void end(boolean interrupted) {
     running = false;
-    SUB_Shooter.isShooting=false;
+    isThetaErrorCorrect = false;
+    shooter.setHighPower(false);
   }
 
   @Override
