@@ -281,15 +281,15 @@ public class RobotContainer {
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
-                        
                         shooter.setVolts(-2.5);
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
                 Driver2.povUp().onTrue(Commands.run(()->linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
-                Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                        linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
-                }, linear));
-
+                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
+                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
+                // }, linear));
+                Driver2.rightTrigger().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                        .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
                                 () -> -(Driver1.getLeftY()),

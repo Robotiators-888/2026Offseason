@@ -52,6 +52,14 @@ public class SUB_Hood extends SubsystemBase {
         setToPosition(0); // TODO: Actually make this safe maybe by using a high I PID and detected when the current gets high
     }
 
+    public void resetEncoder () {
+        hood.setPosition(0);
+    }
+
+    public void set (double speed) {
+        hood.set(speed);
+    }
+
     @Override
     public void periodic () {
         SmartDashboard.putNumber("Hood/Position", getPosition());
