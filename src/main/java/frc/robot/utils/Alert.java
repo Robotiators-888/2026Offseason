@@ -3,6 +3,7 @@ package frc.robot.utils;
 import java.util.HashMap;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -203,41 +204,44 @@ public class Alert {
 
   public static void alertNeoFaults (SparkMax neo) {
     int neoId = neo.getDeviceId();
-    if (neo.getFaults().can)
+    // One read of the struct rather than eight round trips to the controller.
+    final SparkBase.Faults faults = neo.getFaults();
+    if (faults.can)
       registerError("Motor " + neoId + " Fault: can");
-    if (neo.getFaults().escEeprom)
+    if (faults.escEeprom)
       registerError("Motor " + neoId + " Fault: escEeprom");
-    if (neo.getFaults().firmware)
+    if (faults.firmware)
       registerError("Motor " + neoId + " Fault: firmware");
-    if (neo.getFaults().gateDriver)
+    if (faults.gateDriver)
       registerError("Motor " + neoId + " Fault: gateDriver");
-    if (neo.getFaults().motorType)
+    if (faults.motorType)
       registerError("Motor " + neoId + " Fault: motorType");
-    if (neo.getFaults().other)
+    if (faults.other)
       registerError("Motor " + neoId + " Fault: other");
-    if (neo.getFaults().sensor)
+    if (faults.sensor)
       registerError("Motor " + neoId + " Fault: sensor");
-    if (neo.getFaults().temperature)
+    if (faults.temperature)
       registerError("Motor " + neoId + " Fault: temperature");
   }
 
   public static void alertNeoWarnings (SparkMax neo) {
     int neoId = neo.getDeviceId();
-    if (neo.getWarnings().brownout)
+    final SparkBase.Warnings warnings = neo.getWarnings();
+    if (warnings.brownout)
       registerWarning("Motor " + neoId + " Warning: brownout");
-    if (neo.getWarnings().escEeprom)
+    if (warnings.escEeprom)
       registerWarning("Motor " + neoId + " Warning: escEeprom");
-    if (neo.getWarnings().extEeprom)
+    if (warnings.extEeprom)
       registerWarning("Motor " + neoId + " Warning: extEeprom");
-    if (neo.getWarnings().hasReset)
+    if (warnings.hasReset)
       registerWarning("Motor " + neoId + " Warning: hasReset");
-    if (neo.getWarnings().other)
+    if (warnings.other)
       registerWarning("Motor " + neoId + " Warning: other");
-    if (neo.getWarnings().overcurrent)
+    if (warnings.overcurrent)
       registerWarning("Motor " + neoId + " Warning: overcurrent");
-    if (neo.getWarnings().sensor)
+    if (warnings.sensor)
       registerWarning("Motor " + neoId + " Warning: sensor");
-    if (neo.getWarnings().stall)
+    if (warnings.stall)
       registerWarning("Motor " + neoId + " Warning: stall");
   }
 }
