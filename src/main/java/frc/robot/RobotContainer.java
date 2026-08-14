@@ -8,15 +8,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.json.simple.parser.ParseException;
-import org.photonvision.EstimatedRobotPose;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -54,10 +45,10 @@ import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.SUB_Linear;
-import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Linear;
+import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
@@ -67,6 +58,13 @@ import frc.robot.utils.CommandUtil;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Hub;
 import frc.robot.utils.RobotTelemetry;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import org.json.simple.parser.ParseException;
+import org.photonvision.EstimatedRobotPose;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -81,8 +79,11 @@ public class RobotContainer {
         // The robot's subsystems and commands are defined here...
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
-        private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+        private double MaxSpeed = 1.0
+            * TunerConstants.kSpeedAt12Volts.in(
+                MetersPerSecond); // kSpeedAt12Volts desired top speed
+        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(
+            RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
         public static final SUB_Roller roller = SUB_Roller.getInstance();
         public static final SUB_Linear linear = SUB_Linear.getInstance();
@@ -90,11 +91,12 @@ public class RobotContainer {
         public static final SUB_Hood hood = SUB_Hood.getInstance();
         public static final SUB_Metering metering = SUB_Metering.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
+        public final CommandUtil commandUtil =
+            new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
         private final SendableChooser<Command> autoChooser;
-        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
-        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
+        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
+        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
+        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
         // TrenchCrossing Paths
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
@@ -105,14 +107,17 @@ public class RobotContainer {
         private boolean trenchAligning = false;
 
         // xBox Controllers for driver input
-        private final CommandXboxController Driver1 = new CommandXboxController(Operator.kDriver1ControllerPort);
-        private final CommandXboxController Driver2 = new CommandXboxController(Operator.kDriver2ControllerPort);
+        private final CommandXboxController Driver1 =
+            new CommandXboxController(Operator.kDriver1ControllerPort);
+        private final CommandXboxController Driver2 =
+            new CommandXboxController(Operator.kDriver2ControllerPort);
         // Driving Swerve Requests
-        private final SwerveRequest.RobotCentric driveRobot = new SwerveRequest.RobotCentric()
-            .withDriveRequestType(DriveRequestType.Velocity); 
-        private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.Velocity); //Control is based on speed
-        
+        private final SwerveRequest.RobotCentric driveRobot =
+            new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
+        private final SwerveRequest.FieldCentric drive =
+            new SwerveRequest.FieldCentric().withDriveRequestType(
+                DriveRequestType.Velocity); // Control is based on speed
+
         private static String autoName, newAutoName;
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
@@ -128,58 +133,64 @@ public class RobotContainer {
         public RobotContainer() {
                 field = new Field2d();
                 try {
-                        pathLeftToNeutral = PathPlannerPath.fromPathFile("LeftTrough-LeftTroughCenter");
-                        pathNeutralToLeft = PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTroughTA");
-                        pathRightToNeutral = PathPlannerPath.fromPathFile("RightTrough-RightTroughCenter");
-                        pathNeutralToRight = PathPlannerPath.fromPathFile("RightTroughCenter-RightTroughTA");
+                        pathLeftToNeutral =
+                            PathPlannerPath.fromPathFile("LeftTrough-LeftTroughCenter");
+                        pathNeutralToLeft =
+                            PathPlannerPath.fromPathFile("LeftTroughCenter-LeftTroughTA");
+                        pathRightToNeutral =
+                            PathPlannerPath.fromPathFile("RightTrough-RightTroughCenter");
+                        pathNeutralToRight =
+                            PathPlannerPath.fromPathFile("RightTroughCenter-RightTroughTA");
                 } catch (Exception e) {
                         Alert.registerError("Failed to load trench paths: " + e.getMessage());
                 }
 
-                drivetrain.setDefaultCommand(            
-                        drivetrain.applyRequest(() -> {
-                                double xInput = xLimiter.calculate(MathUtil.applyDeadband(-Driver1.getLeftY(), Operator.kDriveDeadband));
-                                double yInput = yLimiter.calculate(MathUtil.applyDeadband(-Driver1.getLeftX(), Operator.kDriveDeadband));
-                                double rotInput = rotLimiter.calculate(MathUtil.applyDeadband(-Driver1.getRightX(), Operator.kDriveDeadband));
-                                if (fieldRelative) {
-                                        return drive.withVelocityX(xInput*MaxSpeed)
-                                                .withVelocityY(yInput*MaxSpeed)
-                                                .withRotationalRate(rotInput*MaxAngularRate);
-                                } else {
-                                        return driveRobot.withVelocityX(xInput*MaxSpeed)
-                                                .withVelocityY(yInput*MaxSpeed)
-                                                .withRotationalRate(rotInput*MaxAngularRate);
-                                }
-                        })
-                );
-                roller.setDefaultCommand(new RunCommand(() -> {
-                        roller.set(0);
-                }, roller));
-                linear.setDefaultCommand(new InstantCommand(() -> { // Could make it go forward and make it an instant command
+                drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> {
+                        double xInput = xLimiter.calculate(
+                            MathUtil.applyDeadband(-Driver1.getLeftY(), Operator.kDriveDeadband));
+                        double yInput = yLimiter.calculate(
+                            MathUtil.applyDeadband(-Driver1.getLeftX(), Operator.kDriveDeadband));
+                        double rotInput = rotLimiter.calculate(
+                            MathUtil.applyDeadband(-Driver1.getRightX(), Operator.kDriveDeadband));
+                        if (fieldRelative) {
+                                return drive.withVelocityX(xInput * MaxSpeed)
+                                    .withVelocityY(yInput * MaxSpeed)
+                                    .withRotationalRate(rotInput * MaxAngularRate);
+                        } else {
+                                return driveRobot.withVelocityX(xInput * MaxSpeed)
+                                    .withVelocityY(yInput * MaxSpeed)
+                                    .withRotationalRate(rotInput * MaxAngularRate);
+                        }
+                }));
+                roller.setDefaultCommand(new RunCommand(() -> { roller.set(0); }, roller));
+                linear.setDefaultCommand(new InstantCommand(() -> { // Could make it go forward and
+                                                                    // make it an instant command
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
                         final double distance = drivetrain.getPose().getTranslation().getDistance(
-                                        SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                        ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                                new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                                        )).orElse(drivetrain.getPose().getTranslation())
-                                );
+                            SUB_PhotonVision.getInstance()
+                                .at_field
+                                .getTagPose(DriverStation.getAlliance().orElse(Alliance.Blue)
+                                            == Alliance.Red
+                                        ? 10
+                                        : 26)
+                                .map(pose
+                                    -> pose.toPose2d().getTranslation().plus(new Translation2d(
+                                        Units.inchesToMeters(
+                                            DriverStation.getAlliance().orElse(Alliance.Blue)
+                                                    == Alliance.Red
+                                                ? -23.5
+                                                : 23.5),
+                                        0)))
+                                .orElse(drivetrain.getPose().getTranslation()));
                         shooter.setRPM(SUB_Shooter.findoptimalRPM(
-                                distance,
-                                SUB_Hood.findoptimalangle(distance)
-                        ));
+                            distance, SUB_Hood.findoptimalangle(distance)));
                 }, shooter));
-                index.setDefaultCommand(new InstantCommand(() -> {
-                        index.set(0);
-                }, index));
-                metering.setDefaultCommand(new InstantCommand(() -> {
-                        metering.set(0);
-                }, metering));
-                hood.setDefaultCommand(new RunCommand(() -> {
-                        hood.resetSafe();
-                }, hood));
+                index.setDefaultCommand(new InstantCommand(() -> { index.set(0); }, index));
+                metering.setDefaultCommand(
+                    new InstantCommand(() -> { metering.set(0); }, metering));
+                hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();
@@ -187,7 +198,6 @@ public class RobotContainer {
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
                 SmartDashboard.putData("Autos/Active Auto Path", autoField);
-
         }
 
         /**
@@ -208,71 +218,79 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
-                        trenchAligning = true;
-                        Pose2d currentPose = drivetrain.getPose();
-                        
-                        Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                        Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+                Driver1.leftBumper()
+                    .onTrue(Commands.runOnce(() -> {
+                            trenchAligning = true;
+                            Pose2d currentPose = drivetrain.getPose();
 
-                        double d1 = currentPose.getTranslation().getDistance(p1.getTranslation());
-                        double d2 = currentPose.getTranslation().getDistance(p2.getTranslation());
-                        double d3 = currentPose.getTranslation().getDistance(p3.getTranslation());
-                        double d4 = currentPose.getTranslation().getDistance(p4.getTranslation());
+                            Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null
+                                    ? pathLeftToNeutral.getStartingHolonomicPose().orElse(
+                                          new Pose2d())
+                                    : new Pose2d());
+                            Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null
+                                    ? pathNeutralToLeft.getStartingHolonomicPose().orElse(
+                                          new Pose2d())
+                                    : new Pose2d());
+                            Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null
+                                    ? pathRightToNeutral.getStartingHolonomicPose().orElse(
+                                          new Pose2d())
+                                    : new Pose2d());
+                            Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null
+                                    ? pathNeutralToRight.getStartingHolonomicPose().orElse(
+                                          new Pose2d())
+                                    : new Pose2d());
 
-                        double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
-                        PathPlannerPath selectedPath = pathNeutralToRight;
+                            double d1 =
+                                currentPose.getTranslation().getDistance(p1.getTranslation());
+                            double d2 =
+                                currentPose.getTranslation().getDistance(p2.getTranslation());
+                            double d3 =
+                                currentPose.getTranslation().getDistance(p3.getTranslation());
+                            double d4 =
+                                currentPose.getTranslation().getDistance(p4.getTranslation());
 
-                        if (minD == d1) {
-                                selectedPath = pathLeftToNeutral;
-                        } else if (minD == d2) {
-                                selectedPath = pathNeutralToLeft;
-                        } else if (minD == d3) {
-                                selectedPath = pathRightToNeutral;
-                        }
+                            double minD = Math.min(Math.min(d1, d2), Math.min(d3, d4));
+                            PathPlannerPath selectedPath = pathNeutralToRight;
 
-                        try {
-                                PathConstraints constraints = new PathConstraints(4.0, 4.0,
-                                                Units.degreesToRadians(360), Units.degreesToRadians(540));
-                                trenchAlign = AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).until(()->{
-                                        return !trenchAligning;
-                                });
-                                trenchAlign.schedule();
-                        } catch (Exception e) {
-                                Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
-                        }
-                })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
+                            if (minD == d1) {
+                                    selectedPath = pathLeftToNeutral;
+                            } else if (minD == d2) {
+                                    selectedPath = pathNeutralToLeft;
+                            } else if (minD == d3) {
+                                    selectedPath = pathRightToNeutral;
+                            }
+
+                            try {
+                                    PathConstraints constraints = new PathConstraints(4.0, 4.0,
+                                        Units.degreesToRadians(360), Units.degreesToRadians(540));
+                                    trenchAlign =
+                                        AutoBuilder
+                                            .pathfindThenFollowPath(selectedPath, constraints)
+                                            .until(() -> { return !trenchAligning; });
+                                    trenchAlign.schedule();
+                            } catch (Exception e) {
+                                    Alert.registerError(
+                                        "Failed to retrieve trench command: " + e.getMessage());
+                            }
+                    }))
+                    .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
                 }, roller, linear));
-                Driver1.rightTrigger().whileTrue(
-                        new ParallelCommandGroup(
-                                new CMD_AimBot(
-                                        drivetrain, 
-                                        photonVision, 
-                                        index,
-                                        hood,
-                                        metering,
-                                        () -> -(Driver1.getLeftY()),
-                                        () -> -(Driver1.getLeftX()) 
-                                ),
-                                commandUtil.getLinearCompress()
-                        )
-                );
-                Driver1.leftStick().onTrue(new InstantCommand(() -> {
-                        fieldRelative = !fieldRelative;
-                }
-                ));
+                Driver1.rightTrigger().whileTrue(new ParallelCommandGroup(
+                    new CMD_AimBot(drivetrain, photonVision, index, hood, metering,
+                        () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX())),
+                    commandUtil.getLinearCompress()));
+                Driver1.leftStick().onTrue(
+                    new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
                 // =========================================================
                 // DRIVER 2
                 // =========================================================
-                Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
+                Driver2.leftTrigger().whileTrue(
+                    new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
@@ -280,27 +298,39 @@ public class RobotContainer {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         shooter.setVolts(-2.5);
                 }, index, shooter));
-                Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
-                Driver2.povUp().onTrue(Commands.run(()->linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
+                Driver2.povDown().onTrue(Commands.run(
+                    () -> linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
+                Driver2.povUp().onTrue(Commands.run(
+                    () -> linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
                 // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
+                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(),
+                //         Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
                 // }, linear));
-                Driver2.rightTrigger().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
-                        .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
-                Driver2.b().whileTrue(
-                        new CMD_Shuttle(drivetrain, photonVision, index, shooter,
-                                () -> -(Driver1.getLeftY()),
-                                () -> -(Driver1.getLeftX())
-                        )
-                );
-                Driver2.x().onTrue(new InstantCommand(() -> targetRPM = shooter.getDistanceRPM(
-                        drivetrain.getPose().getTranslation().getDistance(
-                                SUB_PhotonVision.getInstance().at_field.getTagPose(
-                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-                                ).map(pose -> pose.toPose2d().getTranslation().plus(
-                                        new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-                        )).orElse(drivetrain.getPose().getTranslation())
-                ))));
+                Driver2.rightTrigger()
+                    .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                    .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+                Driver2.b().whileTrue(new CMD_Shuttle(drivetrain, photonVision, index, shooter,
+                    () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX())));
+                Driver2.x().onTrue(new InstantCommand(
+                    ()
+                        -> targetRPM = shooter.getDistanceRPM(
+                               drivetrain.getPose().getTranslation().getDistance(
+                                   SUB_PhotonVision.getInstance()
+                                       .at_field
+                                       .getTagPose(DriverStation.getAlliance().orElse(Alliance.Blue)
+                                                   == Alliance.Red
+                                               ? 10
+                                               : 26)
+                                       .map(pose
+                                           -> pose.toPose2d().getTranslation().plus(
+                                               new Translation2d(
+                                                   Units.inchesToMeters(DriverStation.getAlliance()
+                                                                            .orElse(Alliance.Blue)
+                                                               == Alliance.Red
+                                                           ? -23.5
+                                                           : 23.5),
+                                                   0)))
+                                       .orElse(drivetrain.getPose().getTranslation())))));
         }
 
         public void robotInit() {
@@ -324,14 +354,23 @@ public class RobotContainer {
                 field.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putData("Drivetrain/Field", field);
                 SmartDashboard.putNumber(autoName, listIndex);
-                SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
-                SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
+                SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)", targetRPM);
+                SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)",
+                    drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
                 Pose2d currentPose = drivetrain.getPose();
-                
-                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
-                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
+
+                Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null
+                        ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d())
+                        : new Pose2d());
+                Pose2d p2 = AllianceFlipUtil.apply(pathNeutralToLeft != null
+                        ? pathNeutralToLeft.getStartingHolonomicPose().orElse(new Pose2d())
+                        : new Pose2d());
+                Pose2d p3 = AllianceFlipUtil.apply(pathRightToNeutral != null
+                        ? pathRightToNeutral.getStartingHolonomicPose().orElse(new Pose2d())
+                        : new Pose2d());
+                Pose2d p4 = AllianceFlipUtil.apply(pathNeutralToRight != null
+                        ? pathNeutralToRight.getStartingHolonomicPose().orElse(new Pose2d())
+                        : new Pose2d());
 
                 drivetrain.testPath1Publisher.set(p1);
                 drivetrain.testPath2Publisher.set(p2);
@@ -366,23 +405,24 @@ public class RobotContainer {
                 robotTelemetry.update();
         }
 
-
         public void autonomousInit() {
                 drivetrain.setIntakeComplete(true);
                 drivetrain.setReachedTarget(false);
                 Elastic.selectTab("Autonomous");
                 PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
-
                         Pose2d currentPose = drivetrain.getPose();
 
-                        SmartDashboard.putNumber("Drivetrain/Stat/X Error", pose.getX() - currentPose.getX());
-                        SmartDashboard.putNumber("Drivetrain/Stat/Y Error", pose.getY() - currentPose.getY());
-                        SmartDashboard.putNumber("Drivetrain/Stat/Theta Error", pose.getRotation().getRadians()
-                                        - currentPose.getRotation().getRadians());
-                        SmartDashboard.putNumber("Drivetrain/Stat/Desired Theta", pose.getRotation().getRadians());
-                        SmartDashboard.putNumber("Drivetrain/Stat/Actual Theta",
-                                        currentPose.getRotation().getRadians());
-
+                        SmartDashboard.putNumber(
+                            "Drivetrain/Stat/X Error", pose.getX() - currentPose.getX());
+                        SmartDashboard.putNumber(
+                            "Drivetrain/Stat/Y Error", pose.getY() - currentPose.getY());
+                        SmartDashboard.putNumber("Drivetrain/Stat/Theta Error",
+                            pose.getRotation().getRadians()
+                                - currentPose.getRotation().getRadians());
+                        SmartDashboard.putNumber(
+                            "Drivetrain/Stat/Desired Theta", pose.getRotation().getRadians());
+                        SmartDashboard.putNumber(
+                            "Drivetrain/Stat/Actual Theta", currentPose.getRotation().getRadians());
                 });
         }
 
@@ -390,10 +430,7 @@ public class RobotContainer {
                 photonPoseUpdate();
         }
 
-
-        public void testInit() {
-        }
-
+        public void testInit() {}
 
         public void testPeriodic() {
                 photonPoseUpdate();
@@ -401,15 +438,16 @@ public class RobotContainer {
 
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
-                Elastic.Notification notification = new Elastic.Notification(
-                                Elastic.Notification.NotificationLevel.INFO, "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
+                Elastic.Notification notification =
+                    new Elastic.Notification(Elastic.Notification.NotificationLevel.INFO,
+                        "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
         }
 
         public void teleopPeriodic() {
                 photonPoseUpdate();
-                Hub.start(Driver1,Driver2,shooter);
+                Hub.start(Driver1, Driver2, shooter);
         }
 
         public void disabledPeriodic() {
@@ -420,40 +458,40 @@ public class RobotContainer {
                         lastAlliance = alliance;
                         if (AutoBuilder.getAllAutoNames().contains(autoName)) {
                                 try {
-                                        List<PathPlannerPath> pathPlannerPaths = PathPlannerAuto
-                                                        .getPathGroupFromAutoFile(autoName);
+                                        List<PathPlannerPath> pathPlannerPaths =
+                                            PathPlannerAuto.getPathGroupFromAutoFile(autoName);
                                         List<Pose2d> poses = new ArrayList<>();
                                         for (PathPlannerPath path : pathPlannerPaths) {
-
                                                 if (DriverStation.getAlliance().equals(
-                                                                Optional.of(Alliance.Red))) {
+                                                        Optional.of(Alliance.Red))) {
                                                         poses.addAll(path.getAllPathPoints()
-                                                                        .stream()
-                                                                        .map(point -> new Pose2d(
-                                                                                        Field.fieldLength
-                                                                                                        - point.position.getX(),
-                                                                                        Field.fieldWidth - point.position
-                                                                                                        .getY(),
-                                                                                        new Rotation2d()))
-                                                                        .collect(Collectors
-                                                                                        .toList()));
+                                                                .stream()
+                                                                .map(point
+                                                                    -> new Pose2d(Field.fieldLength
+                                                                            - point.position.getX(),
+                                                                        Field.fieldWidth
+                                                                            - point.position.getY(),
+                                                                        new Rotation2d()))
+                                                                .collect(Collectors.toList()));
                                                 } else {
                                                         poses.addAll(path.getAllPathPoints()
-                                                                        .stream()
-                                                                        .map(point -> new Pose2d(
-                                                                                        point.position.getX(),
-                                                                                        point.position.getY(),
-                                                                                        new Rotation2d()))
-                                                                        .collect(Collectors
-                                                                                        .toList()));
+                                                                .stream()
+                                                                .map(point
+                                                                    -> new Pose2d(
+                                                                        point.position.getX(),
+                                                                        point.position.getY(),
+                                                                        new Rotation2d()))
+                                                                .collect(Collectors.toList()));
                                                 }
                                         }
                                         autoField.getObject("path").setPoses(poses);
                                 } catch (IOException e) {
-                                        Alert.registerError("Failed to read path file: " + e.getMessage());
+                                        Alert.registerError(
+                                            "Failed to read path file: " + e.getMessage());
                                         return;
                                 } catch (ParseException e) {
-                                        Alert.registerError("Failed to parse path file: " + e.getMessage());
+                                        Alert.registerError(
+                                            "Failed to parse path file: " + e.getMessage());
                                         return;
                                 }
                         }
@@ -467,36 +505,38 @@ public class RobotContainer {
                 processCameraPose(photonVision.getCam3Pose(), drivetrain.publisher5);
         }
 
-        private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
-                        StructPublisher<Pose3d> publisher) {
+        private void processCameraPose(
+            Optional<EstimatedRobotPose> poseOptional, StructPublisher<Pose3d> publisher) {
                 if (poseOptional.isPresent()) {
                         EstimatedRobotPose estimatedPose = poseOptional.get();
                         Pose3d photonPose = estimatedPose.estimatedPose;
 
                         if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                                        && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
-                                        && !estimatedPose.targetsUsed.isEmpty()) {
-
+                            && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
+                            && !estimatedPose.targetsUsed.isEmpty()) {
                                 double minDist = Double.MAX_VALUE;
                                 for (var target : estimatedPose.targetsUsed) {
-                                        if (target.getPoseAmbiguity()>0.2) continue;
-                                        double dist = target.getBestCameraToTarget().getTranslation().getNorm();
+                                        if (target.getPoseAmbiguity() > 0.2)
+                                                continue;
+                                        double dist = target.getBestCameraToTarget()
+                                                          .getTranslation()
+                                                          .getNorm();
                                         if (dist < minDist)
                                                 minDist = dist;
                                 }
 
-                                if (minDist<4.0) {
+                                if (minDist < 4.0) {
                                         double xyStddev = Math.pow(minDist, 2) / 16.0;
                                         double rotStddev = Units.degreesToRadians(120.0);
-                                        SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
-                                        drivetrain.addVisionMeasurement(
-                                                        photonPose.toPose2d(),
-                                                        estimatedPose.timestampSeconds,
-                                                        VecBuilder.fill(xyStddev,xyStddev,rotStddev));
+                                        SmartDashboard.putNumber(
+                                            "Vision/PhotonVision Future TimeStamp?",
+                                            Timer.getFPGATimestamp()
+                                                - estimatedPose.timestampSeconds);
+                                        drivetrain.addVisionMeasurement(photonPose.toPose2d(),
+                                            estimatedPose.timestampSeconds,
+                                            VecBuilder.fill(xyStddev, xyStddev, rotStddev));
                                         publisher.set(photonPose);
                                 }
-
-                                
                         }
                 }
         }

@@ -1,84 +1,93 @@
 package frc.robot.subsystems;
 
-
-import com.revrobotics.spark.SparkMax;
-
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
 public class SUB_Index extends SubsystemBase {
-    /** Subsystem hardware components */
-    private final SparkMax LeftIndexer;
-    private final SparkMax RightIndexer;
+        /** Subsystem hardware components */
+        private final SparkMax LeftIndexer;
+        private final SparkMax RightIndexer;
 
-    private static SUB_Index INSTANCE = null;
+        private static SUB_Index INSTANCE = null;
 
-    /** @return Single instance of the SUB_Index subsystem */
-    public static SUB_Index getInstance () {
-        if (INSTANCE == null) {
-            INSTANCE = new SUB_Index();
+        /** @return Single instance of the SUB_Index subsystem */
+        public static SUB_Index getInstance() {
+                if (INSTANCE == null) {
+                        INSTANCE = new SUB_Index();
+                }
+                return INSTANCE;
         }
-        return INSTANCE;
-    }
-    
-    @SuppressWarnings("removal")
-    private SUB_Index () {
-        // Defines motors for indexing and metering
-        LeftIndexer = new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
-        RightIndexer = new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
-        
-        // Configure main indexer motor
-        SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
-        LeftIndexConfig.smartCurrentLimit(15);
-        LeftIndexConfig.follow(RightIndexer, true);
-        LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-        SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
-        RightIndexConfig.smartCurrentLimit(15);
-        RightIndexConfig.inverted(true);
-        RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters);
-    }
-    
-    /** @param speed Target percent output for indexing [-1.0, 1.0] */
-    public void set(double speed){
-        RightIndexer.set(speed);
-    }
-    
-    /** @return Current velocity of the indexer in RPM */
-    public double indexRPM(){
-        return (RightIndexer.getEncoder().getVelocity() + LeftIndexer.getEncoder().getVelocity())/2;
-    }
-    
 
+        @SuppressWarnings("removal")
+        private SUB_Index() {
+                // Defines motors for indexing and metering
+                LeftIndexer =
+                    new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
+                RightIndexer =
+                    new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
 
-    /** @param volts Target voltage for the index motor */
-    public void setVolts(double volts) {
-        RightIndexer.setVoltage(volts);
-    }
+                // Configure main indexer motor
+                SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
+                LeftIndexConfig.smartCurrentLimit(15);
+                LeftIndexConfig.follow(RightIndexer, true);
+                LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
+                    SparkMax.PersistMode.kPersistParameters);
+                SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
+                RightIndexConfig.smartCurrentLimit(15);
+                RightIndexConfig.inverted(true);
+                RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
+                    SparkMax.PersistMode.kPersistParameters);
+        }
 
-    @Override
-    public void periodic() {
-        // Telemetry logging for dashboard
-        SmartDashboard.putNumber("Index/Index Average RPM", indexRPM());
-        SmartDashboard.putNumber("Index/Right Index Output Current", RightIndexer.getOutputCurrent());
-        SmartDashboard.putNumber("Index/Left Index Output Current", LeftIndexer.getOutputCurrent());
+        /** @param speed Target percent output for indexing [-1.0, 1.0] */
+        public void set(double speed) {
+                RightIndexer.set(speed);
+        }
 
-        SmartDashboard.putNumber("Index/Right Index Bus Voltage", RightIndexer.getBusVoltage());
-        SmartDashboard.putNumber("Index/Left Index Bus Voltage", LeftIndexer.getBusVoltage());
+        /** @return Current velocity of the indexer in RPM */
+        public double indexRPM() {
+                return (RightIndexer.getEncoder().getVelocity()
+                           + LeftIndexer.getEncoder().getVelocity())
+                    / 2;
+        }
 
-        SmartDashboard.putNumber("Index/Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
-        SmartDashboard.putNumber("Index/Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
+        /** @param volts Target voltage for the index motor */
+        public void setVolts(double volts) {
+                RightIndexer.setVoltage(volts);
+        }
 
-        SmartDashboard.putNumber("Index/Right Index Motor Temp", RightIndexer.getMotorTemperature());
-        SmartDashboard.putNumber("Index/Left Index Motor Temp", LeftIndexer.getMotorTemperature());
+        @Override
+        public void periodic() {
+                // Telemetry logging for dashboard
+                SmartDashboard.putNumber("Index/Index Average RPM", indexRPM());
+                SmartDashboard.putNumber(
+                    "Index/Right Index Output Current", RightIndexer.getOutputCurrent());
+                SmartDashboard.putNumber(
+                    "Index/Left Index Output Current", LeftIndexer.getOutputCurrent());
 
-        Alert.alertNeoFaults(RightIndexer);
-        Alert.alertNeoWarnings(RightIndexer);
-        Alert.alertNeoFaults(LeftIndexer);
-        Alert.alertNeoWarnings(LeftIndexer);
-    }
+                SmartDashboard.putNumber(
+                    "Index/Right Index Bus Voltage", RightIndexer.getBusVoltage());
+                SmartDashboard.putNumber(
+                    "Index/Left Index Bus Voltage", LeftIndexer.getBusVoltage());
+
+                SmartDashboard.putNumber(
+                    "Index/Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
+                SmartDashboard.putNumber(
+                    "Index/Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
+
+                SmartDashboard.putNumber(
+                    "Index/Right Index Motor Temp", RightIndexer.getMotorTemperature());
+                SmartDashboard.putNumber(
+                    "Index/Left Index Motor Temp", LeftIndexer.getMotorTemperature());
+
+                Alert.alertNeoFaults(RightIndexer);
+                Alert.alertNeoWarnings(RightIndexer);
+                Alert.alertNeoFaults(LeftIndexer);
+                Alert.alertNeoWarnings(LeftIndexer);
+        }
 }
