@@ -63,18 +63,18 @@ public class SUB_Index extends SubsystemBase {
     @Override
     public void periodic() {
         // Telemetry logging for dashboard
-        SmartDashboard.putNumber("Index RPM", indexRPM());
-        SmartDashboard.putNumber("Right Index Output Current", RightIndexer.getOutputCurrent());
-        SmartDashboard.putNumber("Left Index Output Current", LeftIndexer.getOutputCurrent());
+        SmartDashboard.putNumber("Index/Index Average RPM", indexRPM());
+        SmartDashboard.putNumber("Index/Right Index Output Current", RightIndexer.getOutputCurrent());
+        SmartDashboard.putNumber("Index/Left Index Output Current", LeftIndexer.getOutputCurrent());
 
-        SmartDashboard.putNumber("Right Index Bus Voltage", RightIndexer.getBusVoltage());
-        SmartDashboard.putNumber("Left Index Bus Voltage", LeftIndexer.getBusVoltage());
+        SmartDashboard.putNumber("Index/Right Index Bus Voltage", RightIndexer.getBusVoltage());
+        SmartDashboard.putNumber("Index/Left Index Bus Voltage", LeftIndexer.getBusVoltage());
 
-        SmartDashboard.putNumber("Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
-        SmartDashboard.putNumber("Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
+        SmartDashboard.putNumber("Index/Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
+        SmartDashboard.putNumber("Index/Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
 
-        SmartDashboard.putNumber("Right Index Motor Temp", RightIndexer.getMotorTemperature());
-        SmartDashboard.putNumber("Left Index Motor Temp", LeftIndexer.getMotorTemperature());
+        SmartDashboard.putNumber("Index/Right Index Motor Temp", RightIndexer.getMotorTemperature());
+        SmartDashboard.putNumber("Index/Left Index Motor Temp", LeftIndexer.getMotorTemperature());
 
         Alert.alertNeoFaults(RightIndexer);
         Alert.alertNeoWarnings(RightIndexer);

@@ -45,32 +45,32 @@ public class SUB_Metering extends SubsystemBase {
 
     @Override
     public void periodic () {
-        SmartDashboard.putNumber("Hood/Leader Position", metering.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Position", meteringFollower.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Position", metering.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Position", meteringFollower.getPosition().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Stator Current", metering.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Stator Current", meteringFollower.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Stator Current", metering.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Stator Current", meteringFollower.getStatorCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Supply Current", metering.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Supply Current", meteringFollower.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Supply Current", metering.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Supply Current", meteringFollower.getSupplyCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Supply Voltage", metering.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Supply Voltage", meteringFollower.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Supply Voltage", metering.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Supply Voltage", meteringFollower.getSupplyVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Motor Voltage", metering.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Motor Voltage", meteringFollower.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Motor Voltage", metering.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Motor Voltage", meteringFollower.getMotorVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Torque Current", metering.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Torque Current", meteringFollower.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Torque Current", metering.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Torque Current", meteringFollower.getTorqueCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Device Temp", metering.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Device Temp", meteringFollower.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Device Temp", metering.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Device Temp", meteringFollower.getDeviceTemp().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Processor Temp", metering.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Processor Temp", meteringFollower.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Processor Temp", metering.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Processor Temp", meteringFollower.getProcessorTemp().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Velocity", metering.getVelocity().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Velocity", meteringFollower.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Leader Velocity", metering.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("Metering/Follower Velocity", meteringFollower.getVelocity().getValueAsDouble());
         // TODO: Implement rpm stuff
 
         Alert.alertKraken(metering);
