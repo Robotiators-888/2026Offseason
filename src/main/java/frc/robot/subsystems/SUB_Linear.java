@@ -46,7 +46,6 @@ public class SUB_Linear extends SubsystemBase {
         configureMotors();
     }
 
-    @SuppressWarnings("removal")
     private void configureMotors(){
         // Creates config for motor and encoder (23:1 cycloidal gearbox)
         SparkMaxConfig config = new SparkMaxConfig();

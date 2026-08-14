@@ -12,7 +12,6 @@ import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Metering;
-import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Roller;
@@ -31,17 +30,15 @@ public class CommandUtil {
     private final SUB_Linear linear;
     private final SUB_Roller roller;
     private final SUB_Index index;
-    private final SUB_PhotonVision photonVision;
     private final SUB_Shooter shooter;
     private final SUB_Hood hood;
     private final SUB_Metering metering;
 
-    public CommandUtil (CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller, SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering){
+    public CommandUtil (CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller, SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering){
         this.drivetrain = drivetrain;
         this.linear = linear;
         this.roller = roller;
         this.index = index;
-        this.photonVision = photonVision;
         this.shooter = shooter;
         this.hood = hood;
         this.metering = metering;
@@ -70,7 +67,6 @@ public class CommandUtil {
                 NamedCommands.registerCommand("ShootAutoAim",
                         new CMD_AimBotAuto(
                                 drivetrain,
-                                photonVision,
                                 shooter,
                                 index,
                                 hood,

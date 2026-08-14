@@ -91,7 +91,7 @@ public class RobotContainer {
         public static final SUB_Hood hood = SUB_Hood.getInstance();
         public static final SUB_Metering metering = SUB_Metering.getInstance();
         public static final PowerDistribution powerDistribution = new PowerDistribution();
-        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
+        public final CommandUtil commandUtil = new CommandUtil(drivetrain, linear, roller, index, shooter, hood, metering);
         private final SendableChooser<Command> autoChooser;
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0,-8.0,0.0);
@@ -235,7 +235,6 @@ public class RobotContainer {
                         new ParallelCommandGroup(
                                 new CMD_AimBot(
                                         drivetrain, 
-                                        photonVision, 
                                         index,
                                         hood,
                                         metering,

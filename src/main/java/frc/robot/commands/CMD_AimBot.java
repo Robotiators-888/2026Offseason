@@ -13,13 +13,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
@@ -29,7 +26,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Metering;
-import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Hub;
 
@@ -38,7 +34,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 public class CMD_AimBot extends RunCommand {
   /** Subsystems and state variables used for targeting and control */
-  private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
   private Optional<Translation2d> targetTranslation = Optional.empty();
   private final DoubleSupplier translationXSupplier;
@@ -96,9 +91,8 @@ public class CMD_AimBot extends RunCommand {
    * @param translationXSupplier Supplier for X translation input
    * @param translationYSupplier Supplier for Y translation input
    */
-  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
+  public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter, DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {    super(() -> {});
     this.drivetrain = drivetrain;
-    this.photonVision = photonVision;
     this.index = index;
     this.hood = hood;
     this.metering = metering;
