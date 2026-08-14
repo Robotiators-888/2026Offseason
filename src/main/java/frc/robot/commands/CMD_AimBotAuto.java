@@ -1,12 +1,11 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
-// Thanks Omar for the name AimBot, it is a very good name for this command
+
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.*;
 
-import java.util.Optional;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -18,17 +17,18 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
+import frc.robot.utils.TrajectorySolver;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-public class CMD_AimBotAuto extends RunCommand {
+public class CMD_AimBotAuto extends Command {
   /** Subsystems and state variables for autonomous targeting */
   private final SUB_PhotonVision photonVision;
   private final CommandSwerveDrivetrain drivetrain;
@@ -38,7 +38,7 @@ public class CMD_AimBotAuto extends RunCommand {
   private final SUB_Index index;
 
   /** Physical offset from robot center to shooter exit */
-  Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
+  private final Translation2d shooterOffset = new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
   
   /** Motion profiling constraints for rotation (narrower for auto) */
   private final TrapezoidProfile.Constraints thetaConstraints = new TrapezoidProfile.Constraints(
@@ -48,23 +48,19 @@ public class CMD_AimBotAuto extends RunCommand {
 
   /** PID controller for robot heading alignment during autonomous */
   private final ProfiledPIDController robotAngleController = new ProfiledPIDController(
-      3.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+      3.0, 0, 0.2,
       thetaConstraints
   );
   public static boolean isThetaErrorCorrect = false;
-  private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
+  private final double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withRotationalDeadband(0) 
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); 
 
   /**
    * Constructs a new autonomous AimBot command.
-   * @param drivetrain The swerve drivetrain subsystem
-   * @param photonVision The vision subsystem
-   * @param shooter The shooter subsystem
-   * @param index The indexer subsystem
    */
-  public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {    super(() -> {});
+  public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Index index) {
     this.drivetrain = drivetrain;
     this.photonVision = photonVision;
     this.shooter = shooter;
@@ -78,22 +74,23 @@ public class CMD_AimBotAuto extends RunCommand {
   public void initialize() {
     robotAngleController.setTolerance(Units.degreesToRadians(0.0));
     
-    // Determine the correct target tag based on current alliance
-    Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
-      ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
-      : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
+    int targetTag = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) ? 10 : 26;
+    Pose2d tagPose = photonVision.at_field.getTagPose(targetTag).orElse(new Pose3d()).toPose2d();
       
-    double hubOffsetX = DriverStation.getAlliance().equals(Optional.of(Alliance.Red)) ? Units.inchesToMeters(-23.5) : Units.inchesToMeters(23.5);
+    double hubOffsetX = (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) 
+        ? Units.inchesToMeters(-23.5) 
+        : Units.inchesToMeters(23.5);
     Translation2d hubCenterTranslation = new Translation2d(tagPose.getX() + hubOffsetX, tagPose.getY());
     
     targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
     
-    // Reset PID controller to the current state of the robot
+    // Reset PID controller to current state
     robotAngleController.reset(
         drivetrain.getPose().getRotation().getRadians(),
         drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond
     );
     running = true;
+    SUB_Shooter.isShooting = true;
   }
 
   @Override
@@ -105,13 +102,13 @@ public class CMD_AimBotAuto extends RunCommand {
         shooterOffset.rotateBy(currentPose.getRotation())
     );
 
-    // Calculate target heading directly from shooter position to the hub
+    // Calculate target heading directly from shooter position to hub
     Rotation2d targetRotation = new Rotation2d(
         targetTranslation.getX() - shooterFieldPosition.getX(),
         targetTranslation.getY() - shooterFieldPosition.getY()
     );
 
-    drivetrain.publisher2.set(new Pose2d(shooterFieldPosition,targetRotation));
+    drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation));
     drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
     double omegaSpeed = robotAngleController.calculate(
@@ -123,39 +120,39 @@ public class CMD_AimBotAuto extends RunCommand {
     double thetaErrorRads = Math.abs(MathUtil.angleModulus(currentPose.getRotation().getRadians() - targetRotation.getRadians()));
     SmartDashboard.putNumber("CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
     
-    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
+    isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3) 
+        && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 20;
     
-    double distance = drivetrain.getPose().getTranslation().getDistance(
-            SUB_PhotonVision.getInstance().at_field.getTagPose(
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26
-            ).map(pose -> pose.toPose2d().getTranslation().plus(
-                    new Translation2d(Units.inchesToMeters(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? -23.5 : 23.5), 0)
-            )).orElse(drivetrain.getPose().getTranslation())
+    double distance = currentPose.getTranslation().getDistance(targetTranslation);
+    TrajectorySolver.TrajectoryResult trajectory = TrajectorySolver.calculateTrajectory(
+        shooter.flywheelRPM() > 500 ? shooter.flywheelRPM() : Constants.Shooter.kSHOOTER_FLYWHEEL_RPM,
+        distance
     );
-    shooter.shootMeters(distance);
-    
-    
-    
-    // Automated firing trigger
-    boolean isShooterReady = shooter.atDesiredRPM();
-    
-    if (isThetaErrorCorrect && isShooterReady) {
-        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-    } else if (!isThetaErrorCorrect) {
-        index.setVolts(0);
-        
+    if (trajectory.flywheelAdjusted() || shooter.flywheelRPM() < 500) {
+        shooter.setRPM(trajectory.targetFlywheelRPM());
     }
     
-    // Drive request with PID rotation (no translation in static auto aim)
+    boolean isShooterReady = shooter.atDesiredRPM();
+    if (isThetaErrorCorrect && isShooterReady) {
+        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+    } else {
+        index.setVolts(0);
+    }
+    
+    double clampedOmega = MathUtil.clamp(omegaSpeed, -MaxAngularRate, MaxAngularRate);
+    double feedforward = Math.copySign(Units.degreesToRadians(9), clampedOmega);
     drivetrain.setControl(
       drive.withVelocityX(0)
-      .withVelocityY(0)
-      .withRotationalRate(omegaSpeed * MaxAngularRate + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+           .withVelocityY(0)
+           .withRotationalRate(clampedOmega + (Math.abs(clampedOmega) > 1e-4 ? feedforward : 0))
+    );
   }
 
   @Override
   public void end(boolean interrupted) {
     running = false;
+    SUB_Shooter.isShooting = false;
+    index.setVolts(0);
   }
 
   @Override
@@ -163,7 +160,7 @@ public class CMD_AimBotAuto extends RunCommand {
     return false;
   }
 
-  public static boolean isRunning () {
+  public static boolean isRunning() {
     return running;
   }
 }

@@ -14,10 +14,6 @@ import edu.wpi.first.wpilibj.DriverStation;
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
  * globally (i.e. public static). Do not put anything functional in this class.
- *
- * <p>
- * It is advised to statically import this class (or one of its inner classes) wherever the
- * constants are needed, to reduce verbosity.
  */
 public final class Constants {
 
@@ -34,19 +30,21 @@ public final class Constants {
                 public static final int kSHOOTER_MotorOne_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
 
-                //Physical Specs
-                public static final double ShooterDiameter = 3;                
-                // Feedforward constants (Manual tuning in progress)
+                // Physical Specs (inches)
+                public static final double ShooterDiameterInches = 3.0;
+                public static final double ShooterDiameter = 3.0;                
+                
+                // Feedforward constants
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.14; 
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 
                 // PID constants
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.5;
-                public static final double kSHOOTER_FLYWHEEL_kI = 0;
-                public static final double kSHOOTER_FLYWHEEL_kD = 0;
+                public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
-                public static final double kSHOOTER_COMPRESSION_RATIO = .8; // Todo find ratio
+                public static final double kSHOOTER_COMPRESSION_RATIO = 0.8;
 
                 public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
         }
@@ -61,13 +59,13 @@ public final class Constants {
 
         /** Intake arm motor configuration and relative setpoints (NEO 2.0 Encoder) */
         public static final class Linear {
-                public static final int kLINEAR_MOTOR_CANID = 31; 
+                public static final int kLINEAR_MOTOR_CANID = 32; 
                 public static final double kLINEAR_MOTOR_SPEED = 0.1; 
-                public static final double kLINEAR_FORWARD_SETPOINT = 360.0*4.2; // Degrees (Relative)
-                public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
-                public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
-                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0, 0); // Change the values!!!
-                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0, 0); // Change the values!!!
+                public static final double kLINEAR_FORWARD_SETPOINT = 360.0 * 4.2; // Degrees (Relative)
+                public static final double kLINEAR_BACKWARD_SETPOINT = 0;          // Degrees (Relative)
+                public static final double kLINEAR_FAULT_AMPS = 30;          // Stall detection threshold
+                public static final PIDController kLINEAR_FAST_PID_CONTROLLER = new PIDController(4, 0, 0);
+                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER = new PIDController(1, 0, 0);
         }
         
         /** Indexing system: Spindexer and Metering wheel */
@@ -79,7 +77,7 @@ public final class Constants {
                 public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; 
                 
                 // Max RPM of NEO at 12V is 5676; scaled by target voltage
-                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); 
+                public static final double kINDEX_METERING_MOTOR_RPM = 5676 * (kINDEX_METERING_MOTOR_VOLTS / 12.0); 
         }
 
         /** Standard field measurements in meters */
@@ -97,7 +95,7 @@ public final class Constants {
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(172-90));
+                                Units.degreesToRadians(172 - 90));
                 public static final Transform3d kRobotToCamera1 = new Transform3d(
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
                                 Units.inchesToMeters(7.8), cameraRotation);
@@ -105,11 +103,10 @@ public final class Constants {
                 public static final String kCam2Name = "BackRightCam"; 
                 public static final Rotation3d cameraRotation2 = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                                Units.degreesToRadians(-172+90));
+                                Units.degreesToRadians(-172 + 90));
                 public static final Transform3d kRobotToCamera2 = new Transform3d(
                                 Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
                                 Units.inchesToMeters(7.8), cameraRotation2);
-
 
                 public static final String kCam3Name = "HighCam";
                 public static final Rotation3d cameraRotation3 = new Rotation3d(Units.degreesToRadians(3),
@@ -125,14 +122,20 @@ public final class Constants {
                 public static final double kColorGreen = 0.77;
                 public static final double kColorRed = 0.61;
                 public static final double kParty_Palette_Twinkles = -0.53;
-                public static final double kAllianceColor = (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)== DriverStation.Alliance.Blue) ? 0.0 : 0.5;
+                
+                public static double getAllianceColor() {
+                        return (DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue) == DriverStation.Alliance.Blue) ? 0.0 : 0.5;
+                }
+                
+                public static final double kAllianceColor = 0.0;
         }
 
         public static class Hood {
                 public static final int kHOOD_CAN_ID = 47;
-                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4,0,0); // Change the values!!!
-                public static final double ScoreHeight = 55;
+                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0, 0);
+                public static final double ScoreHeight = 55; // Inches
         }
+        
         public static class Metering {
                 public static final int kMETERING_MOTOR_CAN_ID = 45;
                 public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;

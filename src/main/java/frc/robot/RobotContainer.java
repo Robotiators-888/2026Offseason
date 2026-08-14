@@ -208,8 +208,7 @@ public class RobotContainer {
                 // =========================================================
                 // DRIVER 1
                 // =========================================================
-                Driver1.leftBumper().onTrue(Commands.runOnce(() -> {
-                        trenchAligning = true;
+                Driver1.leftBumper().whileTrue(Commands.defer(() -> {
                         Pose2d currentPose = drivetrain.getPose();
                         
                         Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null ? pathLeftToNeutral.getStartingHolonomicPose().orElse(new Pose2d()) : new Pose2d());
@@ -233,17 +232,10 @@ public class RobotContainer {
                                 selectedPath = pathRightToNeutral;
                         }
 
-                        try {
-                                PathConstraints constraints = new PathConstraints(4.0, 4.0,
-                                                Units.degreesToRadians(360), Units.degreesToRadians(540));
-                                trenchAlign = AutoBuilder.pathfindThenFollowPath(selectedPath, constraints).until(()->{
-                                        return !trenchAligning;
-                                });
-                                trenchAlign.schedule();
-                        } catch (Exception e) {
-                                Alert.registerError("Failed to retrieve trench command: " + e.getMessage());
-                        }
-                })).onFalse(new InstantCommand(()->{trenchAligning=false;}));
+                        PathConstraints constraints = new PathConstraints(4.0, 4.0,
+                                        Units.degreesToRadians(360), Units.degreesToRadians(540));
+                        return AutoBuilder.pathfindThenFollowPath(selectedPath, constraints);
+                }, java.util.Set.of(drivetrain)));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
                         roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
@@ -272,7 +264,6 @@ public class RobotContainer {
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        
                 }, index));
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
@@ -282,10 +273,7 @@ public class RobotContainer {
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(()->linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
                 Driver2.povUp().onTrue(Commands.run(()->linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),linear));
-                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
-                // }, linear));
-                Driver2.rightTrigger().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                Driver2.rightBumper().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                         .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
                 Driver2.b().whileTrue(
                         new CMD_Shuttle(drivetrain, photonVision, index, shooter,
@@ -413,7 +401,8 @@ public class RobotContainer {
         }
 
         public void disabledPeriodic() {
-                newAutoName = getAutonomousCommand().getName();
+                Command currentAuto = getAutonomousCommand();
+                newAutoName = (currentAuto != null) ? currentAuto.getName() : "";
                 alliance = DriverStation.getAlliance();
                 if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
                         autoName = newAutoName;

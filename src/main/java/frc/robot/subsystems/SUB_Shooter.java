@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
+import frc.robot.utils.TrajectorySolver;
 
 public class SUB_Shooter extends SubsystemBase {
     private static SUB_Shooter INSTANCE = null;
@@ -29,18 +30,18 @@ public class SUB_Shooter extends SubsystemBase {
     private double desiredSpeed = 0;
     private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
-    public static boolean isShooting;
+    public static boolean isShooting = false;
+    private boolean lastIsShooting = false;
     
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
     /** @return Single instance of the SUB_Shooter subsystem */
-    public static SUB_Shooter getInstance (){
+    public static SUB_Shooter getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new SUB_Shooter();
-          }
-      
-          return INSTANCE;
+        }
+        return INSTANCE;
     }
 
     private SUB_Shooter() {
@@ -50,11 +51,11 @@ public class SUB_Shooter extends SubsystemBase {
 
         // Populate distance-to-RPM look-up table (meters -> RPM)
         distanceToRPM.put(2.49493587092, 1250.0);
-        distanceToRPM.put(3.03308176613, 1375.0+15);
-        distanceToRPM.put(1.6346195276, 1075.0-25);
-        distanceToRPM.put(4.10526503, 1575.0+25);
-        distanceToRPM.put(5.34766117, 1750.0+40);
-        distanceToRPM.put(10.5, 2400.0); // TODO: REDO
+        distanceToRPM.put(3.03308176613, 1375.0 + 15);
+        distanceToRPM.put(1.6346195276, 1075.0 - 25);
+        distanceToRPM.put(4.10526503, 1575.0 + 25);
+        distanceToRPM.put(5.34766117, 1750.0 + 40);
+        distanceToRPM.put(10.5, 2400.0);
         
         configFlywheel();
     }
@@ -102,11 +103,45 @@ public class SUB_Shooter extends SubsystemBase {
         MotorTwo.setControl(new Follower(MotorOne.getDeviceID(), MotorAlignmentValue.Aligned));
     }
 
-    public static double findoptimalRPM(final double distance, final double angle) {
+    /**
+     * Calculates required shooter RPM using projectile physics.
+     * @param distance Distance in meters
+     * @param angleRadians Launch angle in radians
+     * @return Target flywheel RPM
+     */
+    public static double findoptimalRPM(final double distance, final double angleRadians) {
         double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-        double exitvelocity = (1/Math.cos(Units.degreesToRadians(angle)))*Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT*distance*distance)/(2*(distance*Math.tan(angle)-height)));
-        double exitRPM = ((720 / Constants.Shooter.ShooterDiameter)*exitvelocity)/(Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI);
+        double denom = 2.0 * (distance * Math.tan(angleRadians) - height);
+        if (denom <= 0.001 || distance <= 0.1) {
+            return Constants.Shooter.kSHOOTER_FLYWHEEL_RPM;
+        }
+        
+        double cosAngle = Math.cos(angleRadians);
+        if (Math.abs(cosAngle) < 0.001) {
+            return Constants.Shooter.kSHOOTER_FLYWHEEL_RPM;
+        }
+
+        double exitVelocity = (1.0 / cosAngle) * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance) / denom);
+        double wheelDiameterMeters = Units.inchesToMeters(Constants.Shooter.ShooterDiameter);
+        double surfaceSpeed = exitVelocity / Constants.Shooter.kSHOOTER_COMPRESSION_RATIO;
+        double rps = surfaceSpeed / (Math.PI * wheelDiameterMeters);
+        double exitRPM = rps * 60.0;
+        
+        if (Double.isNaN(exitRPM) || Double.isInfinite(exitRPM)) {
+            return Constants.Shooter.kSHOOTER_FLYWHEEL_RPM;
+        }
         return exitRPM;
+    }
+
+    /**
+     * Calculates trajectory setpoints prioritizing current flywheel RPM (hood-first).
+     */
+    public TrajectorySolver.TrajectoryResult getTrajectory(double distanceMeters) {
+        double currentRPM = (this.desiredSpeed > 500) ? this.desiredSpeed : flywheelRPM();
+        if (currentRPM < 500) {
+            currentRPM = Constants.Shooter.kSHOOTER_FLYWHEEL_RPM;
+        }
+        return TrajectorySolver.calculateTrajectory(currentRPM, distanceMeters);
     }
 
     @Deprecated
@@ -122,7 +157,7 @@ public class SUB_Shooter extends SubsystemBase {
 
     /** @return Average current RPM of both flywheels */
     public double flywheelRPM() {
-        return (MotorOne.getVelocity().getValue().in(RPM) + MotorTwo.getVelocity().getValue().in(RPM)) / 2;
+        return (MotorOne.getVelocity().getValue().in(RPM) + MotorTwo.getVelocity().getValue().in(RPM)) / 2.0;
     }
   
     /** @return true if flywheels are within the tolerance of the target RPM */
@@ -144,7 +179,7 @@ public class SUB_Shooter extends SubsystemBase {
      * @param meters Distance to target in meters
      * @return Required RPM from the look-up table
      */
-    public double getDistanceRPM (final double meters) {
+    public double getDistanceRPM(final double meters) {
         return distanceToRPM.get(meters);
     }
 
@@ -173,33 +208,27 @@ public class SUB_Shooter extends SubsystemBase {
       SmartDashboard.putNumber("Shooter/Motor Two Voltage", MotorTwo.getMotorVoltage().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor One Encoder Pos", MotorOne.getPosition().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor Two Encoder Pos", MotorTwo.getPosition().getValueAsDouble());
-
       SmartDashboard.putNumber("Shooter/Motor One Torque Current", MotorOne.getTorqueCurrent().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor Two Torque Current", MotorTwo.getTorqueCurrent().getValueAsDouble());
-
       SmartDashboard.putNumber("Shooter/Motor One Device Temp", MotorOne.getDeviceTemp().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor Two Device Temp", MotorTwo.getDeviceTemp().getValueAsDouble());
-
       SmartDashboard.putNumber("Shooter/Motor One Processor Temp", MotorOne.getProcessorTemp().getValueAsDouble());
       SmartDashboard.putNumber("Shooter/Motor Two Processor Temp", MotorTwo.getProcessorTemp().getValueAsDouble());
-
       SmartDashboard.putNumber("Shooter/FlywheelRPM (One)", MotorOne.getVelocity().getValue().in(RPM));
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Two)", MotorTwo.getVelocity().getValue().in(RPM));
-
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
       
       Alert.alertKraken(MotorOne);
       Alert.alertKraken(MotorTwo);
 
-      if (SUB_Shooter.isShooting) {
-        MotorOne.getConfigurator().apply(shooterConfig);
-        MotorTwo.getConfigurator().apply(shooterConfig);
-      } else {
-        MotorOne.getConfigurator().apply(shooterLowConfig);
-        MotorTwo.getConfigurator().apply(shooterLowConfig);
+      // Only apply configuration on state transition, not every tick
+      if (SUB_Shooter.isShooting != lastIsShooting) {
+        TalonFXConfiguration configToApply = SUB_Shooter.isShooting ? shooterConfig : shooterLowConfig;
+        MotorOne.getConfigurator().apply(configToApply);
+        MotorTwo.getConfigurator().apply(configToApply);
+        lastIsShooting = SUB_Shooter.isShooting;
       }
     }
-
 
     /** 
      * Calculates time-of-flight based on projectile physics.
@@ -207,6 +236,6 @@ public class SUB_Shooter extends SubsystemBase {
      * @return Estimated seconds until impact
      */
     public double getExpectedTOF(final double distanceMeters) {
-        return distanceMeters*0.215298795+0.753755412;
+        return distanceMeters * 0.215298795 + 0.753755412;
     }
 }
