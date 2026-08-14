@@ -69,6 +69,9 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     m_robotContainer.robotPeriodic();
+    // After everything has had its chance to register alerts this loop: advance the fault-scan
+    // stagger and render the alert dashboard at most once.
+    Alert.periodic();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

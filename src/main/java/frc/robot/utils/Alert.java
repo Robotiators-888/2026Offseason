@@ -28,29 +28,55 @@ public class Alert {
   private static Color alertColor = new Color(0, 255, 0); // Green
   private static final double connectedTimeout = .5; // Seconds
 
+  /** Loop counter, advanced once per loop by {@link #periodic()}, used to stagger fault scans. */
+  private static int tick = 0;
+
+  /**
+   * Loops between fault scans of any one device: 12 loops is ~4 Hz, matching the default refresh
+   * rate of Phoenix fault signals — scanning faster only re-reads unchanged data.
+   */
+  private static final int kFaultScanPeriodLoops = 12;
+
+  /** Loops between routine dashboard re-renders (which refresh the occurrence counts). */
+  private static final int kRenderPeriodLoops = 50;
+
+  /** Set when a NEW message arrives; makes the next periodic() render immediately. */
+  private static boolean dirty = false;
+
   public static void setup () {
     updateSmartDashboard();
+  }
+
+  /**
+   * Advances the fault-scan stagger and renders the dashboard when something changed (or at a
+   * slow steady rate, to refresh occurrence counts). Call exactly once per loop from
+   * {@code Robot.robotPeriodic()}. Rendering here instead of inside every register call matters:
+   * one disconnected camera used to rebuild the entire alert surface three times per loop.
+   */
+  public static void periodic () {
+    tick++;
+    if (dirty || tick % kRenderPeriodLoops == 0) {
+      dirty = false;
+      updateSmartDashboard();
+    }
   }
 
   public static void registerError (String alert) {
     if (record(errors, alert)) {
       notifyError(alert);
     }
-    updateSmartDashboard();
   }
 
   public static void registerWarning (String alert) {
     if (record(warnings, alert)) {
       notifyWarning(alert);
     }
-    updateSmartDashboard();
   }
 
   public static void registerInfo (String alert) {
     if (record(infos, alert)) {
       notifyInfo(alert);
     }
-    updateSmartDashboard();
   }
 
   /**
@@ -60,8 +86,13 @@ public class Alert {
    *     Repeats only bump the counter, otherwise a flapping fault would spam the dashboard.
    */
   private static boolean record (final Map<String, Integer> into, final String alert) {
-    final Integer previous = into.put(alert, into.getOrDefault(alert, -1) + 1);
-    return previous == null;
+    // getOrDefault(0) + 1, so the first occurrence renders as "<message> 1", not "<message> 0".
+    final Integer previous = into.put(alert, into.getOrDefault(alert, 0) + 1);
+    if (previous == null) {
+      dirty = true;
+      return true;
+    }
+    return false;
   }
 
   /** Renders a severity's map as the "<message> <count>" array the dashboard expects. */
@@ -120,6 +151,11 @@ public class Alert {
   // Alerts every fault a kraken could have in just about the worst way possible, but there is no better way
   public static void alertKraken (TalonFX kraken) {
     int krakenId = kraken.getDeviceID();
+    // Staggered by device ID: each of the ~26 signal reads below runs at ~4 Hz per device
+    // instead of every device paying them every loop (~390 reads per 20 ms across the robot).
+    if (tick % kFaultScanPeriodLoops != krakenId % kFaultScanPeriodLoops) {
+      return;
+    }
     if (!kraken.isAlive())
       registerError("Motor " + krakenId + " is not alive");
     if (!kraken.isConnected(connectedTimeout))

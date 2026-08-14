@@ -12,7 +12,6 @@ import java.util.Optional;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Constants.Field;
@@ -77,67 +76,6 @@ public class AllianceFlipUtil {
       return pose;
     return new Pose2d(apply(pose.getTranslation(), flipType), apply(pose.getRotation(), flipType));
   }
-
-  public static ChassisSpeeds applyFieldRelative(ChassisSpeeds speeds) {
-    return applyFieldRelative(speeds, defaultFlipType);
-  }
-
-  public static ChassisSpeeds applyFieldRelative(ChassisSpeeds speeds, FieldFlipType flipType) {
-    if (!shouldFlip())
-      return speeds;
-    switch (flipType) {
-      default:
-      case CenterPointFlip:
-        return new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond,
-            speeds.omegaRadiansPerSecond);
-      case MirrorFlip:
-        return new ChassisSpeeds(-speeds.vxMetersPerSecond, speeds.vyMetersPerSecond,
-            speeds.omegaRadiansPerSecond);
-    }
-  }
-
-  public static ChassisSpeeds applyRobotRelative(ChassisSpeeds speeds, Rotation2d robotRotation) {
-    return applyRobotRelative(speeds, robotRotation, defaultFlipType);
-  }
-
-  public static ChassisSpeeds applyRobotRelative(ChassisSpeeds speeds, Rotation2d robotRotation,
-      FieldFlipType flipType) {
-    return ChassisSpeeds.fromFieldRelativeSpeeds(
-        applyFieldRelative(ChassisSpeeds.fromRobotRelativeSpeeds(speeds, robotRotation)),
-        robotRotation);
-  }
-
-  /**
-   * Flips a trajectory state to the correct side of the field based on the current alliance color.
-   */
-  // public static Trajectory.State apply(Trajectory.State state) {
-  // if (shouldFlip()) {
-  // return new Trajectory.State(
-  // state.timeSeconds,
-  // state.velocityMetersPerSecond,
-  // state.accelerationMetersPerSecondSq,
-  // new Pose2d(
-  // FieldConstants.fieldLength - state.poseMeters.getX(),
-  // state.poseMeters.getY(),
-  // new Rotation2d(
-  // -state.poseMeters.getRotation().getCos(),
-  // state.poseMeters.getRotation().getSin())),
-  // -state.curvatureRadPerMeter);
-  // } else {
-  // return state;
-  // }
-  // }
-
-  /** Flips a rotation sequence state based on the current alliance color. */
-  // public static RotationSequence.State apply(RotationSequence.State state) {
-  // if (shouldFlip()) {
-  // return new RotationSequence.State(
-  // new Rotation2d(-state.position.getCos(), state.position.getSin()),
-  // -state.velocityRadiansPerSec);
-  // } else {
-  // return state;
-  // }
-  // }
 
   public static boolean shouldFlip() {
     return DriverStation.getAlliance().equals(Optional.of(Alliance.Red));

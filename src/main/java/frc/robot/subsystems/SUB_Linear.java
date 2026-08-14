@@ -76,11 +76,6 @@ public class SUB_Linear extends SubsystemBase {
         driveTo(slowController, Constants.Linear.kLINEAR_BACKWARD_SETPOINT);
     }
 
-    /** Retracts the arm at the fast gain, for a deliberate jog rather than a compress. */
-    public void backwardFast() {
-        driveTo(fastController, Constants.Linear.kLINEAR_BACKWARD_SETPOINT);
-    }
-
     /**
      * Runs one iteration of a position loop.
      *
@@ -90,14 +85,6 @@ public class SUB_Linear extends SubsystemBase {
     private void driveTo(final PIDController controller, final double setpoint) {
         final double output = controller.calculate(linear.getEncoder().getPosition(), setpoint);
         linear.set(MathUtil.clamp(output, -kMaxOutput, kMaxOutput));
-    }
-
-    public boolean isForward() {
-        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_FORWARD_SETPOINT) < 3.0;
-    }
-
-    public boolean isBackward() {
-        return Math.abs(linear.getEncoder().getPosition() - Constants.Linear.kLINEAR_BACKWARD_SETPOINT) < 3.0;
     }
 
     public void set(double speed) {

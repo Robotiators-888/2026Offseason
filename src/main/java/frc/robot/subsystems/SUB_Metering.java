@@ -6,6 +6,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -15,6 +16,9 @@ public class SUB_Metering extends SubsystemBase {
     private final TalonFX metering;
     private final TalonFX meteringFollower;
     private static SUB_Metering INSTANCE = null;
+
+    /** See the identical check in SUB_Shooter — a wrong MotorAlignmentValue shows up as this. */
+    private final Debouncer followerOpposedDebouncer = new Debouncer(0.25, Debouncer.DebounceType.kRising);
 
     public static SUB_Metering getInstance () {
         if (INSTANCE == null) {
@@ -43,35 +47,51 @@ public class SUB_Metering extends SubsystemBase {
         metering.set(speed);
     }
 
+    /** Loop counter used to decimate the diagnostic telemetry below to ~4 Hz. */
+    private int telemetryTick = 0;
+
     @Override
     public void periodic () {
-        SmartDashboard.putNumber("Hood/Leader Position", metering.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Position", meteringFollower.getPosition().getValueAsDouble());
+        // Velocity is read every loop for the follower-alignment check; everything else is
+        // slow-moving diagnostics published at ~4 Hz. These keys used to sit under "Hood/" —
+        // a copy-paste from SUB_Hood that filed the metering stage's entire diagnostic surface
+        // under the wrong mechanism.
+        final double leaderRPS = metering.getVelocity().getValueAsDouble();
+        final double followerRPS = meteringFollower.getVelocity().getValueAsDouble();
+        SmartDashboard.putNumber("Metering/Leader Velocity", leaderRPS);
+        SmartDashboard.putNumber("Metering/Follower Velocity", followerRPS);
 
-        SmartDashboard.putNumber("Hood/Leader Stator Current", metering.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Stator Current", meteringFollower.getStatorCurrent().getValueAsDouble());
+        if (followerOpposedDebouncer.calculate(
+                Math.abs(leaderRPS) > 5 && Math.abs(followerRPS) > 5
+                    && Math.signum(followerRPS) != Math.signum(leaderRPS))) {
+            Alert.registerError("Metering follower (46) opposing leader — MotorAlignmentValue likely wrong");
+        }
 
-        SmartDashboard.putNumber("Hood/Leader Supply Current", metering.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Supply Current", meteringFollower.getSupplyCurrent().getValueAsDouble());
+        if (telemetryTick++ % 12 == 0) {
+            SmartDashboard.putNumber("Metering/Leader Position", metering.getPosition().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Position", meteringFollower.getPosition().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Supply Voltage", metering.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Supply Voltage", meteringFollower.getSupplyVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Leader Stator Current", metering.getStatorCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Stator Current", meteringFollower.getStatorCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Motor Voltage", metering.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Motor Voltage", meteringFollower.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Leader Supply Current", metering.getSupplyCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Supply Current", meteringFollower.getSupplyCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Torque Current", metering.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Torque Current", meteringFollower.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Leader Supply Voltage", metering.getSupplyVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Supply Voltage", meteringFollower.getSupplyVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Device Temp", metering.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Device Temp", meteringFollower.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Leader Motor Voltage", metering.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Motor Voltage", meteringFollower.getMotorVoltage().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Processor Temp", metering.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Processor Temp", meteringFollower.getProcessorTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Leader Torque Current", metering.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Torque Current", meteringFollower.getTorqueCurrent().getValueAsDouble());
 
-        SmartDashboard.putNumber("Hood/Leader Velocity", metering.getVelocity().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Follower Velocity", meteringFollower.getVelocity().getValueAsDouble());
-        // TODO: Implement rpm stuff
+            SmartDashboard.putNumber("Metering/Leader Device Temp", metering.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Device Temp", meteringFollower.getDeviceTemp().getValueAsDouble());
+
+            SmartDashboard.putNumber("Metering/Leader Processor Temp", metering.getProcessorTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Metering/Follower Processor Temp", meteringFollower.getProcessorTemp().getValueAsDouble());
+        }
 
         Alert.alertKraken(metering);
         Alert.alertKraken(meteringFollower);

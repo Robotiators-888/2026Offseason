@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -10,6 +11,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.OptionalDouble;
 import frc.robot.Constants;
@@ -35,6 +37,15 @@ public class SUB_Hood extends SubsystemBase {
 
     /** Last angle commanded, in mechanism radians, for telemetry and atAngle(). */
     private double desiredAngleRads = Constants.Hood.kHOOD_ANGLE_AT_ZERO_RADS;
+
+    /**
+     * The normal soft limits, and a homing variant with the reverse limit dropped. The retracted
+     * hard stop sits AT the reverse soft limit (encoder zero), so a homing crawl with the limit
+     * enabled is halted by the controller before it can ever reach the stop — the exact failure
+     * the homing routine used to time out on, every time.
+     */
+    private final SoftwareLimitSwitchConfigs normalSoftLimits = new SoftwareLimitSwitchConfigs();
+    private final SoftwareLimitSwitchConfigs homingSoftLimits = new SoftwareLimitSwitchConfigs();
 
     public static SUB_Hood getInstance () {
         if (INSTANCE == null) {
@@ -63,15 +74,27 @@ public class SUB_Hood extends SubsystemBase {
 
         // The hood has hard stops and no limit switch, so the soft limits are the only thing
         // standing between a bad setpoint and a stalled motor.
-        config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
+        normalSoftLimits.ForwardSoftLimitEnable = true;
+        normalSoftLimits.ForwardSoftLimitThreshold =
             angleToRotations(Constants.Hood.kHOOD_MAX_ANGLE_RADS);
-        config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-        config.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+        normalSoftLimits.ReverseSoftLimitEnable = true;
+        normalSoftLimits.ReverseSoftLimitThreshold =
             angleToRotations(Constants.Hood.kHOOD_MIN_ANGLE_RADS);
+
+        homingSoftLimits.ForwardSoftLimitEnable = normalSoftLimits.ForwardSoftLimitEnable;
+        homingSoftLimits.ForwardSoftLimitThreshold = normalSoftLimits.ForwardSoftLimitThreshold;
+        homingSoftLimits.ReverseSoftLimitEnable = false;
+        homingSoftLimits.ReverseSoftLimitThreshold = normalSoftLimits.ReverseSoftLimitThreshold;
+
+        config.SoftwareLimitSwitch = normalSoftLimits;
 
         hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
         hood.getConfigurator().apply(config);
+    }
+
+    /** Swaps the soft-limit profile without blocking; used only around the homing crawl. */
+    private void setReverseSoftLimitEnabled (final boolean enabled) {
+        hood.getConfigurator().apply(enabled ? normalSoftLimits : homingSoftLimits, 0.0);
     }
 
     /** Converts a mechanism angle in radians to the encoder's rotation reading. */
@@ -159,9 +182,9 @@ public class SUB_Hood extends SubsystemBase {
      * Hood angle for a shot at {@code distance} with the flywheel held at {@code rpm}.
      *
      * <p>The RPM is converted to a launch speed by scaling the minimum-energy speed for this range
-     * by how far the commanded RPM exceeds the tuned table value — the same ratio trick
-     * {@link SUB_Shooter#requiredRPM} uses, and for the same reason: the absolute RPM-to-speed
-     * transfer is unreliable, but ratios taken near a calibrated point are sound.
+     * by how far the commanded RPM exceeds the tuned table value. Ratio, not absolute: the
+     * absolute RPM-to-speed transfer is unreliable, but ratios taken near a calibrated point are
+     * sound.
      *
      * @return Launch angle in radians, or empty if that RPM cannot reach that range
      */
@@ -201,16 +224,31 @@ public class SUB_Hood extends SubsystemBase {
      * enough to rule out a startup spike. Bounded by a timeout so a dead current signal cannot leave
      * the motor stalled indefinitely.
      *
-     * <p>This is what {@code resetSafe()} always claimed to be. Run it once on startup, or bind it
-     * to a button — it is the only thing that makes the encoder's zero mean anything.
+     * <p>The reverse soft limit is dropped for the duration of the crawl — the retracted stop sits
+     * at the soft limit, so leaving it enabled halts the crawl at encoder zero before the stop and
+     * the routine can only ever time out. And a timeout must NOT re-zero: whatever position the
+     * hood happened to be sitting at would silently become the new zero, which is worse than no
+     * home at all.
+     *
+     * <p>Run it once on startup, or bind it to a button — it is the only thing that makes the
+     * encoder's zero mean anything.
      */
     public Command homeCommand () {
         final Debouncer stallDebouncer = new Debouncer(0.15, Debouncer.DebounceType.kRising);
+        final boolean[] stalled = {false};
         return startEnd(this::driveTowardStop, this::stop)
-            .beforeStarting(() -> stallDebouncer.calculate(false))
-            .until(() -> stallDebouncer.calculate(isStalled()))
+            .beforeStarting(() -> {
+                stalled[0] = false;
+                stallDebouncer.calculate(false);
+                setReverseSoftLimitEnabled(false);
+            })
+            .until(() -> stalled[0] = stallDebouncer.calculate(isStalled()))
             .withTimeout(Constants.Hood.kHOOD_HOMING_TIMEOUT_SECONDS)
-            .andThen(runOnce(this::resetEncoder))
+            .finallyDo(() -> setReverseSoftLimitEnabled(true))
+            .andThen(Commands.either(
+                runOnce(this::resetEncoder),
+                runOnce(() -> Alert.registerWarning("Hood homing timed out — encoder NOT zeroed")),
+                () -> stalled[0]))
             .withName("HomeHood");
     }
 
@@ -228,20 +266,27 @@ public class SUB_Hood extends SubsystemBase {
         hood.set(speed);
     }
 
+    /** Loop counter used to decimate the diagnostic telemetry below to ~4 Hz. */
+    private int telemetryTick = 0;
+
     @Override
     public void periodic () {
+        // Fire-gate signals at full rate; slow diagnostics at ~4 Hz.
         SmartDashboard.putNumber("Hood/Angle (Deg)", Units.radiansToDegrees(getAngle()));
         SmartDashboard.putNumber("Hood/Desired Angle (Deg)", Units.radiansToDegrees(desiredAngleRads));
         SmartDashboard.putBoolean("Hood/At Angle", atAngle());
         SmartDashboard.putNumber("Hood/Position (Rotations)", hood.getPosition().getValueAsDouble());
+        // Stator current at full rate too — it is the homing routine's stall signal.
         SmartDashboard.putNumber("Hood/Stator Current", hood.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Supply Current", hood.getSupplyCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Supply Voltage", hood.getSupplyVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Motor Voltage", hood.getMotorVoltage().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Torque Current", hood.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Device Temp", hood.getDeviceTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Processor Temp", hood.getProcessorTemp().getValueAsDouble());
-        SmartDashboard.putNumber("Hood/Velocity", hood.getVelocity().getValueAsDouble());
+        if (telemetryTick++ % 12 == 0) {
+            SmartDashboard.putNumber("Hood/Supply Current", hood.getSupplyCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Supply Voltage", hood.getSupplyVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Motor Voltage", hood.getMotorVoltage().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Torque Current", hood.getTorqueCurrent().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Device Temp", hood.getDeviceTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Processor Temp", hood.getProcessorTemp().getValueAsDouble());
+            SmartDashboard.putNumber("Hood/Velocity", hood.getVelocity().getValueAsDouble());
+        }
         Alert.alertKraken(hood);
     }
 }

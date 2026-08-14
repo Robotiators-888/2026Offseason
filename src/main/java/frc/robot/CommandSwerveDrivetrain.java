@@ -127,23 +127,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
-    private boolean reachedAutoTarget = false;
-    private boolean intakeComplete = true;
 
     public final StructPublisher<Pose2d> publisher1 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/debugXPoint", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/debugXPoint", Pose2d.struct).publish();
     public final StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/debugYPoint", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/debugYPoint", Pose2d.struct).publish();
     public final StructPublisher<Pose3d> publisher3 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose3d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam1Pose", Pose3d.struct).publish();
     public final StructPublisher<Pose3d> publisher4 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose3d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/PhotonCam2Pose", Pose3d.struct).publish();
     public final StructPublisher<Pose3d> publisher5 = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose3d.struct).publish(); 
-    public final StructPublisher<Pose2d> selectPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/SelectedPose", Pose2d.struct).publish();
+        .getStructTopic("SmartDashboard/Drivetrain/HighCamPose", Pose3d.struct).publish();
     public final StructPublisher<Pose2d> robotPosePublisher = NetworkTableInstance.getDefault()
-        .getStructTopic("SmartDashboard/Drivetrain/Robot Pose", Pose2d.struct).publish(); 
+        .getStructTopic("SmartDashboard/Drivetrain/Robot Pose", Pose2d.struct).publish();
 
     public final StructPublisher<Pose2d> testPath1Publisher = NetworkTableInstance.getDefault()
         .getStructTopic("SmartDashboard/Drivetrain/TestPath1", Pose2d.struct).publish();
@@ -158,10 +154,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /** The four trench-path publishers, indexable so callers can loop instead of unrolling. */
     @SuppressWarnings("unchecked")
+    private final StructPublisher<Pose2d>[] testPathPublishers = new StructPublisher[] {
+        testPath1Publisher, testPath2Publisher, testPath3Publisher, testPath4Publisher
+    };
+
     public StructPublisher<Pose2d>[] testPathPublishers() {
-        return new StructPublisher[] {
-            testPath1Publisher, testPath2Publisher, testPath3Publisher, testPath4Publisher
-        };
+        // Cached — this used to allocate a fresh array on every call, and it is called every loop.
+        return testPathPublishers;
     }
 
     public final StructArrayPublisher<SwerveModuleState> swerveModuleStatesPublisher = NetworkTableInstance.getDefault()
@@ -406,24 +405,5 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public Pose2d getPose() {
         return this.getState().Pose;
-    }
-    
-
-    public void setReachedTarget(boolean value) {
-        reachedAutoTarget = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/ReachedAutoTarget", reachedAutoTarget);
-    }
-
-    public boolean getReachedTarget() {
-        return reachedAutoTarget;
-    }
-
-    public void setIntakeComplete(boolean value) {
-        intakeComplete = value;
-        edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putBoolean("Drivetrain/IntakeComplete", intakeComplete);
-    }
-
-    public boolean getIntakeComplete() {
-        return intakeComplete;
     }
 }

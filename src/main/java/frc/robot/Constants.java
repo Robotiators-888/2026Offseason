@@ -9,7 +9,6 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -33,7 +32,6 @@ public final class Constants {
         public static final class Shooter {
                 public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 44;
                 public static final int kSHOOTER_LEADER_MOTOR_CANID = 43;
-                public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
 
                 //Physical Specs
                 public static final double ShooterDiameter = 3;                
@@ -75,6 +73,70 @@ public final class Constants {
 
                 /** How far past a band's reach the robot must go before stepping down a band. */
                 public static final double kBAND_HYSTERESIS = 0.90;
+
+                /** At-speed tolerance to arm a shot, in RPM. */
+                public static final double kRPM_TOLERANCE = 75;
+
+                /**
+                 * Looser at-speed tolerance used to keep feeding once a shot has started, in RPM.
+                 * Ball contact drops the flywheel well past the arming tolerance, and cutting the
+                 * indexer mid-ball jams the feed.
+                 */
+                public static final double kRPM_SUSTAIN_TOLERANCE = 250;
+
+                /**
+                 * How long the full arm condition (aligned, at speed, hood arrived, in range) must
+                 * hold continuously before the feed opens. A single 20 ms blip is jitter, not
+                 * readiness.
+                 */
+                public static final double kFEED_ARM_DEBOUNCE_SECONDS = 0.10;
+
+                /**
+                 * Effective half-width of the hub opening for aiming, in meters: half the 41.7 in
+                 * hexagonal opening minus a 5.91 in FUEL radius. The heading tolerance is the angle
+                 * this subtends at the current range.
+                 */
+                public static final double kAIM_HALF_WIDTH_METERS =
+                                Units.inchesToMeters((41.7 - 5.91) / 2.0);
+
+                /** Fraction of the geometric tolerance teleop aiming actually accepts. */
+                public static final double kAIM_SAFETY_FACTOR_TELEOP = 0.8;
+
+                /** Tighter than teleop, since auto has no driver to judge the shot. */
+                public static final double kAIM_SAFETY_FACTOR_AUTO = 0.6;
+
+                /** Heading-controller gains shared by the aim and shuttle commands. */
+                public static final double kAIM_HEADING_kP = 5.0;
+                public static final double kAIM_HEADING_kD = 0.2;
+
+                /** Inside this heading error the rotation output is zeroed so the robot settles. */
+                public static final double kAIM_HEADING_TOLERANCE_RADS = Units.degreesToRadians(0.75);
+
+                /** Constant term that breaks drivetrain stiction, applied outside the tolerance band. */
+                public static final double kAIM_STICTION_RADS_PER_SEC = Units.degreesToRadians(9);
+
+                /**
+                 * The stiction term ramps in over this width past the heading tolerance instead of
+                 * switching on — a step there is a limit cycle: the robot settles, the term
+                 * vanishes, it drifts out, and the term slams back in.
+                 */
+                public static final double kAIM_STICTION_RAMP_WIDTH_RADS = Units.degreesToRadians(2);
+
+                /**
+                 * Hood angle held while shuttling, in mechanism radians. A shuttle is a lob onto
+                 * the floor, not a shot at the hub opening, so the analytic hood solve (which
+                 * targets ScoreHeight above the shooter) does not apply — this is a fixed lob
+                 * angle. BENCH TUNE.
+                 */
+                public static final double kSHUTTLE_HOOD_ANGLE_RADS = Units.degreesToRadians(45);
+
+                /**
+                 * The shuttle flywheel setpoint only moves when the table value drifts this far,
+                 * in RPM, from the current setpoint. Must comfortably exceed the at-speed
+                 * tolerance, or the setpoint chases odometry jitter and atDesiredRPM() never
+                 * latches long enough to feed.
+                 */
+                public static final double kSHUTTLE_RPM_LATCH_DEADBAND = 150;
         }
 
         /** Intake roller motor configuration */
@@ -89,17 +151,22 @@ public final class Constants {
                  * the motor, so it is left alone rather than changed silently here.
                  */
                 public static final int kINTAKE_RIGHTMOTOR_CANID = 31;
-                public static final double kROLLER_MOTOR_SPEED = 0.9;
-                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254; 
+                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254;
         }
 
         /** Intake arm motor configuration and relative setpoints (NEO 2.0 Encoder) */
         public static final class Linear {
-                public static final int kLINEAR_MOTOR_CANID = 31; 
-                public static final double kLINEAR_MOTOR_SPEED = 0.1; 
-                public static final double kLINEAR_FORWARD_SETPOINT = 360.0*4.2; // Degrees (Relative)
-                public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Degrees (Relative)
-                public static final double kLINEAR_FAULT_AMPS = 30;       // Stall detection threshold
+                public static final int kLINEAR_MOTOR_CANID = 31;
+
+                /**
+                 * Motor rotations (relative to the retracted position). No position conversion
+                 * factor is configured on the SparkMax, so the encoder reads MOTOR rotations —
+                 * the old value of {@code 360.0*4.2} treated it as degrees, commanding the arm
+                 * 360x past its stop so it only ever rode the output clamp into the hard stop.
+                 * BENCH VERIFY the deploy pose actually lands where intended.
+                 */
+                public static final double kLINEAR_FORWARD_SETPOINT = 4.2;
+                public static final double kLINEAR_BACKWARD_SETPOINT = 0;       // Motor rotations (Relative)
 
                 // Gains, not controllers. SUB_Linear builds its own PIDController instances from
                 // these — a shared static controller carries mutable loop state between commands.
@@ -113,10 +180,6 @@ public final class Constants {
                 public static final int kMETERING_WHEEL_CANID = 42;   // High-speed feed to shooter
                 
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;    // Spindexer feed voltage
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0; 
-                
-                // Max RPM of NEO at 12V is 5676; scaled by target voltage
-                public static final double kINDEX_METERING_MOTOR_RPM = 5676*(kINDEX_METERING_MOTOR_VOLTS/12.0); 
         }
 
         /** Standard field measurements in meters */
@@ -155,8 +218,19 @@ public final class Constants {
                 /** Max per-tag pose ambiguity; any worse tag in the solve rejects the whole frame. */
                 public static final double kMaxAmbiguity = 0.2;
 
-                /** Max distance to the nearest tag used, in meters. */
-                public static final double kMaxDistance = 4.0;
+                /**
+                 * Max distance to the nearest tag used, in meters. Raised from 4.0: shooting
+                 * range extends past 5.4 m, and cutting vision off at 4 m left the pose to drift
+                 * on wheel odometry exactly where the aim solution is most distance-sensitive.
+                 * The quadratic std-dev scaling already de-weights far solves.
+                 */
+                public static final double kMaxDistance = 6.0;
+
+                /** Divisor in xyStddev = dist^2 / divisor for single-tag fallback solves. */
+                public static final double kSingleTagStddevDivisor = 16.0;
+
+                /** Same, for multi-tag PnP solves, which are far more trustworthy. FIELD TUNE. */
+                public static final double kMultiTagStddevDivisor = 40.0;
 
                 public static final Rotation3d cameraRotation = new Rotation3d(
                                 Units.degreesToRadians(0), Units.degreesToRadians(-25),
@@ -180,26 +254,6 @@ public final class Constants {
                 public static final Transform3d kRobotToCamera3 = new Transform3d(
                                  Units.inchesToMeters(-4), Units.inchesToMeters(0),
                                  Units.inchesToMeters(20.5), cameraRotation3);
-        }
-
-        /** PWM configurations and predefined color values for Blinkin */
-        public static class LEDs {
-                public static final int kPWMPort = 9;
-                public static final double kColorGreen = 0.77;
-                public static final double kColorRed = 0.61;
-                public static final double kParty_Palette_Twinkles = -0.53;
-
-                /**
-                 * Blinkin value for our alliance colour.
-                 *
-                 * <p>This must stay a method. It used to be a {@code static final} field initialised
-                 * from {@link DriverStation#getAlliance()}, which runs at class load — long before
-                 * the FMS reports an alliance — so it always evaluated to blue.
-                 */
-                public static double allianceColor () {
-                        return DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue)
-                                        == DriverStation.Alliance.Blue ? 0.0 : 0.5;
-                }
         }
 
         public static class Hood {

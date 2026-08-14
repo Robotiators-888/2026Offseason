@@ -38,7 +38,6 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -118,7 +117,6 @@ public class RobotContainer {
         Optional<Alliance> lastAlliance;
         Optional<Alliance> alliance;
         public static Field2d autoField = new Field2d();
-        public int listIndex = 0;
         public double targetRPM = 1000;
 
         /** Ceiling for the manual RPM trim on Driver 2's Y/A buttons. */
@@ -184,10 +182,42 @@ public class RobotContainer {
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();
                 configureBindings();
-                autoChooser = AutoBuilder.buildAutoChooser();
+                if (AutoBuilder.isConfigured()) {
+                        autoChooser = AutoBuilder.buildAutoChooser();
+                } else {
+                        // configurePathPlanner() already alerted about the failed RobotConfig load.
+                        // buildAutoChooser() throws on an unconfigured AutoBuilder, which would
+                        // crash-loop robot code at the field, so fall back to a no-op chooser.
+                        autoChooser = new SendableChooser<>();
+                        autoChooser.setDefaultOption("Do Nothing (PathPlanner config failed)", Commands.none());
+                }
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
                 SmartDashboard.putData("Autos/Active Auto Path", autoField);
+                // Registered once — a Sendable only needs putData at setup, and doing it every
+                // robotPeriodic() paid a registry lookup per loop.
+                SmartDashboard.putData("Drivetrain/Field", field);
 
+                registerCalibrationWarnings();
+        }
+
+        /**
+         * Standing dashboard warnings for constants that are still placeholders. The hood is the
+         * aiming axis, so until these are measured on the robot no shot solution is trustworthy.
+         * Each warning names the constant to fix; remove the LUT warning when the long-range
+         * entries are re-shot.
+         */
+        private static void registerCalibrationWarnings() {
+                if (Constants.Hood.kHOOD_GEAR_RATIO == 1.0) {
+                        Alert.registerWarning(
+                                "Hood gear ratio is placeholder 1.0 (Constants.Hood) — hood angles are meaningless until measured");
+                }
+                if (Constants.Hood.kHOOD_ANGLE_AT_ZERO_RADS == 0.0
+                                && Constants.Hood.kHOOD_MIN_ANGLE_RADS == 0.0) {
+                        Alert.registerWarning(
+                                "Hood zero offset and travel limits are unmeasured (Constants.Hood) — soft limits are fictional");
+                }
+                Alert.registerWarning(
+                        "Shooter LUT 10.5 m anchor is untuned (SUB_Shooter TODO) — long-range and shuttle RPM uncalibrated");
         }
 
         /**
@@ -260,31 +290,30 @@ public class RobotContainer {
                 // Clamped so holding the button cannot walk the setpoint into a reverse spin-up.
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM = MathUtil.clamp(targetRPM + 25, 0, kMaxManualRPM)));
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM = MathUtil.clamp(targetRPM - 25, 0, kMaxManualRPM)));
+                // Unjam: back the whole feed path out, metering stage included — a ball jammed at
+                // the metering wheels could not previously be backed out at all.
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
+                        metering.set(-0.5);
                         shooter.setVolts(-2.5);
-                }, index, shooter));
+                }, index, metering, shooter));
                 Driver2.povDown().whileTrue(Commands.run(()->linear.forward(),linear));
                 Driver2.povUp().whileTrue(Commands.run(()->linear.backward(),linear));
-                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(), Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
-                // }, linear));
-                // Manual hood jog + re-zero. This used to share Driver2.rightTrigger() with the
-                // indexer feed above, so every feed also nudged the hood down and silently
-                // redefined its zero on release.
-                Driver2.povLeft().whileTrue(new RunCommand(() -> hood.set(-.05), hood))
-                        .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+                // Manual hood jog. Re-zeroing on release was removed: declaring wherever the jog
+                // stopped to be the new zero silently corrupted every subsequent hood angle.
+                // Zeroing belongs exclusively to the current-sensing homeCommand below.
+                Driver2.povLeft().whileTrue(new RunCommand(() -> hood.set(-.05), hood));
 
                 // Proper current-sensing home, bounded by a timeout.
                 Driver2.povRight().onTrue(hood.homeCommand());
                 Driver2.b().whileTrue(
-                        new CMD_Shuttle(drivetrain, photonVision, index, shooter,
+                        new CMD_Shuttle(drivetrain, index, shooter, hood, metering,
                                 () -> -(Driver1.getLeftY()),
                                 () -> -(Driver1.getLeftX())
                         )
                 );
                 Driver2.x().onTrue(new InstantCommand(() -> Hub.getDistanceToGoal(drivetrain.getPose())
-                        .ifPresent(distance -> targetRPM = shooter.getDistanceRPM(distance))));
+                        .ifPresent(distance -> targetRPM = shooter.tunedRPM(distance))));
         }
 
         public void robotInit() {
@@ -301,11 +330,17 @@ public class RobotContainer {
                 return autoChooser.getSelected();
         }
 
+        /** Cached array for {@link #trenchPaths()}, rebuilt lazily — the paths never change after load. */
+        private PathPlannerPath[] trenchPathsCache;
+
         /** The four trench-crossing paths, alliance-flipped. Null entries mean the file failed to load. */
         private PathPlannerPath[] trenchPaths() {
-                return new PathPlannerPath[] {
-                        pathLeftToNeutral, pathNeutralToLeft, pathRightToNeutral, pathNeutralToRight
-                };
+                if (trenchPathsCache == null) {
+                        trenchPathsCache = new PathPlannerPath[] {
+                                pathLeftToNeutral, pathNeutralToLeft, pathRightToNeutral, pathNeutralToRight
+                        };
+                }
+                return trenchPathsCache;
         }
 
         private static final String[] kTrenchNames = {
@@ -378,7 +413,6 @@ public class RobotContainer {
                 autoField.setRobotPose(drivetrain.getPose());
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 field.setRobotPose(drivetrain.getPose());
-                SmartDashboard.putData("Drivetrain/Field", field);
                 SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)",targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)", drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
 
@@ -388,8 +422,6 @@ public class RobotContainer {
 
 
         public void autonomousInit() {
-                drivetrain.setIntakeComplete(true);
-                drivetrain.setReachedTarget(false);
                 Elastic.selectTab("Autonomous");
                 PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
 
@@ -489,17 +521,21 @@ public class RobotContainer {
         }
 
         public void photonPoseUpdate() {
-                processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
-                processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
-                processCameraPose(photonVision.getCam3Pose(), drivetrain.publisher5);
+                // Every unread frame is fused, not just the newest — the drivetrain pose
+                // estimator's timestamped buffer handles out-of-order measurements.
+                for (EstimatedRobotPose pose : photonVision.getCam1Poses()) {
+                        processCameraPose(pose, drivetrain.publisher3);
+                }
+                for (EstimatedRobotPose pose : photonVision.getCam2Poses()) {
+                        processCameraPose(pose, drivetrain.publisher4);
+                }
+                for (EstimatedRobotPose pose : photonVision.getCam3Poses()) {
+                        processCameraPose(pose, drivetrain.publisher5);
+                }
         }
 
-        private void processCameraPose(Optional<EstimatedRobotPose> poseOptional,
+        private void processCameraPose(EstimatedRobotPose estimatedPose,
                         StructPublisher<Pose3d> publisher) {
-                if (poseOptional.isEmpty()) {
-                        return;
-                }
-                EstimatedRobotPose estimatedPose = poseOptional.get();
                 Pose3d photonPose = estimatedPose.estimatedPose;
 
                 if (estimatedPose.targetsUsed.isEmpty()) {
@@ -529,9 +565,13 @@ public class RobotContainer {
                 }
 
                 if (minDist < Constants.PhotonVision.kMaxDistance) {
-                        double xyStddev = Math.pow(minDist, 2) / 16.0;
+                        // A multi-tag PnP solve is far more trustworthy than a single-tag solve at
+                        // the same range, so it gets a proportionally smaller std dev.
+                        double divisor = estimatedPose.targetsUsed.size() > 1
+                                        ? Constants.PhotonVision.kMultiTagStddevDivisor
+                                        : Constants.PhotonVision.kSingleTagStddevDivisor;
+                        double xyStddev = minDist * minDist / divisor;
                         double rotStddev = Units.degreesToRadians(120.0);
-                        SmartDashboard.putNumber("Vision/PhotonVision Future TimeStamp?",Timer.getFPGATimestamp() - estimatedPose.timestampSeconds );
                         drivetrain.addVisionMeasurement(
                                         photonPose.toPose2d(),
                                         estimatedPose.timestampSeconds,

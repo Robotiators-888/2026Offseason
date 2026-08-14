@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -41,8 +42,22 @@ public class SUB_Shooter extends SubsystemBase {
     /** Tracks which limit profile is currently on the motors so we only touch CAN on a change. */
     private boolean highPower = false;
 
+    /**
+     * The profile the last {@link #setHighPower} call asked for. Reconciled against
+     * {@link #highPower} in {@link #periodic()} with non-blocking applies — a blocking apply in
+     * a command's initialize()/end() used to stall the whole loop by up to ~100 ms per motor.
+     */
+    private boolean requestedHighPower = false;
+
     /** Index into {@link Constants.Shooter#kREADY_RPM_BANDS}, held with hysteresis. */
     private int currentBand = 0;
+
+    /**
+     * Sustained sign disagreement between leader and follower means the Follower request's
+     * MotorAlignmentValue is wrong for this gearbox — {@link #flywheelRPM()} would average two
+     * opposing speeds toward zero and the robot would silently never fire.
+     */
+    private final Debouncer followerOpposedDebouncer = new Debouncer(0.25, Debouncer.DebounceType.kRising);
 
     /** Interpolation map for distance-based RPM calibration */
     private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
@@ -113,37 +128,30 @@ public class SUB_Shooter extends SubsystemBase {
      * Selects the shooting (high supply current) or idle (low supply current) limit profile.
      *
      * <p>Every command that spins the flywheel to score must call this with {@code true} in
-     * {@code initialize()} and {@code false} in {@code end()}. The call is edge-triggered, so
-     * repeating it costs nothing; only an actual change touches the CAN bus.
+     * {@code initialize()} and {@code false} in {@code end()}. Only the request is recorded here;
+     * {@link #periodic()} pushes it to the motors with zero-timeout (non-blocking) applies, so
+     * calling this can never stall the command scheduler loop. The one-loop delay is immaterial
+     * against a ~1 s spin-up.
      *
      * @param enabled true while actively shooting
      */
     public void setHighPower(final boolean enabled) {
-        if (enabled == highPower) {
-            return;
-        }
-        highPower = enabled;
-        final CurrentLimitsConfigs limits = enabled ? highPowerLimits : lowPowerLimits;
-        shooterLeader.getConfigurator().apply(limits);
-        shooterFollower.getConfigurator().apply(limits);
+        requestedHighPower = enabled;
     }
 
-    /**
-     * Flywheel speed needed to land a projectile launched at {@code angle} at horizontal range
-     * {@code distance}.
-     *
-     * <p>{@code angle} is in <b>radians</b> throughout — it previously went into
-     * {@code Units.degreesToRadians()} for the secant term while being used raw in the tangent term,
-     * so the same variable was read as two different units inside one expression.
-     *
-     * <p>The surface-speed to RPM conversion is {@code v * 60 / (pi * D)} with D in meters. Since
-     * {@link Constants.Shooter#ShooterDiameter} is in inches, the numerator carries the inches per
-     * meter factor; the old literal 720 was short by a factor of ~3.3.
-     *
-     * @param distance Horizontal range to the target, in meters
-     * @param angle Launch angle in radians (see {@link SUB_Hood#findoptimalangle})
-     * @return Required flywheel RPM, or 0 if the shot is not physically reachable
-     */
+    /** Pushes a pending limit-profile change to both motors without blocking; retried until acked. */
+    private void reconcileCurrentLimits() {
+        if (requestedHighPower == highPower) {
+            return;
+        }
+        final CurrentLimitsConfigs limits = requestedHighPower ? highPowerLimits : lowPowerLimits;
+        final boolean leaderOk = shooterLeader.getConfigurator().apply(limits, 0.0).isOK();
+        final boolean followerOk = shooterFollower.getConfigurator().apply(limits, 0.0).isOK();
+        if (leaderOk && followerOk) {
+            highPower = requestedHighPower;
+        }
+    }
+
     /**
      * Lowest launch speed, in m/s, that can reach a target {@code distance} away and
      * {@link Constants.Hood#ScoreHeight} above the shooter: {@code sqrt(g*(h + hypot(h, d)))}.
@@ -172,31 +180,6 @@ public class SUB_Shooter extends SubsystemBase {
     }
 
     /**
-     * Flywheel RPM needed to reach {@code distance} at a given hood {@code angle} in radians.
-     *
-     * <p>Anchored on the tuned look-up table rather than on absolute physics. The table is sampled
-     * along the minimum-energy angle, so this scales its value by the <em>ratio</em> of the speed
-     * this angle needs to the speed that angle needs:
-     *
-     * <pre>rpm(d, theta) = lut(d) * requiredLaunchSpeed(d, theta) / minLaunchSpeed(d)</pre>
-     *
-     * <p>Taking a ratio at nearly the same operating point cancels most of the wheel-to-ball
-     * transfer error. That matters here: fitting the table against ideal projectile motion gives
-     * RPM-per-m/s rising from ~178 at 1.6 m to ~221 at 10.5 m, while {@link #findoptimalRPM}
-     * assumes a flat 313. The slip is real and speed-dependent, so absolute predictions from the
-     * analytic model are not usable — but ratios near a calibrated point are.
-     *
-     * @return Required RPM, or {@link Double#NaN} if the shot is unreachable at that angle
-     */
-    public double requiredRPM(final double distance, final double angle) {
-        final double needed = requiredLaunchSpeed(distance, angle);
-        if (Double.isNaN(needed)) {
-            return Double.NaN;
-        }
-        return distanceToRPM.get(distance) * (needed / minLaunchSpeed(distance));
-    }
-
-    /**
      * Lowest standing RPM band that can still reach {@code distance}.
      *
      * <p>A band is viable when it is at least the table's tuned RPM for that range — below that no
@@ -206,25 +189,51 @@ public class SUB_Shooter extends SubsystemBase {
      */
     public double readyRPM(final double distance) {
         final double[] bands = Constants.Shooter.kREADY_RPM_BANDS;
-        final double needed = distanceToRPM.get(distance);
+        currentBand = selectBand(bands, distanceToRPM.get(distance), currentBand,
+            Constants.Shooter.kBAND_HYSTERESIS);
+        return bands[currentBand];
+    }
 
-        // Stay in the current band while it still reaches, minus a margin, so the boundary has to
-        // be cleared properly before stepping down.
+    /**
+     * Band selection as a pure function, so the hysteresis behaviour is unit-testable.
+     *
+     * <p>Stays in {@code currentBand} while it still reaches and, on the way down, until the
+     * needed RPM drops below {@code hysteresis} of the band below. Otherwise a robot hovering on
+     * a band boundary steps the flywheel up and down on every odometry jitter — which is exactly
+     * what the previous comparison allowed: it divided where it should have multiplied, making
+     * the early return provably identical to the plain scan (no hysteresis at all).
+     *
+     * @param bands ascending standing speeds
+     * @param needed the table RPM for the current range
+     * @param currentBand the band currently held
+     * @param hysteresis fraction of the lower band's speed the requirement must drop below
+     *     before stepping down
+     * @return index of the band to run; the top band with nothing reaching means the shot is out
+     *     of range (see {@link #canReach})
+     */
+    public static int selectBand(final double[] bands, final double needed, final int currentBand,
+            final double hysteresis) {
         if (bands[currentBand] >= needed
-            && (currentBand == 0
-                || bands[currentBand - 1] < needed * Constants.Shooter.kBAND_HYSTERESIS)) {
-            return bands[currentBand];
+            && (currentBand == 0 || needed > bands[currentBand - 1] * hysteresis)) {
+            return currentBand;
         }
-
         for (int i = 0; i < bands.length; i++) {
             if (bands[i] >= needed) {
-                currentBand = i;
-                return bands[i];
+                return i;
             }
         }
         // Out of range of every band: run the top one and let the caller see the shot is short.
-        currentBand = bands.length - 1;
-        return bands[currentBand];
+        return bands.length - 1;
+    }
+
+    /**
+     * @return true when some standing band reaches {@code distanceMeters}. Beyond the top band
+     *     the aim commands must not feed — the flywheel pre-spins at the top band regardless,
+     *     but the shot is guaranteed short.
+     */
+    public boolean canReach(final double distanceMeters) {
+        final double[] bands = Constants.Shooter.kREADY_RPM_BANDS;
+        return distanceToRPM.get(distanceMeters) <= bands[bands.length - 1];
     }
 
     /** @return The RPM most recently commanded, which the hood solves its angle against */
@@ -237,8 +246,8 @@ public class SUB_Shooter extends SubsystemBase {
      *
      * @deprecated Its absolute predictions do not match the robot — fitting {@link #distanceToRPM}
      *     against ideal projectile motion shows the wheel-to-ball transfer varies with speed, while
-     *     this assumes it is constant. Kept for reference and unit tests. Use {@link #requiredRPM}
-     *     or {@link #shootMeters}, both of which are anchored on the tuned table.
+     *     this assumes it is constant. Kept for reference and unit tests. Use {@link #shootMeters}
+     *     or the banded {@link #holdReadyBand}, both of which are anchored on the tuned table.
      */
     @Deprecated
     public static double findoptimalRPM(final double distance, final double angle) {
@@ -259,11 +268,6 @@ public class SUB_Shooter extends SubsystemBase {
             / (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter);
     }
 
-    @Deprecated
-    public void set(final double speed) {
-        shooterLeader.set(speed);
-    }
-
     /** @param rpm Target velocity for both flywheels */
     public void setRPM(final double rpm) {
         this.desiredSpeed = rpm;
@@ -275,9 +279,19 @@ public class SUB_Shooter extends SubsystemBase {
         return (shooterLeader.getVelocity().getValue().in(RPM) + shooterFollower.getVelocity().getValue().in(RPM)) / 2;
     }
   
-    /** @return true if flywheels are within the tolerance of the target RPM */
+    /**
+     * @return true if a nonzero target is set and the flywheels are within tolerance of it. The
+     *     nonzero guard matters: a stopped shooter at a zero setpoint used to count as "at
+     *     speed", so auto shots skipped their spin-up and fed balls into a dead flywheel.
+     */
     public boolean atDesiredRPM() {
-        return Math.abs(flywheelRPM() - desiredSpeed) < 75;
+        return desiredSpeed > 0
+            && Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPM_TOLERANCE;
+    }
+
+    /** @return Signed difference between measured and target RPM, for the feed-sustain check */
+    public double rpmError() {
+        return flywheelRPM() - desiredSpeed;
     }
 
     /**
@@ -307,15 +321,6 @@ public class SUB_Shooter extends SubsystemBase {
         return distanceToRPM.get(meters);
     }
 
-    /** 
-     * Calibration utility for autonomous logic.
-     * @param meters Distance to target in meters
-     * @return Required RPM from the look-up table
-     */
-    public double getDistanceRPM (final double meters) {
-        return distanceToRPM.get(meters);
-    }
-
     /** Stops both flywheels */
     public void stop() {
         this.desiredSpeed = 0;
@@ -327,36 +332,50 @@ public class SUB_Shooter extends SubsystemBase {
         shooterLeader.setControl(voltageRequest.withOutput(volts));
     }
 
+    /** Loop counter used to decimate the diagnostic telemetry below to ~4 Hz. */
+    private int telemetryTick = 0;
+
     @Override
     public void periodic() {
-      // Telemetry logging for dashboard and diagnostics
+      reconcileCurrentLimits();
+
+      // Fire-gate signals stay at full rate — they are what anyone debugs a no-shoot with.
+      final double leaderRPM = shooterLeader.getVelocity().getValue().in(RPM);
+      final double followerRPM = shooterFollower.getVelocity().getValue().in(RPM);
       SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
-      SmartDashboard.putNumber("Shooter/Motor One Stator Current", shooterLeader.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Stator Current", shooterFollower.getStatorCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor One Supply Current", shooterLeader.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Supply Current", shooterFollower.getSupplyCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor One Supply Voltage", shooterLeader.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Supply Voltage", shooterFollower.getSupplyVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor One Voltage", shooterLeader.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Voltage", shooterFollower.getMotorVoltage().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor One Encoder Pos", shooterLeader.getPosition().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Encoder Pos", shooterFollower.getPosition().getValueAsDouble());
-
-      SmartDashboard.putNumber("Shooter/Motor One Torque Current", shooterLeader.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Torque Current", shooterFollower.getTorqueCurrent().getValueAsDouble());
-
-      SmartDashboard.putNumber("Shooter/Motor One Device Temp", shooterLeader.getDeviceTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Device Temp", shooterFollower.getDeviceTemp().getValueAsDouble());
-
-      SmartDashboard.putNumber("Shooter/Motor One Processor Temp", shooterLeader.getProcessorTemp().getValueAsDouble());
-      SmartDashboard.putNumber("Shooter/Motor Two Processor Temp", shooterFollower.getProcessorTemp().getValueAsDouble());
-
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (One)", shooterLeader.getVelocity().getValue().in(RPM));
-      SmartDashboard.putNumber("Shooter/FlywheelRPM (Two)", shooterFollower.getVelocity().getValue().in(RPM));
-
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (One)", leaderRPM);
+      SmartDashboard.putNumber("Shooter/FlywheelRPM (Two)", followerRPM);
       SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
-      
       SmartDashboard.putBoolean("Shooter/High Power Limits", highPower);
+
+      if (followerOpposedDebouncer.calculate(
+              Math.abs(leaderRPM) > 300 && Math.abs(followerRPM) > 300
+                  && Math.signum(followerRPM) != Math.signum(leaderRPM))) {
+        Alert.registerError("Shooter follower (44) opposing leader — MotorAlignmentValue likely wrong");
+      }
+
+      // Slow-moving diagnostics at ~4 Hz.
+      if (telemetryTick++ % 12 == 0) {
+        SmartDashboard.putNumber("Shooter/Motor One Stator Current", shooterLeader.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Stator Current", shooterFollower.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor One Supply Current", shooterLeader.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Supply Current", shooterFollower.getSupplyCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor One Supply Voltage", shooterLeader.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Supply Voltage", shooterFollower.getSupplyVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor One Voltage", shooterLeader.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Voltage", shooterFollower.getMotorVoltage().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor One Encoder Pos", shooterLeader.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Encoder Pos", shooterFollower.getPosition().getValueAsDouble());
+
+        SmartDashboard.putNumber("Shooter/Motor One Torque Current", shooterLeader.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Torque Current", shooterFollower.getTorqueCurrent().getValueAsDouble());
+
+        SmartDashboard.putNumber("Shooter/Motor One Device Temp", shooterLeader.getDeviceTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Device Temp", shooterFollower.getDeviceTemp().getValueAsDouble());
+
+        SmartDashboard.putNumber("Shooter/Motor One Processor Temp", shooterLeader.getProcessorTemp().getValueAsDouble());
+        SmartDashboard.putNumber("Shooter/Motor Two Processor Temp", shooterFollower.getProcessorTemp().getValueAsDouble());
+      }
 
       Alert.alertKraken(shooterLeader);
       Alert.alertKraken(shooterFollower);

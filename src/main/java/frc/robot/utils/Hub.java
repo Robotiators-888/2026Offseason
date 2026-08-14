@@ -18,8 +18,17 @@ import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 
 public class Hub {
-    private static Boolean lastActiveAlliance = true;
+    // Primitive, not Boolean: the boxed version was compared with != against another boxed
+    // Boolean, i.e. by reference — it only worked because Boolean.valueOf caches TRUE/FALSE.
+    private static boolean lastActiveAlliance = true;
     private static String gameData = "";
+
+    /**
+     * Teleop-countdown seconds at which the active hub changes, descending: the transition shift
+     * ends at 130, the four 25-second alliance shifts follow, and endgame (both hubs active)
+     * starts at 30.
+     */
+    private static final double[] kShiftBoundaries = {130, 105, 80, 55, 30};
 
     /** AprilTag on the face of each alliance's hub. */
     private static final int kRedHubTagId = 10;
@@ -69,65 +78,73 @@ public class Hub {
     }
 
     public static Optional<Boolean> isAllianceHubActive () {
-        if (getActiveAlliance().isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(getActiveAlliance().get() == DriverStation.getAlliance().orElse(Alliance.Red));
+        return getActiveAlliance()
+                .map(active -> active == DriverStation.getAlliance().orElse(Alliance.Red));
     }
 
     public static Optional<Alliance> getActiveAlliance () {
         if (DriverStation.isAutonomous()) {
             return Optional.empty();
         }
-        
-        double matchTime = DriverStation.getMatchTime();
         if (gameData.length() == 0) {
-            gameData = DriverStation.getGameSpecificMessage(); 
-            if (gameData.length() == 0) {
-                return Optional.empty();
+            // The FMS only publishes game data ~3 s after auto ends, so keep re-fetching until
+            // it appears rather than trusting the one fetch in teleopInit().
+            gameData = DriverStation.getGameSpecificMessage();
+        }
+        return activeAllianceAt(DriverStation.getMatchTime(), gameData,
+                DriverStation.getAlliance().orElse(Alliance.Red));
+    }
+
+    /**
+     * The alliance whose hub is active, as a pure function so it is unit-testable.
+     *
+     * <p>Per the 2026 game data spec, the game-specific message is a single character naming the
+     * alliance that out-scored auto, whose hub goes <b>inactive</b> first: that alliance's hub is
+     * active in shifts 2 and 4, the other alliance's in shifts 1 and 3. During the transition
+     * shift and endgame both hubs are active, reported here as {@code ourAlliance} so
+     * "is our hub active" reads true.
+     *
+     * @param matchTime teleop countdown in seconds
+     * @param gameData FMS game-specific message ("R"/"B"), or empty if not yet published
+     * @param ourAlliance our alliance, used for the both-active phases
+     */
+    public static Optional<Alliance> activeAllianceAt (final double matchTime,
+            final String gameData, final Alliance ourAlliance) {
+        if (gameData == null || gameData.isEmpty()) {
+            return Optional.empty();
+        }
+        if (matchTime >= kShiftBoundaries[0]
+                || matchTime < kShiftBoundaries[kShiftBoundaries.length - 1]) {
+            return Optional.of(ourAlliance);
+        }
+        final Alliance inactiveFirst = gameData.charAt(0) == 'R' ? Alliance.Red : Alliance.Blue;
+        final Alliance activeFirst = inactiveFirst == Alliance.Red ? Alliance.Blue : Alliance.Red;
+
+        int shift = 0;
+        for (final double boundary : kShiftBoundaries) {
+            if (matchTime < boundary) {
+                shift++;
             }
         }
-        
-        Alliance initialAlliance = gameData.charAt(0) == 'R' ? Alliance.Red : Alliance.Blue;
-
-        if (matchTime >= 130 || matchTime < 30) {
-            return Optional.of(DriverStation.getAlliance().orElse(Alliance.Red));
-        }
-        else if (matchTime >= 105 || (matchTime < 80 && matchTime >= 55)) {
-            return initialAlliance == Alliance.Red ? Optional.of(Alliance.Blue) : Optional.of(Alliance.Red);
-        }
-        else {
-            return Optional.of(initialAlliance);
-        }
+        // shift is 1..4 here; odd shifts belong to the alliance whose hub is active first.
+        return Optional.of(shift % 2 == 1 ? activeFirst : inactiveFirst);
     }
 
     public static double getTimeUntilNextChange () {
-        double matchTime = DriverStation.getMatchTime();
-        // Auto and transition shift
-        if (matchTime >= 30+(25*4)) {
-            // Idk if this is right
-            return 30 - (30+(25*4)+30 - matchTime);
+        return timeUntilNextChangeAt(DriverStation.getMatchTime());
+    }
+
+    /**
+     * Seconds until the next hub activity change, as a pure function of the teleop countdown.
+     * Counts down to each boundary in {@link #kShiftBoundaries} and to zero in endgame.
+     */
+    public static double timeUntilNextChangeAt (final double matchTime) {
+        for (final double boundary : kShiftBoundaries) {
+            if (matchTime >= boundary) {
+                return matchTime - boundary;
+            }
         }
-        // Shift 1
-        else if (matchTime >= 30+(25*3)) {
-            return 25 - (30+(25*4) - matchTime);
-        }
-        // Shift 2
-        else if (matchTime >= 30+(25*2)) {
-            return 25 - (30+(25*3) - matchTime);
-        }
-        // Shift 3
-        else if (matchTime >= 30+(25*1)) {
-            return 25 - (30+(25*2) - matchTime);
-        }
-        // Shift 4
-        else if (matchTime >= 30) {
-            return 25 - (30+(25*1) - matchTime);
-        }
-        // Endgame
-        else {
-            return 30 - (30 - matchTime);
-        }
+        return matchTime;
     }
 
     public static void fetchMatchData () {
@@ -135,7 +152,11 @@ public class Hub {
     }
 
     public static void start(CommandXboxController Driver1, CommandXboxController Driver2, SUB_Shooter shooter) {
+        // Computed once per call — this used to re-derive the shift state up to seven times per
+        // loop, each re-reading the DriverStation, so values could disagree within one loop.
         final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
+        final double timeUntilChange = Hub.getTimeUntilNextChange();
+
         SmartDashboard.putBoolean("Hub/Last Active Alliance", lastActiveAlliance);
         if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                 Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Active hub change",
@@ -143,13 +164,13 @@ public class Hub {
                 // Maybe do a rumble
                 lastActiveAlliance = activeAlliance.get();
         }
-        SmartDashboard.putNumber("Hub/Time until next alliance change", Hub.getTimeUntilNextChange());
-        if (Hub.isAllianceHubActive().isPresent()) {
-                SmartDashboard.putBoolean("Hub/Is our Alliance Active", Hub.isAllianceHubActive().get());
+        SmartDashboard.putNumber("Hub/Time until next alliance change", timeUntilChange);
+        if (activeAlliance.isPresent()) {
+                SmartDashboard.putBoolean("Hub/Is our Alliance Active", activeAlliance.get());
         }
-        if ((Hub.getTimeUntilNextChange() <= 3.25 && Hub.getTimeUntilNextChange() >= 2.75)
-                        || (Hub.getTimeUntilNextChange() <= 2.25 && Hub.getTimeUntilNextChange() >= 1.75)
-                        || (Hub.getTimeUntilNextChange() <= 1.25 && Hub.getTimeUntilNextChange() >= 0.75)) {
+        if ((timeUntilChange <= 3.25 && timeUntilChange >= 2.75)
+                        || (timeUntilChange <= 2.25 && timeUntilChange >= 1.75)
+                        || (timeUntilChange <= 1.25 && timeUntilChange >= 0.75)) {
                 Driver1.getHID().setRumble(RumbleType.kLeftRumble, 1);
                 Driver2.getHID().setRumble(RumbleType.kLeftRumble, 1);
         } else {
