@@ -30,8 +30,8 @@ public final class Constants {
 
         /** Shooter motor IDs and PID/Feedforward tuning (Manually Tuned) */
         public static final class Shooter {
-                public static final int kSHOOTER_MotorTwo_MOTOR_CANID = 44;
-                public static final int kSHOOTER_MotorOne_MOTOR_CANID = 43;
+                public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 44;
+                public static final int kSHOOTER_LEADER_MOTOR_CANID = 43;
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
 
                 //Physical Specs
