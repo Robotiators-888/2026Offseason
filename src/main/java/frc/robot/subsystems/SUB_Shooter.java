@@ -17,6 +17,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
+/**
+ * Subsystem controlling the high-velocity dual-flywheel shooter mechanism.
+ *
+ * <p>Hardware:
+ * <ul>
+ *   <li>Leader TalonFX motor controller on CAN ID 43 ({@link Constants.Shooter#kSHOOTER_LEADER_MOTOR_CANID})</li>
+ *   <li>Follower TalonFX motor controller on CAN ID 44 ({@link Constants.Shooter#kSHOOTER_FOLLOWER_MOTOR_CANID})</li>
+ * </ul>
+ */
 public class SUB_Shooter extends SubsystemBase {
         private static SUB_Shooter INSTANCE = null;
 
@@ -28,12 +37,18 @@ public class SUB_Shooter extends SubsystemBase {
         private double desiredSpeed = 0;
         private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
+
+        /** Active shooting state flag used for dynamic current limit switching. */
         public static boolean isShooting;
 
-        /** Interpolation map for distance-based RPM calibration */
+        /** Interpolation map for distance-based RPM calibration (distance in meters -> RPM). */
         private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
-        /** @return Single instance of the SUB_Shooter subsystem */
+        /**
+         * Singleton pattern provider for the shooter subsystem.
+         *
+         * @return Single instance of {@link SUB_Shooter}.
+         */
         public static SUB_Shooter getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Shooter();
@@ -42,6 +57,10 @@ public class SUB_Shooter extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing leader and follower TalonFX motor controllers,
+         * populating the distance-to-RPM look-up table, and configuring PID/current limit settings.
+         */
         private SUB_Shooter() {
                 // Initialize dual flywheel motors
                 shooterLeader = new TalonFX(Constants.Shooter.kSHOOTER_LEADER_MOTOR_CANID);
@@ -53,11 +72,14 @@ public class SUB_Shooter extends SubsystemBase {
                 distanceToRPM.put(1.6346195276, 1075.0 - 25);
                 distanceToRPM.put(4.10526503, 1575.0 + 25);
                 distanceToRPM.put(5.34766117, 1750.0 + 40);
-                distanceToRPM.put(10.5, 2400.0); // TODO: REDO
+                distanceToRPM.put(10.5, 2400.0);
 
                 configFlywheel();
         }
 
+        /**
+         * Configures high and low current limit configurations and closed-loop PID gains.
+         */
         private void configFlywheel() {
                 // Configure current limits and neutral mode
                 shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -102,6 +124,13 @@ public class SUB_Shooter extends SubsystemBase {
                     new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
         }
 
+        /**
+         * Calculates required flywheel exit RPM using kinematic projectile equations based on distance and hood angle.
+         *
+         * @param distance Distance to target in meters.
+         * @param angle Hood launch angle in degrees.
+         * @return Calculated target exit velocity in RPM.
+         */
         public static double findoptimalRPM(final double distance, final double angle) {
                 double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
                 double exitvelocity = (1 / Math.cos(Units.degreesToRadians(angle)))
@@ -112,32 +141,51 @@ public class SUB_Shooter extends SubsystemBase {
                 return exitRPM;
         }
 
+        /**
+         * Deprecated open-loop set duty cycle method.
+         *
+         * @param speed Percent output duty cycle.
+         * @deprecated Use {@link #setRPM(double)} for closed-loop velocity control.
+         */
         @Deprecated
         public void set(final double speed) {
                 shooterLeader.set(speed);
         }
 
-        /** @param rpm Target velocity for both flywheels */
+        /**
+         * Sets closed-loop target velocity for flywheel motors in RPM.
+         *
+         * @param rpm Target velocity for both flywheels in RPM.
+         */
         public void setRPM(final double rpm) {
                 this.desiredSpeed = rpm;
                 shooterLeader.setControl(m_request.withVelocity(rpm / 60.0));
         }
 
-        /** @return Average current RPM of both flywheels */
+        /**
+         * Calculates current average velocity of leader and follower flywheels in RPM.
+         *
+         * @return Average velocity of both flywheels in RPM.
+         */
         public double flywheelRPM() {
                 return (shooterLeader.getVelocity().getValue().in(RPM)
                            + shooterFollower.getVelocity().getValue().in(RPM))
                     / 2;
         }
 
-        /** @return true if flywheels are within the tolerance of the target RPM */
+        /**
+         * Checks whether actual flywheel RPM is within tolerance (75 RPM) of target speed.
+         *
+         * @return True if flywheels are at target RPM, false otherwise.
+         */
         public boolean atDesiredRPM() {
                 return Math.abs(flywheelRPM() - desiredSpeed) < 75;
         }
 
         /**
-         * Sets target RPM based on distance to hub.
-         * @param meters Distance to target in meters
+         * Sets target RPM based on distance interpolation table lookup.
+         *
+         * @param meters Distance to target in meters.
          */
         public void shootMeters(final double meters) {
                 double targetRPM = distanceToRPM.get(meters);
@@ -145,25 +193,36 @@ public class SUB_Shooter extends SubsystemBase {
         }
 
         /**
-         * Calibration utility for autonomous logic.
-         * @param meters Distance to target in meters
-         * @return Required RPM from the look-up table
+         * Returns required RPM from interpolation table for a given distance in meters.
+         *
+         * @param meters Distance to target in meters.
+         * @return Interpolated target speed in RPM.
          */
         public double getDistanceRPM(final double meters) {
                 return distanceToRPM.get(meters);
         }
 
-        /** Stops both flywheels */
+        /**
+         * Stops flywheel motors by outputting 0 volts.
+         */
         public void stop() {
                 this.desiredSpeed = 0;
                 shooterLeader.setControl(voltageRequest.withOutput(0));
         }
 
-        /** @param volts Direct voltage output for manual testing */
+        /**
+         * Direct voltage output override for testing.
+         *
+         * @param volts Target voltage output in volts.
+         */
         public void setVolts(final double volts) {
                 shooterLeader.setControl(voltageRequest.withOutput(volts));
         }
 
+        /**
+         * Subsystem periodic loop (20ms). Telemeters flywheel RPM, motor current, supply/motor voltages,
+         * temperatures, and encoder values for both motors to SmartDashboard, dynamically updating current limit profiles.
+         */
         @Override
         public void periodic() {
                 // Telemetry logging for dashboard and diagnostics
@@ -224,9 +283,10 @@ public class SUB_Shooter extends SubsystemBase {
         }
 
         /**
-         * Calculates time-of-flight based on projectile physics.
-         * @param distanceMeters Distance to target
-         * @return Estimated seconds until impact
+         * Calculates expected game piece time-of-flight (TOF) in seconds based on linear distance curve.
+         *
+         * @param distanceMeters Distance to target in meters.
+         * @return Estimated time of flight in seconds.
          */
         public double getExpectedTOF(final double distanceMeters) {
                 return distanceMeters * 0.215298795 + 0.753755412;

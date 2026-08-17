@@ -14,19 +14,19 @@ import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * The methods in this class are called automatically corresponding to each mode, as described in
- * the TimedRobot documentation. If you change the name of this class or the package after creating
- * this project, you must also update the Main.java file in the project.
+ * Main Robot class extending AdvantageKit's {@link LoggedRobot}.
+ *
+ * <p>Manages the lifecycle of the robot across different match phases (Disabled, Autonomous,
+ * Teleoperated, Test, and Simulation) and ensures periodic execution of the {@link CommandScheduler}.
  */
-
 public class Robot extends LoggedRobot {
         private Command m_autonomousCommand;
 
         private final RobotContainer m_robotContainer;
 
         /**
-         * This function is run when the robot is first started up and should be used for any
-         * initialization code.
+         * Initializes data logging (AdvantageKit, WPILib DataLog, Phoenix SignalLogger),
+         * instantiates the {@link RobotContainer}, and sets up alert mechanisms.
          */
         public Robot() {
                 DataLogManager.start();
@@ -45,8 +45,7 @@ public class Robot extends LoggedRobot {
          * This function is called every 20 ms, no matter the mode. Use this for items like
          * diagnostics that you want ran during disabled, autonomous, teleoperated and test.
          *
-         * <p>
-         * This runs after the mode specific periodic functions, but before LiveWindow and
+         * <p>This runs after the mode specific periodic functions, but before LiveWindow and
          * SmartDashboard integrated updating.
          */
         @Override
@@ -64,14 +63,18 @@ public class Robot extends LoggedRobot {
         @Override
         public void disabledInit() {}
 
+        /**
+         * Periodic method called while the robot is disabled.
+         * delegates tasks to {@link RobotContainer#disabledPeriodic()}.
+         */
         @Override
         public void disabledPeriodic() {
                 m_robotContainer.disabledPeriodic();
         }
 
         /**
-         * This autonomous runs the autonomous command selected by your {@link RobotContainer}
-         * class.
+         * Runs once when autonomous mode is enabled. Retrieves and schedules the command
+         * selected in {@link RobotContainer#getAutonomousCommand()}.
          */
         @Override
         public void autonomousInit() {
@@ -84,12 +87,13 @@ public class Robot extends LoggedRobot {
                 m_robotContainer.autonomousInit();
         }
 
-        /** This function is called periodically during autonomous. */
+        /** Periodic method called during autonomous mode (every 20ms). */
         @Override
         public void autonomousPeriodic() {
                 m_robotContainer.autonomousPeriodic();
         }
 
+        /** Runs once when teleoperated mode is enabled. Cancels any active autonomous command. */
         @Override
         public void teleopInit() {
                 // This makes sure that the autonomous stops running when
@@ -102,12 +106,13 @@ public class Robot extends LoggedRobot {
                 m_robotContainer.teleopInit();
         }
 
-        /** This function is called periodically during operator control. */
+        /** Periodic method called during operator control (every 20ms). */
         @Override
         public void teleopPeriodic() {
                 m_robotContainer.teleopPeriodic();
         }
 
+        /** Runs once when test mode is enabled. Cancels all currently running commands. */
         @Override
         public void testInit() {
                 // Cancels all running commands at the start of test mode.
@@ -115,17 +120,17 @@ public class Robot extends LoggedRobot {
                 m_robotContainer.testInit();
         }
 
-        /** This function is called periodically during test mode. */
+        /** Periodic method called during test mode (every 20ms). */
         @Override
         public void testPeriodic() {
                 m_robotContainer.testPeriodic();
         }
 
-        /** This function is called once when the robot is first started up. */
+        /** This function is called once when the robot is first started up in simulation. */
         @Override
         public void simulationInit() {}
 
-        /** This function is called periodically whilst in simulation. */
+        /** This function is called periodically whilst in simulation (every 20ms). */
         @Override
         public void simulationPeriodic() {}
 }

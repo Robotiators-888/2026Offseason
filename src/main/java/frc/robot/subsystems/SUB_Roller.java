@@ -12,16 +12,31 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
+/**
+ * Subsystem controlling the ground intake roller mechanism.
+ *
+ * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 30 and 31 ({@link Constants.Roller#kINTAKE_LEFTMOTOR_CANID}
+ * and {@link Constants.Roller#kINTAKE_RIGHTMOTOR_CANID}) in opposed leader-follower configuration with FOC enabled.
+ */
 public class SUB_Roller extends SubsystemBase {
-        /** Subsystem hardware components */
+        /** Left roller TalonFX motor controller (Leader). */
         private final TalonFX LeftRollerMotor;
+
+        /** Right roller TalonFX motor controller (Follower). */
         private final TalonFX RightRollerMotor;
+
+        /** Voltage output control request object with Field Oriented Control (FOC) enabled. */
         private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+
+        /** Duty cycle percent output control request object with Field Oriented Control (FOC) enabled. */
         private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
+
         private static SUB_Roller INSTANCE = null;
 
         /**
-         * @return Single instance of the SUB_Roller subsystem
+         * Singleton pattern provider for the roller subsystem.
+         *
+         * @return Single instance of {@link SUB_Roller}.
          */
         public static SUB_Roller getInstance() {
                 if (INSTANCE == null) {
@@ -30,6 +45,9 @@ public class SUB_Roller extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing TalonFX motors and applying configuration.
+         */
         private SUB_Roller() {
                 // Defines motor with ID from Constants
                 LeftRollerMotor = new TalonFX(Constants.Roller.kINTAKE_LEFTMOTOR_CANID);
@@ -37,6 +55,9 @@ public class SUB_Roller extends SubsystemBase {
                 configureMotors();
         }
 
+        /**
+         * Configures current limits (30A supply limit, 15A lower limit) and sets follower mode.
+         */
         private void configureMotors() {
                 // Configure TalonFX motor controller with current limits and inversion
                 TalonFXConfiguration talonConfig = new TalonFXConfiguration();
@@ -52,23 +73,39 @@ public class SUB_Roller extends SubsystemBase {
                     new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }
 
-        /** @param speed Target voltage for the roller motor */
+        /**
+         * Sets target output voltage for the roller motors.
+         *
+         * @param speed Target output in volts.
+         */
         public void setVolts(double speed) {
                 LeftRollerMotor.setControl(voltageRequest.withOutput(speed));
         }
 
-        /** @param speed Target percent output for the roller motor [-1.0, 1.0] */
+        /**
+         * Sets target duty cycle percent output for the roller motor (-1.0 to 1.0).
+         *
+         * @param speed Target percent duty cycle.
+         */
         public void set(double speed) {
                 LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
         }
 
-        /** @return Current velocity of the roller in RPM */
+        /**
+         * Calculates average velocity of left and right roller motors in RPM.
+         *
+         * @return Average rotational velocity in RPM.
+         */
         public double rollerRPM() {
                 return (LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude()
                            + RightRollerMotor.getVelocity().getValue().baseUnitMagnitude())
                     / 2;
         }
 
+        /**
+         * Subsystem periodic loop (20ms). Telemeters roller RPM, positions, current draws, voltages,
+         * and device temperatures for both Kraken motors to SmartDashboard, monitoring motor health.
+         */
         @Override
         public void periodic() {
                 // Telemetry logging for dashboard

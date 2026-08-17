@@ -19,13 +19,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 
+/**
+ * Handles real-time telemetry logging and NetworkTables publishing for the swerve drivetrain.
+ */
 public class Telemetry {
         private final double MaxSpeed;
 
         /**
-         * Construct a telemetry object, with the specified max speed of the robot
+         * Construct a telemetry object with the specified max speed of the robot.
          *
-         * @param maxSpeed Maximum speed in meters per second
+         * @param maxSpeed Maximum speed in meters per second (m/s).
          */
         public Telemetry(double maxSpeed) {
                 MaxSpeed = maxSpeed;
@@ -106,7 +109,13 @@ public class Telemetry {
         private final double[] m_moduleStatesArray = new double[8];
         private final double[] m_moduleTargetsArray = new double[8];
 
-        /** Accept the swerve drive state and telemeterize it to SmartDashboard and SignalLogger. */
+        /**
+         * Accepts the swerve drive state and telemeterizes it to SmartDashboard, NetworkTables,
+         * and CTRE SignalLogger.
+         *
+         * @param state Current {@link SwerveDriveState} containing pose, module states, targets,
+         *              positions, and timestamps.
+         */
         public void telemeterize(SwerveDriveState state) {
                 /* Telemeterize the swerve drive state */
                 drivePose.set(state.Pose);

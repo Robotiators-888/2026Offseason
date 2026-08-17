@@ -11,10 +11,20 @@ import frc.robot.utils.Elastic.Notification;
 import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import java.util.Optional;
 
+/**
+ * Utility helper class for tracking game-specific Hub activation timing and providing controller haptic rumble feedback.
+ */
 public class Hub {
+        private Hub() {}
+
         private static Boolean lastActiveAlliance = true;
         private static String gameData = "";
 
+        /**
+         * Checks whether the team's alliance Hub is currently active for scoring.
+         *
+         * @return Optional containing true if our alliance Hub is active, false if inactive, or empty if unknown/autonomous.
+         */
         public static Optional<Boolean> isAllianceHubActive() {
                 if (getActiveAlliance().isEmpty()) {
                         return Optional.empty();
@@ -23,6 +33,11 @@ public class Hub {
                     getActiveAlliance().get() == DriverStation.getAlliance().orElse(Alliance.Red));
         }
 
+        /**
+         * Determines the active alliance Hub based on FMS match time and game-specific data message.
+         *
+         * @return Optional containing the active {@link Alliance}, or empty if during autonomous/uninitialized.
+         */
         public static Optional<Alliance> getActiveAlliance() {
                 if (DriverStation.isAutonomous()) {
                         return Optional.empty();
@@ -48,11 +63,15 @@ public class Hub {
                 }
         }
 
+        /**
+         * Calculates seconds remaining until the next Hub active state change.
+         *
+         * @return Time in seconds until the next active Hub shift.
+         */
         public static double getTimeUntilNextChange() {
                 double matchTime = DriverStation.getMatchTime();
                 // Auto and transition shift
                 if (matchTime >= 30 + (25 * 4)) {
-                        // Idk if this is right
                         return 30 - (30 + (25 * 4) + 30 - matchTime);
                 }
                 // Shift 1
@@ -77,10 +96,20 @@ public class Hub {
                 }
         }
 
+        /**
+         * Fetches game-specific data message from FMS.
+         */
         public static void fetchMatchData() {
                 gameData = DriverStation.getGameSpecificMessage();
         }
 
+        /**
+         * Periodic update loop for Hub timing, dashboard updates, and controller rumble feedback.
+         *
+         * @param Driver1 Primary driver controller.
+         * @param Driver2 Secondary driver controller.
+         * @param shooter Shooter subsystem instance.
+         */
         public static void start(
             CommandXboxController Driver1, CommandXboxController Driver2, SUB_Shooter shooter) {
                 final Optional<Boolean> activeAlliance = Hub.isAllianceHubActive();
@@ -88,7 +117,6 @@ public class Hub {
                 if (activeAlliance.isPresent() && lastActiveAlliance != activeAlliance.get()) {
                         Elastic.sendNotification(new Notification(NotificationLevel.INFO,
                             "Active hub change", "The active hub has changed!"));
-                        // Maybe do a rumble
                         lastActiveAlliance = activeAlliance.get();
                 }
                 SmartDashboard.putNumber(

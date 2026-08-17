@@ -17,6 +17,16 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+/**
+ * Subsystem managing PhotonVision AprilTag camera interfaces and multi-camera pose estimation.
+ *
+ * <p>Hardware:
+ * <ul>
+ *   <li>Back-Left Camera ("BackLeftCam") with 3D transform {@link PhotonVision#kRobotToCamera1}</li>
+ *   <li>Back-Right Camera ("BackRightCam") with 3D transform {@link PhotonVision#kRobotToCamera2}</li>
+ *   <li>High Camera ("HighCam") with 3D transform {@link PhotonVision#kRobotToCamera3}</li>
+ * </ul>
+ */
 public class SUB_PhotonVision extends SubsystemBase {
         private static SUB_PhotonVision INSTANCE = null;
 
@@ -30,9 +40,15 @@ public class SUB_PhotonVision extends SubsystemBase {
         private final PhotonPoseEstimator poseEstimator1;
         private final PhotonPoseEstimator poseEstimator2;
         private final PhotonPoseEstimator poseEstimator3;
+
+        /** AprilTag field layout configuration for target coordinate localization. */
         public AprilTagFieldLayout at_field;
 
-        /** @return Single instance of the SUB_PhotonVision subsystem */
+        /**
+         * Singleton pattern provider for the PhotonVision subsystem.
+         *
+         * @return Single instance of the {@link SUB_PhotonVision} subsystem.
+         */
         public static SUB_PhotonVision getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_PhotonVision();
@@ -40,6 +56,11 @@ public class SUB_PhotonVision extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing camera pipelines, 2026 AprilTag field layout,
+         * and PhotonPoseEstimators with MULTI_TAG_PNP_ON_COPROCESSOR strategy.
+         */
+        @SuppressWarnings("removal")
         private SUB_PhotonVision() {
                 // Load the 2026 field layout
                 at_field = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
@@ -62,7 +83,12 @@ public class SUB_PhotonVision extends SubsystemBase {
                 poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
         }
 
-        /** @return Latest estimated robot pose from camera 1 */
+        /**
+         * Processes unread frames from camera 1 and returns the latest estimated robot pose.
+         *
+         * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
+         */
+        @SuppressWarnings("removal")
         public Optional<EstimatedRobotPose> getCam1Pose() {
                 List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
 
@@ -81,7 +107,12 @@ public class SUB_PhotonVision extends SubsystemBase {
                 return finalPose1;
         }
 
-        /** @return Latest estimated robot pose from camera 2 */
+        /**
+         * Processes unread frames from camera 2 and returns the latest estimated robot pose.
+         *
+         * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
+         */
+        @SuppressWarnings("removal")
         public Optional<EstimatedRobotPose> getCam2Pose() {
                 List<PhotonPipelineResult> results2 = cam2.getAllUnreadResults();
                 Optional<EstimatedRobotPose> finalPose2 = Optional.empty();
@@ -98,7 +129,12 @@ public class SUB_PhotonVision extends SubsystemBase {
                 return finalPose2;
         }
 
-        /** @return Latest estimated robot pose from camera 3 */
+        /**
+         * Processes unread frames from camera 3 and returns the latest estimated robot pose.
+         *
+         * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
+         */
+        @SuppressWarnings("removal")
         public Optional<EstimatedRobotPose> getCam3Pose() {
                 List<PhotonPipelineResult> results3 = cam3.getAllUnreadResults();
                 Optional<EstimatedRobotPose> finalPose3 = Optional.empty();
@@ -115,34 +151,77 @@ public class SUB_PhotonVision extends SubsystemBase {
                 return finalPose3;
         }
 
+        /**
+         * Gets the best target tracked by camera 1.
+         *
+         * @return Best {@link PhotonTrackedTarget} for camera 1.
+         */
         public PhotonTrackedTarget getCam1BestTarget() {
                 return cam1BestTarget;
         }
 
+        /**
+         * Gets the best target tracked by camera 2.
+         *
+         * @return Best {@link PhotonTrackedTarget} for camera 2.
+         */
         public PhotonTrackedTarget getCam2BestTarget() {
                 return cam2BestTarget;
         }
+
+        /**
+         * Gets the best target tracked by camera 3.
+         *
+         * @return Best {@link PhotonTrackedTarget} for camera 3.
+         */
         public PhotonTrackedTarget getCam3BestTarget() {
                 return cam3BestTarget;
         }
 
+        /**
+         * Gets yaw angle offset to specified tracked target in degrees.
+         *
+         * @param target Tracked target.
+         * @return Horizontal offset angle in degrees.
+         */
         public double getTargetYaw(PhotonTrackedTarget target) {
                 return target.getYaw();
         }
 
+        /**
+         * Gets pitch angle offset to specified tracked target in degrees.
+         *
+         * @param target Tracked target.
+         * @return Vertical offset angle in degrees.
+         */
         public double getTargetPitch(PhotonTrackedTarget target) {
                 return target.getPitch();
         }
 
+        /**
+         * Gets area of target bounding box as percentage of image area (0.0 to 100.0).
+         *
+         * @param target Tracked target.
+         * @return Target area percentage.
+         */
         public double getTargetArea(PhotonTrackedTarget target) {
                 return target.getArea();
         }
 
-        /** @return The fiducial ID of the tracked target */
+        /**
+         * Gets the AprilTag fiducial ID of the specified tracked target.
+         *
+         * @param target Tracked target.
+         * @return The fiducial ID integer of the tracked tag.
+         */
         public int getId(PhotonTrackedTarget target) {
                 return target.getFiducialId();
         }
 
+        /**
+         * Periodic subsystem loop (20ms). Checks connection status of each hardware camera
+         * and reports errors to dashboard using Alert utility if disconnected.
+         */
         @Override
         public void periodic() {
                 // Check connection status and report errors

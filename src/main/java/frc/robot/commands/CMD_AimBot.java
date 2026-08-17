@@ -33,6 +33,13 @@ import frc.robot.subsystems.SUB_Shooter;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
+/**
+ * Command for automated vision-guided target alignment, hood positioning, and shooting feed control.
+ *
+ * <p>Requires {@link CommandSwerveDrivetrain}, {@link SUB_Metering}, {@link SUB_Index}, and {@link SUB_Hood}.
+ * Allows driver translation via joystick inputs while automatically calculating and maintaining chassis rotation
+ * towards the alliance Hub target center.
+ */
 public class CMD_AimBot extends RunCommand {
         /** Subsystems and state variables used for targeting and control */
         private final SUB_PhotonVision photonVision;
@@ -52,16 +59,19 @@ public class CMD_AimBot extends RunCommand {
         Rotation2d shooterThetaOffset =
             new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
 
-        /** Motion profiling constraints for rotation */
+        /** Motion profiling constraints for rotation (1.6 rot/s max velocity, 12 rot/s^2 max acceleration). */
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(1.6).in(RadiansPerSecond),
                 RotationsPerSecond.of(12).in(RadiansPerSecond));
 
-        /** PID controller for robot heading alignment */
+        /** Profiled PID controller for heading alignment (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(5.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+            new ProfiledPIDController(5.0, 0, 0.2,
                 thetaConstraints);
+
+        /** Status flag indicating whether heading error is within 5 degrees tolerance. */
         public static boolean isThetaErrorCorrect = false;
+
         private final SwerveRequest.SwerveDriveBrake brakeRequest =
             new SwerveRequest.SwerveDriveBrake();
         private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
@@ -69,18 +79,20 @@ public class CMD_AimBot extends RunCommand {
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
         private final SlewRateLimiter xSlewRateLimiter =
-            new SlewRateLimiter(3.0, -8.0, 0.0); // Limit acceleration to 3 m/s^2 in X direction
+            new SlewRateLimiter(3.0, -8.0, 0.0);
         private final SlewRateLimiter ySlewRateLimiter =
-            new SlewRateLimiter(3.0, -8.0, 0.0); // Limit acceleration to 3 m/s^2 in Y direction
+            new SlewRateLimiter(3.0, -8.0, 0.0);
 
         /**
          * Constructs a new AimBot command.
-         * @param drivetrain The swerve drivetrain subsystem
-         * @param photonVision The vision subsystem for target tracking
-         * @param shooter The shooter subsystem
-         * @param index The indexer subsystem
-         * @param translationXSupplier Supplier for X translation input
-         * @param translationYSupplier Supplier for Y translation input
+         *
+         * @param drivetrain The swerve drivetrain subsystem.
+         * @param photonVision The vision subsystem for target tracking.
+         * @param index The indexer subsystem.
+         * @param hood The hood subsystem.
+         * @param metering The metering subsystem.
+         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
+         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Hood hood, SUB_Metering metering,
@@ -98,6 +110,10 @@ public class CMD_AimBot extends RunCommand {
                 addRequirements(drivetrain, metering, index, hood);
         }
 
+        /**
+         * Command initialization. Resolves target AprilTag pose based on alliance color, resets
+         * heading PID controller, and sets high current limit shooting mode.
+         */
         @Override
         public void initialize() {
                 // Determine the correct target tag based on the current alliance
@@ -123,6 +139,10 @@ public class CMD_AimBot extends RunCommand {
                 SUB_Shooter.isShooting = true;
         }
 
+        /**
+         * Command execution loop (20ms). Calculates angle to target, computes rotational velocity,
+         * updates hood angle and metering speed, and feeds indexer when alignment error is within 5 degrees.
+         */
         @Override
         public void execute() {
                 // Set up poses
@@ -200,21 +220,36 @@ public class CMD_AimBot extends RunCommand {
                                 .withVelocityY(yInput * MaxSpeed)
                                 .withRotationalRate(omegaSpeed * MaxAngularRate
                                     + Math.copySign(Units.degreesToRadians(9),
-                                        omegaSpeed * MaxAngularRate))); // TODO: Comment
+                                        omegaSpeed * MaxAngularRate)));
                 }
         }
 
+        /**
+         * Clears running flags and disables high current limit shooting mode when ended or interrupted.
+         *
+         * @param interrupted True if command was interrupted.
+         */
         @Override
         public void end(boolean interrupted) {
                 running = false;
                 SUB_Shooter.isShooting = false;
         }
 
+        /**
+         * Returns whether command is complete. Always returns false (runs until canceled).
+         *
+         * @return False.
+         */
         @Override
         public boolean isFinished() {
                 return false;
         }
 
+        /**
+         * Returns whether the AimBot command is currently active.
+         *
+         * @return True if running, false otherwise.
+         */
         public static boolean isRunning() {
                 return running;
         }

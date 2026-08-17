@@ -27,6 +27,13 @@ import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import java.util.Optional;
 
+/**
+ * Autonomous command for vision-guided target heading alignment and automatic firing.
+ *
+ * <p>Requires {@link CommandSwerveDrivetrain}, {@link SUB_Shooter}, and {@link SUB_Index}.
+ * Controls rotation towards the alliance Hub target while stationary, setting shooter RPM based
+ * on distance and triggering indexer feed when rotation tolerance and flywheel speeds are satisfied.
+ */
 public class CMD_AimBotAuto extends RunCommand {
         /** Subsystems and state variables for autonomous targeting */
         private final SUB_PhotonVision photonVision;
@@ -40,16 +47,19 @@ public class CMD_AimBotAuto extends RunCommand {
         Translation2d shooterOffset =
             new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
 
-        /** Motion profiling constraints for rotation (narrower for auto) */
+        /** Motion profiling constraints for rotation (1.6 rot/s max velocity, 12 rot/s^2 max acceleration). */
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(1.6).in(RadiansPerSecond),
                 RotationsPerSecond.of(12).in(RadiansPerSecond));
 
-        /** PID controller for robot heading alignment during autonomous */
+        /** Profiled PID controller for robot heading alignment during autonomous (P=3.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(3.0, 0, 0.2, // P=5.0 is aggressive but safe with a Profile
+            new ProfiledPIDController(3.0, 0, 0.2,
                 thetaConstraints);
+
+        /** Status flag indicating whether heading error is within 3 degrees tolerance during autonomous. */
         public static boolean isThetaErrorCorrect = false;
+
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withRotationalDeadband(0).withDriveRequestType(
@@ -57,10 +67,11 @@ public class CMD_AimBotAuto extends RunCommand {
 
         /**
          * Constructs a new autonomous AimBot command.
-         * @param drivetrain The swerve drivetrain subsystem
-         * @param photonVision The vision subsystem
-         * @param shooter The shooter subsystem
-         * @param index The indexer subsystem
+         *
+         * @param drivetrain The swerve drivetrain subsystem.
+         * @param photonVision The vision subsystem.
+         * @param shooter The shooter subsystem.
+         * @param index The indexer subsystem.
          */
         public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Shooter shooter, SUB_Index index) {
@@ -74,6 +85,9 @@ public class CMD_AimBotAuto extends RunCommand {
                 addRequirements(drivetrain, shooter, index);
         }
 
+        /**
+         * Command initialization. Resolves target AprilTag pose based on alliance color and resets heading PID controller.
+         */
         @Override
         public void initialize() {
                 robotAngleController.setTolerance(Units.degreesToRadians(0.0));
@@ -97,6 +111,10 @@ public class CMD_AimBotAuto extends RunCommand {
                 running = true;
         }
 
+        /**
+         * Command execution loop (20ms). Calculates rotational velocity, sets distance-interpolated shooter RPM,
+         * and activates indexer feed when rotational error is within 3 degrees and flywheels are at target speed.
+         */
         @Override
         public void execute() {
                 Pose2d currentPose = drivetrain.getPose();
@@ -159,16 +177,31 @@ public class CMD_AimBotAuto extends RunCommand {
                     + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
         }
 
+        /**
+         * Resets running state when ended or interrupted.
+         *
+         * @param interrupted True if command was interrupted.
+         */
         @Override
         public void end(boolean interrupted) {
                 running = false;
         }
 
+        /**
+         * Returns whether command is complete. Always returns false (runs until canceled).
+         *
+         * @return False.
+         */
         @Override
         public boolean isFinished() {
                 return false;
         }
 
+        /**
+         * Returns whether the autonomous AimBot command is currently active.
+         *
+         * @return True if running, false otherwise.
+         */
         public static boolean isRunning() {
                 return running;
         }

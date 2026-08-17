@@ -10,11 +10,27 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
+/**
+ * Subsystem controlling the metering feed wheel system feeding game pieces into shooter flywheels.
+ *
+ * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 45 and 46 ({@link Constants.Metering#kMETERING_MOTOR_CAN_ID}
+ * and {@link Constants.Metering#kMETERING_MOTOR_FOLLOWER_CAN_ID}) configured in leader-follower mode with stator
+ * current limits (120A) and supply limits (60A/25A).
+ */
 public class SUB_Metering extends SubsystemBase {
+        /** Leader TalonFX motor controller for metering wheel. */
         private final TalonFX metering;
+
+        /** Follower TalonFX motor controller for metering wheel. */
         private final TalonFX meteringFollower;
+
         private static SUB_Metering INSTANCE = null;
 
+        /**
+         * Singleton pattern provider for the metering subsystem.
+         *
+         * @return Single instance of {@link SUB_Metering}.
+         */
         public static SUB_Metering getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Metering();
@@ -22,6 +38,10 @@ public class SUB_Metering extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing leader and follower TalonFX motor controllers, applying current limits,
+         * and establishing follower relationships.
+         */
         private SUB_Metering() {
                 metering = new TalonFX(Constants.Metering.kMETERING_MOTOR_CAN_ID);
                 meteringFollower = new TalonFX(Constants.Metering.kMETERING_MOTOR_FOLLOWER_CAN_ID);
@@ -39,10 +59,19 @@ public class SUB_Metering extends SubsystemBase {
                     new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
         }
 
+        /**
+         * Sets open-loop percent output speed for the metering leader motor (-1.0 to 1.0).
+         *
+         * @param speed Percent duty cycle power.
+         */
         public void set(final double speed) {
                 metering.set(speed);
         }
 
+        /**
+         * Subsystem periodic loop (20ms). Telemeters position, current draw, supply/motor voltage, torque current,
+         * device temperature, and velocity for both leader and follower Kraken motors to SmartDashboard.
+         */
         @Override
         public void periodic() {
                 SmartDashboard.putNumber(
@@ -89,7 +118,6 @@ public class SUB_Metering extends SubsystemBase {
                     "Metering/Leader Velocity", metering.getVelocity().getValueAsDouble());
                 SmartDashboard.putNumber("Metering/Follower Velocity",
                     meteringFollower.getVelocity().getValueAsDouble());
-                // TODO: Implement rpm stuff
 
                 Alert.alertKraken(metering);
                 Alert.alertKraken(meteringFollower);
