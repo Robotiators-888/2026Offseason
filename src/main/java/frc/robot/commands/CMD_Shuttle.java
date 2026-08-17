@@ -27,6 +27,12 @@ import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import java.util.function.DoubleSupplier;
 
+/**
+ * Command for shuttling game pieces across the field with velocity feedforward motion compensation.
+ *
+ * <p>Requires {@link SUB_PhotonVision}, {@link CommandSwerveDrivetrain}, {@link SUB_Index}, and {@link SUB_Shooter}.
+ * Calculates a virtual target position compensating for robot translation velocity and time-of-flight (TOF).
+ */
 public class CMD_Shuttle extends RunCommand {
         /** Physical offsets for targeting calibration */
         Translation2d shooterOffset =
@@ -47,14 +53,14 @@ public class CMD_Shuttle extends RunCommand {
                 .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
                 .withCenterOfRotation(shooterOffset);
 
-        /** Motion profiling constraints for rotation */
+        /** Motion profiling constraints for rotation (0.75 rot/s max velocity, 1.5 rot/s^2 max acceleration). */
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(0.75).in(RadiansPerSecond),
                 RotationsPerSecond.of(1.5).in(RadiansPerSecond));
         private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
         private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
 
-        /** PID controller for robot heading alignment during shuttle */
+        /** Profiled PID controller for robot heading alignment during shuttle (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
             new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
         private Pose2d targetPose = new Pose2d();
@@ -62,12 +68,13 @@ public class CMD_Shuttle extends RunCommand {
 
         /**
          * Constructs a new CMD_Shuttle command for long-range scoring or passing.
-         * @param drivetrain The swerve drivetrain subsystem
-         * @param photonVision The vision subsystem
-         * @param index The indexer subsystem
-         * @param shooter The shooter subsystem
-         * @param translationXSupplier Supplier for X translation input
-         * @param translationYSupplier Supplier for Y translation input
+         *
+         * @param drivetrain The swerve drivetrain subsystem.
+         * @param photonVision The vision subsystem.
+         * @param index The indexer subsystem.
+         * @param shooter The shooter subsystem.
+         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
+         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
          */
         public CMD_Shuttle(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Shooter shooter, DoubleSupplier translationXSupplier,
@@ -84,6 +91,9 @@ public class CMD_Shuttle extends RunCommand {
                 addRequirements(photonVision, drivetrain, index, shooter);
         }
 
+        /**
+         * Command initialization. Resets heading PID controller.
+         */
         @Override
         public void initialize() {
                 robotAngleController.setTolerance(Units.degreesToRadians(0.0));
@@ -92,6 +102,10 @@ public class CMD_Shuttle extends RunCommand {
                     drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond);
         }
 
+        /**
+         * Command execution loop (20ms). Computes virtual shuttle target using time-of-flight compensation,
+         * aligns drivetrain heading towards virtual target, and feeds game piece when rotational error is within 14 degrees.
+         */
         @Override
         public void execute() {
                 // Calculate a target pose shifted away from the hub for shuttling/passing

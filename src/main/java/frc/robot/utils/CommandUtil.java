@@ -19,6 +19,9 @@ import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 
+/**
+ * Utility helper class for building and registering named commands for PathPlanner auto routines.
+ */
 public class CommandUtil {
         private CommandSwerveDrivetrain drivetrain;
         private SUB_Linear linear;
@@ -26,6 +29,17 @@ public class CommandUtil {
         private SUB_Index index;
         private SUB_PhotonVision photonVision;
         private SUB_Shooter shooter;
+
+        /**
+         * Constructs a new CommandUtil instance with subsystem references.
+         *
+         * @param drivetrain Swerve drivetrain subsystem instance.
+         * @param linear Linear intake deploy subsystem instance.
+         * @param roller Intake roller subsystem instance.
+         * @param index Spindexer and feeder subsystem instance.
+         * @param photonVision Vision subsystem instance.
+         * @param shooter Shooter flywheel subsystem instance.
+         */
         public CommandUtil(CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller,
             SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter) {
                 this.drivetrain = drivetrain;
@@ -35,6 +49,10 @@ public class CommandUtil {
                 this.photonVision = photonVision;
                 this.shooter = shooter;
         }
+
+        /**
+         * Registers all named commands with PathPlanner {@link NamedCommands} for autonomous routines.
+         */
         public void registerAllNamedCommands() {
                 NamedCommands.registerCommand("ReachedTarget",
                     new InstantCommand(
@@ -59,12 +77,8 @@ public class CommandUtil {
 
                 NamedCommands.registerCommand("StopIntake",
                     Commands.parallel(new InstantCommand(() -> roller.set(0), roller)
-                        // TODO: Check?
-                        // Not needed?
-                        // new InstantCommand(() -> linear.set(0), linear)
                         ));
 
-                // TODO: Check
                 NamedCommands.registerCommand("DeployIntakeEncoder",
                     new InstantCommand(
                         ()
@@ -87,12 +101,6 @@ public class CommandUtil {
 
                 NamedCommands.registerCommand(
                     "ShootAutoAim", new CMD_AimBotAuto(drivetrain, photonVision, shooter, index));
-
-                // NamedCommands.registerCommand("IntakeWiggle",
-                //         new RunCommand(() ->
-                //                 intake.intakeWiggle()
-                //         , intake)
-                // );
 
                 NamedCommands.registerCommand("IntakeAgitate", getLinearCompress());
 
@@ -138,8 +146,13 @@ public class CommandUtil {
                             index.set(0);
                     }, index), new InstantCommand(() -> shooter.stop(), shooter)));
         }
+
+        /**
+         * Creates a command to retract the linear intake mechanism.
+         *
+         * @return Retraction command.
+         */
         public Command getLinearCompress() {
-                // TODO: check this
                 return new RunCommand(
                     () -> linear.backward(Constants.Linear.kLINEAR_SLOW_PID_CONTROLLER), linear);
         }

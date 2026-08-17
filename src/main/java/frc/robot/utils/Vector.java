@@ -5,8 +5,11 @@ import java.util.Arrays;
 import java.util.function.Function;
 import org.opencv.core.Mat.Tuple2;
 
-// This class was created to provide a dynamic array implementation that is able to return a regular
-// array This is to ensure that we can easily pass arrays to SmartDashboard
+/**
+ * Custom dynamic array implementation capable of returning trimmed raw arrays for SmartDashboard publishing.
+ *
+ * @param <T> Element type stored in the Vector.
+ */
 public class Vector<T> {
         // Stores the underlying array
         private T[] storage;
@@ -18,7 +21,11 @@ public class Vector<T> {
         // Defualt capacity of a vector
         private static final int DEFAULT_CAPACITY = 10;
 
-        // Constructor takes a default value because of java's weird generics
+        /**
+         * Constructs a new Vector with the specified default element value.
+         *
+         * @param defaultValue Sample non-null default element value for array instantiation.
+         */
         public Vector(T defaultValue) {
                 defaultVal = defaultValue;
                 size = DEFAULT_CAPACITY;
@@ -26,60 +33,66 @@ public class Vector<T> {
                 storage = createArray(size, defaultVal);
         }
 
-        // Creates an array with a size and a default value with a type of T
+        /**
+         * Helper method for instantiating a generic array of type T.
+         *
+         * @param size Array length.
+         * @param defaultValue Default value to populate array entries.
+         * @return Array of type T.
+         */
         @SuppressWarnings("unchecked")
         private static <T> T[] createArray(int size, T defaultValue) {
-                // Terrible casting needed because of runtime objects and rules against generic
-                // arrays
                 T[] array = (T[]) Array.newInstance(defaultValue.getClass(), size);
                 Arrays.fill(array, defaultValue);
                 return array;
         }
 
-        // Adds more data to the back of the Vector
+        /**
+         * Appends an element to the back of the Vector, doubling capacity if needed.
+         *
+         * @param data Element to add.
+         * @throws NullPointerException If passed data element is null.
+         */
         public void add(T data) throws NullPointerException {
-                // Data shouldn't be null
                 if (data == null) {
                         throw new NullPointerException();
                 } else {
                         if (usedSize + 1 < size) {
-                                // Inserts data
                                 storage[usedSize] = data;
                                 usedSize++;
                         } else {
                                 size *= 2;
-                                // Creates a reference to storage and keeps its data alive
                                 T[] tempStorage = storage;
-                                // Makes storage a new array
                                 storage = createArray(size, defaultVal);
                                 int i = 0;
-                                // "Copies" the elements (it really uses references but who cares)
-                                // hopefully doesn't create memory leaks by keeping references to
-                                // old allocations
                                 for (i = 0; i < tempStorage.length; i++) {
                                         storage[i] = tempStorage[i];
                                 }
-                                // Fills the rest of the array with the default value
                                 for (; i < storage.length; i++) {
                                         storage[i] = defaultVal;
                                 }
-                                // Inserts data
                                 storage[usedSize] = data;
                                 usedSize++;
                         }
                 }
         }
 
-        // Gets a value from the Vector
+        /**
+         * Retrieves the element at the specified index.
+         *
+         * @param index Array index.
+         * @return Element at index.
+         */
         public T get(int index) {
-                // I should make this throw something
                 return storage[index];
         }
 
-        // Returns an array of type T[] from the contents of the Vector without the unused space
+        /**
+         * Returns a trimmed array containing only populated elements.
+         *
+         * @return Array of type T[] with length equal to used element count.
+         */
         public T[] toArray() {
-                // Creates an array with minimal size and "copies" the data over once again it is
-                // really just references
                 T[] result = createArray(usedSize, defaultVal);
                 for (int i = 0; i < result.length; i++) {
                         result[i] = storage[i];
@@ -87,29 +100,43 @@ public class Vector<T> {
                 return result;
         }
 
-        // Returns if the Vector is empty
+        /**
+         * Returns whether the Vector contains zero elements.
+         *
+         * @return True if empty, false otherwise.
+         */
         public boolean isEmpty() {
                 return usedSize == 0;
         }
 
-        // Returns the actual used size of the Vector
+        /**
+         * Returns the number of elements currently stored in the Vector.
+         *
+         * @return Element count.
+         */
         public int size() {
                 return usedSize;
         }
 
-        // Sets and index to a value
+        /**
+         * Overwrites the element at the specified index.
+         *
+         * @param index Target index.
+         * @param data New element value.
+         */
         public void set(int index, T data) {
                 storage[index] = data;
         }
 
-        // Finds the first instance of something in the Vector
-        // Takes a function that is meant to compare to values of type T and return if they are
-        // equal or not Also takes T data which is the value to find Returns the index or -1 if not
-        // found, it should return an optional but doing it c style kind of makes sense for the use
-        // case
+        /**
+         * Searches for the first element matching a custom predicate function.
+         *
+         * @param func Binary predicate function accepting a tuple of elements.
+         * @param data Comparison target element.
+         * @return Index of matching element, or -1 if not found.
+         */
         public int findFirst(Function<Tuple2<T>, Boolean> func,
-            T data) { // Maybe I could just use .equals but this is way cooler and may not always be
-                      // overrided
+            T data) {
                 for (int i = 0; i < usedSize; i++) {
                         if (func.apply(new Tuple2<T>(storage[i], data)))
                                 return i;

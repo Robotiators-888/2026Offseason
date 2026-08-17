@@ -67,68 +67,120 @@ import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 /**
- * This class is where the bulk of the robot should be declared. Since
- * Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in
- * the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of
- * the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
+ * RobotContainer declares all subsystems, operator interface (OI) bindings, commands,
+ * and autonomous routines.
+ *
+ * <p>This class implements the declarative structure of the robot, mapping Xbox controller inputs
+ * to commands, configuring default subsystem commands, and initializing PathPlanner autos.
  */
 public class RobotContainer {
-        // The robot's subsystems and commands are defined here...
+        /** Drivetrain subsystem initialized via Phoenix 6 TunerConstants. */
         public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+        /** PhotonVision camera vision subsystem instance. */
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
+
+        /** Maximum linear velocity of the robot in meters/second. */
         private double MaxSpeed = 1.0
             * TunerConstants.kSpeedAt12Volts.in(
                 MetersPerSecond); // kSpeedAt12Volts desired top speed
+
+        /** Maximum angular rate of the robot in radians/second (0.75 rot/s). */
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(
             RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+        /** Flywheel shooter subsystem instance. */
         public static final SUB_Shooter shooter = SUB_Shooter.getInstance();
+
+        /** Intake roller subsystem instance. */
         public static final SUB_Roller roller = SUB_Roller.getInstance();
+
+        /** Linear intake deploy subsystem instance. */
         public static final SUB_Linear linear = SUB_Linear.getInstance();
+
+        /** Spindexer and feeder index subsystem instance. */
         public static final SUB_Index index = SUB_Index.getInstance();
+
+        /** Adjustable hood subsystem instance. */
         public static final SUB_Hood hood = SUB_Hood.getInstance();
+
+        /** Metering wheel subsystem instance. */
         public static final SUB_Metering metering = SUB_Metering.getInstance();
+
+        /** REV Power Distribution Module for monitoring current and switchable channels. */
         public static final PowerDistribution powerDistribution = new PowerDistribution();
+
+        /** Command utility helper for registering PathPlanner named commands and macro routines. */
         public final CommandUtil commandUtil =
             new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
+
+        /** Dashboard chooser for autonomous routines. */
         private final SendableChooser<Command> autoChooser;
+
+        /** Slew rate limiters for smooth driver translation (X and Y) and rotation. */
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
-        // TrenchCrossing Paths
+
+        /** PathPlanner path definitions for trench alignment and navigation. */
         private PathPlannerPath pathLeftToNeutral;
         private PathPlannerPath pathNeutralToLeft;
         private PathPlannerPath pathRightToNeutral;
         private PathPlannerPath pathNeutralToRight;
+
+        /** Toggle flag for field-relative vs. robot-centric driving mode. */
         private boolean fieldRelative = true;
+
+        /** Scheduled command for automatic trench alignment. */
         private Command trenchAlign = Commands.none();
+
+        /** State flag indicating active trench alignment status. */
         private boolean trenchAligning = false;
 
-        // xBox Controllers for driver input
+        /** Xbox controller on port 0 for primary driver controls. */
         private final CommandXboxController Driver1 =
             new CommandXboxController(Operator.kDriver1ControllerPort);
+
+        /** Xbox controller on port 1 for secondary operator controls. */
         private final CommandXboxController Driver2 =
             new CommandXboxController(Operator.kDriver2ControllerPort);
-        // Driving Swerve Requests
+
+        /** Swerve request object for robot-centric velocity driving. */
         private final SwerveRequest.RobotCentric driveRobot =
             new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
+
+        /** Swerve request object for field-centric velocity driving. */
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withDriveRequestType(
-                DriveRequestType.Velocity); // Control is based on speed
+                DriveRequestType.Velocity);
 
+        /** Cache for tracking auto name changes in dashboard. */
         private static String autoName, newAutoName;
+
+        /** Previous alliance state tracker. */
         Optional<Alliance> lastAlliance;
+
+        /** Current alliance state tracker. */
         Optional<Alliance> alliance;
+
+        /** Field2d display object for visualizing active autonomous trajectory. */
         public static Field2d autoField = new Field2d();
+
+        /** List index for logging/debugging. */
         public int listIndex = 0;
+
+        /** Target flywheel RPM setpoint in revolutions per minute. */
         public double targetRPM = 1000;
+
+        /** Field2d display object for robot pose visualization. */
         Field2d field;
+
+        /** Telemetry wrapper for robot dashboard reporting. */
         private final RobotTelemetry robotTelemetry;
 
         /**
-         * The container for the robot. Contains subsystems, OI devices, and commands.
+         * The container for the robot. Initializes subsystems, sets default commands, configures
+         * button bindings, and sets up the autonomous chooser.
          */
         public RobotContainer() {
                 field = new Field2d();
@@ -163,8 +215,7 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.set(0); }, roller));
-                linear.setDefaultCommand(new InstantCommand(() -> { // Could make it go forward and
-                                                                    // make it an instant command
+                linear.setDefaultCommand(new InstantCommand(() -> {
                         linear.set(0);
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {
@@ -201,23 +252,10 @@ public class RobotContainer {
         }
 
         /**
-         * Use this method to define your trigger->command mappings. Triggers can be
-         * created via the
-         * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with
-         * an arbitrary
-         * predicate, or via the named factories in
-         * {@link edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses
-         * for
-         * {@link CommandXboxController
-         * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller PS4}
-         * controllers
-         * or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-         * joysticks}.
+         * Configures controller button triggers to commands.
          */
         private void configureBindings() {
-                // =========================================================
-                // DRIVER 1
-                // =========================================================
+                // Driver 1 Bindings
                 Driver1.leftBumper()
                     .onTrue(Commands.runOnce(() -> {
                             trenchAligning = true;
@@ -284,9 +322,8 @@ public class RobotContainer {
                     commandUtil.getLinearCompress()));
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
-                // =========================================================
-                // DRIVER 2
-                // =========================================================
+
+                // Driver 2 Bindings
                 Driver2.leftTrigger().whileTrue(
                     new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
@@ -302,10 +339,6 @@ public class RobotContainer {
                     () -> linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
                 Driver2.povUp().onTrue(Commands.run(
                     () -> linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
-                // Driver2.rightBumper().whileTrue(new RunCommand(() -> {
-                //         linear.set(MathUtil.applyDeadband(Driver2.getLeftY(),
-                //         Operator.kDriveDeadband) * Constants.Linear.kLINEAR_MOTOR_SPEED);
-                // }, linear));
                 Driver2.rightTrigger()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
@@ -333,20 +366,27 @@ public class RobotContainer {
                                        .orElse(drivetrain.getPose().getTranslation())))));
         }
 
+        /**
+         * Initializes robot hardware settings such as pathfinding algorithm and power distribution.
+         */
         public void robotInit() {
                 Pathfinding.setPathfinder(new LocalADStar());
                 powerDistribution.setSwitchableChannel(true);
         }
 
         /**
-         * Use this to pass the autonomous command to the main {@link Robot} class.
+         * Retrieves the user-selected autonomous command from the dashboard chooser.
          *
-         * @return the command to run in autonomous
+         * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
                 return autoChooser.getSelected();
         }
 
+        /**
+         * Periodic method called every 20ms during all robot operating modes. Updates dashboard
+         * status, nearest trough position calculation, and telemetry outputs.
+         */
         public void robotPeriodic() {
                 SmartDashboard.putNumber("Stat/Match Time", DriverStation.getMatchTime());
                 autoField.setRobotPose(drivetrain.getPose());
@@ -405,6 +445,9 @@ public class RobotContainer {
                 robotTelemetry.update();
         }
 
+        /**
+         * Initializes settings for autonomous mode, configuring logging callbacks and UI tabs.
+         */
         public void autonomousInit() {
                 drivetrain.setIntakeComplete(true);
                 drivetrain.setReachedTarget(false);
@@ -426,16 +469,20 @@ public class RobotContainer {
                 });
         }
 
+        /** Periodic method called every 20ms during autonomous mode. Updates vision localization. */
         public void autonomousPeriodic() {
                 photonPoseUpdate();
         }
 
+        /** Initializes settings for test mode. */
         public void testInit() {}
 
+        /** Periodic method called every 20ms during test mode. Updates vision localization. */
         public void testPeriodic() {
                 photonPoseUpdate();
         }
 
+        /** Initializes settings for teleoperated mode, configuring dashboard tabs and Hub data. */
         public void teleopInit() {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification =
@@ -445,11 +492,16 @@ public class RobotContainer {
                 Hub.fetchMatchData();
         }
 
+        /** Periodic method called every 20ms during teleoperated mode. Handles vision updates and Hub logic. */
         public void teleopPeriodic() {
                 photonPoseUpdate();
                 Hub.start(Driver1, Driver2, shooter);
         }
 
+        /**
+         * Periodic method called every 20ms while the robot is disabled. Updates active auto trajectory
+         * visualization on field dashboard when auto selection or alliance changes.
+         */
         public void disabledPeriodic() {
                 newAutoName = getAutonomousCommand().getName();
                 alliance = DriverStation.getAlliance();
@@ -499,12 +551,22 @@ public class RobotContainer {
                 photonPoseUpdate();
         }
 
+        /**
+         * Polls vision estimations from all three PhotonVision cameras and updates drivetrain odometry.
+         */
         public void photonPoseUpdate() {
                 processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
                 processCameraPose(photonVision.getCam2Pose(), drivetrain.publisher4);
                 processCameraPose(photonVision.getCam3Pose(), drivetrain.publisher5);
         }
 
+        /**
+         * Filters and processes estimated pose from a PhotonVision camera, feeding valid measurements
+         * to the drivetrain pose estimator.
+         *
+         * @param poseOptional Estimated camera pose optional wrapper.
+         * @param publisher NetworkTable publisher for camera pose visualization.
+         */
         private void processCameraPose(
             Optional<EstimatedRobotPose> poseOptional, StructPublisher<Pose3d> publisher) {
                 if (poseOptional.isPresent()) {

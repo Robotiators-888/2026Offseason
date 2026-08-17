@@ -5,22 +5,37 @@ import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.CommandSwerveDrivetrain;
 
+/**
+ * Utility helper for real-time telemetry logging of swerve drivetrain modules and REV Power Distribution Hub (PDH).
+ */
 public class RobotTelemetry {
         private final CommandSwerveDrivetrain drivetrain;
         private final PowerDistribution powerDistribution;
 
+        /**
+         * Constructs a new RobotTelemetry instance.
+         *
+         * @param drivetrain CommandSwerveDrivetrain subsystem instance.
+         * @param powerDistribution PowerDistribution hardware instance.
+         */
         public RobotTelemetry(
             CommandSwerveDrivetrain drivetrain, PowerDistribution powerDistribution) {
                 this.drivetrain = drivetrain;
                 this.powerDistribution = powerDistribution;
         }
 
+        /**
+         * Telemetry update loop. Logs drivetrain module states, PDH status, and checks motor alerts.
+         */
         public void update() {
                 logDrivetrain();
                 logPDH();
                 checkAlerts();
         }
 
+        /**
+         * Logs individual swerve module states, motor currents, voltages, velocities, positions, and temperatures to SmartDashboard.
+         */
         private void logDrivetrain() {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
                 drivetrain.desiredSwerveModuleStatesPublisher.set(
@@ -92,6 +107,9 @@ public class RobotTelemetry {
                 }
         }
 
+        /**
+         * Logs Power Distribution Hub (PDH) battery voltage, channel currents, total current, total energy, and hardware breaker faults.
+         */
         public void logPDH() {
                 SmartDashboard.putNumber("PDH/Battery Voltage", powerDistribution.getVoltage());
                 SmartDashboard.putNumberArray(
@@ -102,8 +120,6 @@ public class RobotTelemetry {
                     "PDH/Total Current Amps", powerDistribution.getTotalCurrent());
                 SmartDashboard.putNumber(
                     "PDH/Total Energy Joules", powerDistribution.getTotalEnergy());
-                // Not supported on PDH
-                // SmartDashboard.putNumber("PDH/Total Watts", powerDistribution.getTotalPower());
                 if (powerDistribution.getFaults().Brownout)
                         Alert.registerError("PDH Brownout!!");
                 if (powerDistribution.getFaults().CanWarning)
@@ -116,13 +132,6 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel10BreakerFault");
                 if (powerDistribution.getFaults().Channel11BreakerFault)
                         Alert.registerError("PDH Channel11BreakerFault");
-                // We dont use these ports so they cause false errors
-                // if (powerDistribution.getFaults().Channel12BreakerFault)
-                //         Alert.registerError("PDH Channel12BreakerFault");
-                // if (powerDistribution.getFaults().Channel13BreakerFault)
-                //         Alert.registerError("PDH Channel13BreakerFault");
-                // if (powerDistribution.getFaults().Channel14BreakerFault)
-                //         Alert.registerError("PDH Channel14BreakerFault");
                 if (powerDistribution.getFaults().Channel15BreakerFault)
                         Alert.registerError("PDH Channel15BreakerFault");
                 if (powerDistribution.getFaults().Channel16BreakerFault)
@@ -141,9 +150,6 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel21BreakerFault");
                 if (powerDistribution.getFaults().Channel22BreakerFault)
                         Alert.registerError("PDH Channel22BreakerFault");
-                // Also unused
-                // if (powerDistribution.getFaults().Channel23BreakerFault)
-                //         Alert.registerError("PDH Channel23BreakerFault");
                 if (powerDistribution.getFaults().Channel2BreakerFault)
                         Alert.registerError("PDH Channel2BreakerFault");
                 if (powerDistribution.getFaults().Channel3BreakerFault)
@@ -162,6 +168,9 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel19BreakerFault");
         }
 
+        /**
+         * Checks health status for all swerve module drive and steer Kraken motors via Alert utility.
+         */
         private void checkAlerts() {
                 for (int i = 0; i < drivetrain.getModules().length; i++) {
                         Alert.alertKraken(drivetrain.getModule(i).getDriveMotor());

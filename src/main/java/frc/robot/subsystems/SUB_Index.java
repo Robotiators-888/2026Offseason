@@ -8,14 +8,29 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
+/**
+ * Subsystem controlling the spindexer and feeder mechanism.
+ *
+ * <p>Hardware:
+ * <ul>
+ *   <li>Primary spindexer SPARK Max motor controller on CAN ID 41 ({@link Constants.Index#KINDEX_MOTOR_CANID})</li>
+ *   <li>High-speed metering SPARK Max motor controller on CAN ID 42 ({@link Constants.Index#kMETERING_WHEEL_CANID})</li>
+ * </ul>
+ */
 public class SUB_Index extends SubsystemBase {
-        /** Subsystem hardware components */
+        /** Left indexer SPARK Max motor controller (Follower). */
         private final SparkMax LeftIndexer;
+
+        /** Right indexer SPARK Max motor controller (Leader). */
         private final SparkMax RightIndexer;
 
         private static SUB_Index INSTANCE = null;
 
-        /** @return Single instance of the SUB_Index subsystem */
+        /**
+         * Singleton pattern provider for the index subsystem.
+         *
+         * @return Single instance of the {@link SUB_Index} subsystem.
+         */
         public static SUB_Index getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Index();
@@ -23,6 +38,9 @@ public class SUB_Index extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing SPARK Max motor controllers, current limits (15A), and follower relationships.
+         */
         @SuppressWarnings("removal")
         private SUB_Index() {
                 // Defines motors for indexing and metering
@@ -44,23 +62,39 @@ public class SUB_Index extends SubsystemBase {
                     SparkMax.PersistMode.kPersistParameters);
         }
 
-        /** @param speed Target percent output for indexing [-1.0, 1.0] */
+        /**
+         * Sets target open-loop speed for indexer motors.
+         *
+         * @param speed Target percent output for indexing (-1.0 to 1.0 scale).
+         */
         public void set(double speed) {
                 RightIndexer.set(speed);
         }
 
-        /** @return Current velocity of the indexer in RPM */
+        /**
+         * Calculates average velocity of left and right indexer motor encoders in RPM.
+         *
+         * @return Average velocity of the indexer in RPM.
+         */
         public double indexRPM() {
                 return (RightIndexer.getEncoder().getVelocity()
                            + LeftIndexer.getEncoder().getVelocity())
                     / 2;
         }
 
-        /** @param volts Target voltage for the index motor */
+        /**
+         * Sets target voltage for indexer motor controllers.
+         *
+         * @param volts Target voltage in volts.
+         */
         public void setVolts(double volts) {
                 RightIndexer.setVoltage(volts);
         }
 
+        /**
+         * Periodic subsystem loop (20ms). Telemeters average RPM, output current, bus voltage, encoder position,
+         * and motor temperature for both SPARK Max controllers to SmartDashboard, checking for REV hardware faults.
+         */
         @Override
         public void periodic() {
                 // Telemetry logging for dashboard

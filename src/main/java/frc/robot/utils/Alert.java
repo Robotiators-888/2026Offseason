@@ -7,12 +7,16 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import java.util.HashMap;
 
+/**
+ * Utility class for logging, reporting, and dashboard management of robot alerts, warnings, and errors.
+ *
+ * <p>Integrates with NetworkTables and Elastic dashboard notification UI.
+ */
 public class Alert {
         // ArrayList required akward casting to work so I created Vector
         // Hashmaps to check if keys are present in O(1) time!
         private static Elastic.Notification notification =
-            new Elastic.Notification(); // Creates one notification object that can be method
-                                        // chained on to increase garbage collection performance
+            new Elastic.Notification();
         private static Vector<String> error = new Vector<String>(new String());
         private static Vector<String> warning = new Vector<String>(new String());
         private static Vector<String> info = new Vector<String>(new String());
@@ -22,12 +26,21 @@ public class Alert {
         private static Color alertColor = new Color(0, 255, 0); // Green
         private static final double connectedTimeout = .5; // Seconds
 
+        /** Default constructor for Alert utility. */
         public Alert() {}
 
+        /**
+         * Initializes dashboard alert entries.
+         */
         public static void setup() {
                 updateSmartDashboard();
         }
 
+        /**
+         * Registers an error message in the error registry and sends Elastic notification.
+         *
+         * @param alert Error message string.
+         */
         public static void registerError(String alert) {
                 // Makes sure there are no duplicates using the hashmap
                 if (!errorMap.containsKey(alert)) {
@@ -35,7 +48,6 @@ public class Alert {
                         error.add(alert + " 0");
                         notifyError(alert);
                         updateSmartDashboard();
-                        // triggerStop();
                 } else {
                         // Stores the value at the hashmap of the alert
                         Integer mapVal = errorMap.get(alert);
@@ -46,11 +58,15 @@ public class Alert {
                                       -> comparees.get_0().equals(comparees.get_1()),
                                       alert + " " + mapVal),
                             alert + " " + (mapVal + 1));
-                        // Doesn't notify elastic as this would spam notifications
                         updateSmartDashboard();
                 }
         }
 
+        /**
+         * Registers a warning message in the warning registry and sends Elastic notification.
+         *
+         * @param alert Warning message string.
+         */
         public static void registerWarning(String alert) {
                 // Makes sure there are no duplicates using the hashmap
                 if (!warningMap.containsKey(alert)) {
@@ -68,11 +84,15 @@ public class Alert {
                                         -> comparees.get_0().equals(comparees.get_1()),
                                         alert + " " + mapVal),
                             alert + " " + (mapVal + 1));
-                        // Doesn't notify elastic as this would spam notifications
                         updateSmartDashboard();
                 }
         }
 
+        /**
+         * Registers an informational message in the info registry and sends Elastic notification.
+         *
+         * @param alert Informational message string.
+         */
         public static void registerInfo(String alert) {
                 // Makes sure there are no duplicates using the hashmap
                 if (!infoMap.containsKey(alert)) {
@@ -90,13 +110,15 @@ public class Alert {
                                      -> comparees.get_0().equals(comparees.get_1()),
                                      alert + " " + mapVal),
                             alert + " " + (mapVal + 1));
-                        // Doesn't notify elastic as this would spam notifications
                         updateSmartDashboard();
                 }
         }
 
-        // Don't use direct notifications on things that spam them use them for things like telop
-        // init, things that happen multiple times, infrequently
+        /**
+         * Sends an explicit error notification banner to Elastic.
+         *
+         * @param alert Error description string.
+         */
         public static void notifyError(String alert) {
                 Elastic.sendNotification(
                     notification.withLevel(Elastic.Notification.NotificationLevel.ERROR)
@@ -104,6 +126,11 @@ public class Alert {
                         .withDescription(alert));
         }
 
+        /**
+         * Sends an explicit warning notification banner to Elastic.
+         *
+         * @param alert Warning description string.
+         */
         public static void notifyWarning(String alert) {
                 Elastic.sendNotification(
                     notification.withLevel(Elastic.Notification.NotificationLevel.WARNING)
@@ -111,6 +138,11 @@ public class Alert {
                         .withDescription(alert));
         }
 
+        /**
+         * Sends an explicit info notification banner to Elastic.
+         *
+         * @param alert Informational description string.
+         */
         public static void notifyInfo(String alert) {
                 Elastic.sendNotification(
                     notification.withLevel(Elastic.Notification.NotificationLevel.INFO)
@@ -118,9 +150,9 @@ public class Alert {
                         .withDescription(alert));
         }
 
-        // Sets the single color elastic object to the highest severity level (severity level
-        // meaning either info, error or warning) that the robot has at least one alert for (check
-        // engine light)
+        /**
+         * Calculates and updates the highest alert status color indicator on SmartDashboard.
+         */
         private static void registerColor() {
                 if (!error.isEmpty()) {
                         alertColor = new Color(255, 0, 0); // Red
@@ -132,15 +164,9 @@ public class Alert {
                 SmartDashboard.putString("Alert/Alerts", alertColor.toHexString());
         }
 
-        // public static void triggerStop () { // Stops the robot from running if it has errors
-        // (This will not be used because errors shouldn't kill the robot) Todo: implement this
-        // }
-
-        // private static void testcalls () {
-        //   registerWarning("There may be an issue");
-        //   notifyWarning("Photonvision has optional type idk");
-        // }
-
+        /**
+         * Pushes current error, warning, and info lists to NetworkTables string arrays.
+         */
         private static void updateSmartDashboard() {
                 SmartDashboard.putStringArray("Alert/errors", error.toArray());
                 SmartDashboard.putStringArray("Alert/warnings", warning.toArray());
@@ -148,8 +174,11 @@ public class Alert {
                 registerColor();
         }
 
-        // Alerts every fault a kraken could have in just about the worst way possible, but there is
-        // no better way
+        /**
+         * Inspects CTRE TalonFX motor status for active hardware faults and registers any errors found.
+         *
+         * @param kraken Target CTRE TalonFX motor controller.
+         */
         public static void alertKraken(TalonFX kraken) {
                 int krakenId = kraken.getDeviceID();
                 if (!kraken.isAlive())
@@ -208,6 +237,11 @@ public class Alert {
                             "Motor " + krakenId + " Fault_UsingFusedCANcoderWhileUnlicensed");
         }
 
+        /**
+         * Inspects REV SPARK Max motor controller for active hardware faults and registers errors found.
+         *
+         * @param neo Target REV SPARK Max motor controller.
+         */
         public static void alertNeoFaults(SparkMax neo) {
                 int neoId = neo.getDeviceId();
                 // One read of the struct rather than eight round trips to the controller.
@@ -230,6 +264,11 @@ public class Alert {
                         registerError("Motor " + neoId + " Fault: temperature");
         }
 
+        /**
+         * Inspects REV SPARK Max motor controller for active hardware warnings and registers warnings found.
+         *
+         * @param neo Target REV SPARK Max motor controller.
+         */
         public static void alertNeoWarnings(SparkMax neo) {
                 int neoId = neo.getDeviceId();
                 final SparkBase.Warnings warnings = neo.getWarnings();

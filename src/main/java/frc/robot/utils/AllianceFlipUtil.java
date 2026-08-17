@@ -17,29 +17,40 @@ import frc.robot.Constants.Field;
 import java.util.Optional;
 
 /**
- * Utility functions for flipping from the blue to red alliance. By default, all translations and
- * poses in {@link FieldConstants} are stored with the origin at the rightmost point on the blue
- * alliance wall.
+ * Utility functions for flipping field coordinates between blue and red alliance perspectives.
+ *
+ * <p>Origin is default defined at rightmost point on blue alliance wall.
  */
 public class AllianceFlipUtil {
+        private AllianceFlipUtil() {}
+
+        /** Field geometry flip modes (CenterPoint 180 deg rotation or Mirror along X axis). */
         public static enum FieldFlipType {
+                /** Rotates 180 degrees around center point of field. */
                 CenterPointFlip,
+                /** Mirrors coordinates along field centerline X axis. */
                 MirrorFlip,
         }
 
+        /** Default flip type configuration for field transformations. */
         public static final FieldFlipType defaultFlipType = FieldFlipType.CenterPointFlip;
 
         /**
-         * Flips a translation to the correct side of the field based on the current alliance
-         * color.
+         * Flips a 2D translation vector to the current alliance side using default flip type.
+         *
+         * @param translation Blue alliance 2D translation vector in meters.
+         * @return Alliance-adjusted 2D translation vector in meters.
          */
         public static Translation2d apply(Translation2d translation) {
                 return apply(translation, defaultFlipType);
         }
 
         /**
-         * Flips a translation to the correct side of the field based on the current alliance
-         * color.
+         * Flips a 2D translation vector to the current alliance side using specified flip type.
+         *
+         * @param translation Blue alliance 2D translation vector in meters.
+         * @param flipType Specified field flip mode.
+         * @return Alliance-adjusted 2D translation vector in meters.
          */
         public static Translation2d apply(Translation2d translation, FieldFlipType flipType) {
                 if (!shouldFlip())
@@ -55,12 +66,23 @@ public class AllianceFlipUtil {
                 }
         }
 
-        /** Flips a rotation based on the current alliance color. */
+        /**
+         * Flips a 2D rotation to current alliance side using default flip type.
+         *
+         * @param rotation Blue alliance 2D rotation.
+         * @return Alliance-adjusted 2D rotation.
+         */
         public static Rotation2d apply(Rotation2d rotation) {
                 return apply(rotation, defaultFlipType);
         }
 
-        /** Flips a rotation based on the current alliance color. */
+        /**
+         * Flips a 2D rotation to current alliance side using specified flip type.
+         *
+         * @param rotation Blue alliance 2D rotation.
+         * @param flipType Specified field flip mode.
+         * @return Alliance-adjusted 2D rotation.
+         */
         public static Rotation2d apply(Rotation2d rotation, FieldFlipType flipType) {
                 if (!shouldFlip())
                         return rotation;
@@ -73,12 +95,23 @@ public class AllianceFlipUtil {
                 }
         }
 
-        /** Flips a pose to the correct side of the field based on the current alliance color. */
+        /**
+         * Flips a 2D pose to current alliance side using default flip type.
+         *
+         * @param pose Blue alliance 2D pose.
+         * @return Alliance-adjusted 2D pose.
+         */
         public static Pose2d apply(Pose2d pose) {
                 return apply(pose, defaultFlipType);
         }
 
-        /** Flips a pose to the correct side of the field based on the current alliance color. */
+        /**
+         * Flips a 2D pose to current alliance side using specified flip type.
+         *
+         * @param pose Blue alliance 2D pose.
+         * @param flipType Specified field flip mode.
+         * @return Alliance-adjusted 2D pose.
+         */
         public static Pose2d apply(Pose2d pose, FieldFlipType flipType) {
                 if (!shouldFlip())
                         return pose;
@@ -86,10 +119,23 @@ public class AllianceFlipUtil {
                     apply(pose.getTranslation(), flipType), apply(pose.getRotation(), flipType));
         }
 
+        /**
+         * Flips field-relative chassis speeds to current alliance perspective using default flip type.
+         *
+         * @param speeds Field-relative chassis speeds.
+         * @return Alliance-adjusted chassis speeds.
+         */
         public static ChassisSpeeds applyFieldRelative(ChassisSpeeds speeds) {
                 return applyFieldRelative(speeds, defaultFlipType);
         }
 
+        /**
+         * Flips field-relative chassis speeds to current alliance perspective using specified flip type.
+         *
+         * @param speeds Field-relative chassis speeds.
+         * @param flipType Specified field flip mode.
+         * @return Alliance-adjusted chassis speeds.
+         */
         public static ChassisSpeeds applyFieldRelative(
             ChassisSpeeds speeds, FieldFlipType flipType) {
                 if (!shouldFlip())
@@ -105,11 +151,26 @@ public class AllianceFlipUtil {
                 }
         }
 
+        /**
+         * Flips robot-relative chassis speeds to current alliance perspective using default flip type.
+         *
+         * @param speeds Robot-relative chassis speeds.
+         * @param robotRotation Current robot rotation.
+         * @return Alliance-adjusted robot-relative chassis speeds.
+         */
         public static ChassisSpeeds applyRobotRelative(
             ChassisSpeeds speeds, Rotation2d robotRotation) {
                 return applyRobotRelative(speeds, robotRotation, defaultFlipType);
         }
 
+        /**
+         * Flips robot-relative chassis speeds to current alliance perspective using specified flip type.
+         *
+         * @param speeds Robot-relative chassis speeds.
+         * @param robotRotation Current robot rotation.
+         * @param flipType Specified field flip mode.
+         * @return Alliance-adjusted robot-relative chassis speeds.
+         */
         public static ChassisSpeeds applyRobotRelative(
             ChassisSpeeds speeds, Rotation2d robotRotation, FieldFlipType flipType) {
                 return ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -119,38 +180,10 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Flips a trajectory state to the correct side of the field based on the current alliance
-         * color.
+         * Returns whether pose and rotation coordinates should be flipped (true if current alliance is Red).
+         *
+         * @return True if on Red alliance, false otherwise.
          */
-        // public static Trajectory.State apply(Trajectory.State state) {
-        // if (shouldFlip()) {
-        // return new Trajectory.State(
-        // state.timeSeconds,
-        // state.velocityMetersPerSecond,
-        // state.accelerationMetersPerSecondSq,
-        // new Pose2d(
-        // FieldConstants.fieldLength - state.poseMeters.getX(),
-        // state.poseMeters.getY(),
-        // new Rotation2d(
-        // -state.poseMeters.getRotation().getCos(),
-        // state.poseMeters.getRotation().getSin())),
-        // -state.curvatureRadPerMeter);
-        // } else {
-        // return state;
-        // }
-        // }
-
-        /** Flips a rotation sequence state based on the current alliance color. */
-        // public static RotationSequence.State apply(RotationSequence.State state) {
-        // if (shouldFlip()) {
-        // return new RotationSequence.State(
-        // new Rotation2d(-state.position.getCos(), state.position.getSin()),
-        // -state.velocityRadiansPerSec);
-        // } else {
-        // return state;
-        // }
-        // }
-
         public static boolean shouldFlip() {
                 return DriverStation.getAlliance().equals(Optional.of(Alliance.Red));
         }

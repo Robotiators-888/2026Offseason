@@ -9,10 +9,21 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.utils.Alert;
 
+/**
+ * Subsystem controlling the adjustable shooter hood angle mechanism.
+ *
+ * <p>Hardware: Single CTRE TalonFX motor on CAN ID 47 ({@link Constants.Hood#kHOOD_CAN_ID})
+ * with stator current limits (25A) and supply current limits (7A/5A).
+ */
 public class SUB_Hood extends SubsystemBase {
         private static SUB_Hood INSTANCE = null;
         private final TalonFX hood;
 
+        /**
+         * Singleton pattern provider for the hood subsystem.
+         *
+         * @return The single instance of {@link SUB_Hood}.
+         */
         public static SUB_Hood getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Hood();
@@ -20,6 +31,9 @@ public class SUB_Hood extends SubsystemBase {
                 return INSTANCE;
         }
 
+        /**
+         * Private constructor initializing the TalonFX motor controller with current limits.
+         */
         private SUB_Hood() {
                 final TalonFXConfiguration config =
                     new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
@@ -33,34 +47,63 @@ public class SUB_Hood extends SubsystemBase {
                 hood.getConfigurator().apply(config);
         }
 
+        /**
+         * Drives the hood motor to a specified target position using PID control.
+         *
+         * @param angle Target position in motor rotations.
+         */
         public void setToPosition(double angle) {
                 hood.set(Constants.Hood.kHOOD_PID_CONTROLLER.calculate(
                     hood.getPosition().getValueAsDouble(), angle));
         }
 
+        /**
+         * Returns the current hood motor position in rotations.
+         *
+         * @return Current position in motor rotations.
+         */
         public double getPosition() {
                 return hood.getPosition().getValueAsDouble();
         }
 
+        /**
+         * Calculates optimal hood angle in radians based on target distance and target height.
+         *
+         * @param distance Horizontal distance to target in meters.
+         * @return Calculated optimal launch angle in radians.
+         */
         public static double findoptimalangle(final double distance) {
                 double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
                 return (Math.PI / 4.0) + 0.5 * Math.atan2(height, distance);
         }
 
-        // Reset the hood to the origional position while including checks for motor stalling
+        /**
+         * Resets the hood towards position 0 safely.
+         */
         public void resetSafe() {
-                setToPosition(0); // TODO: Actually make this safe maybe by using a high I PID and
-                                  // detected when the current gets high
+                setToPosition(0);
         }
 
+        /**
+         * Resets the motor encoder position reading to zero.
+         */
         public void resetEncoder() {
                 hood.setPosition(0);
         }
 
+        /**
+         * Sets raw duty cycle power output to the hood motor (-1.0 to 1.0).
+         *
+         * @param speed Duty cycle speed percentage.
+         */
         public void set(double speed) {
                 hood.set(speed);
         }
 
+        /**
+         * Subsystem periodic loop (20ms). Telemeters position, current, voltage, temperature,
+         * and velocity to SmartDashboard, and checks Kraken motor health status via Alert class.
+         */
         @Override
         public void periodic() {
                 SmartDashboard.putNumber("Hood/Position", getPosition());

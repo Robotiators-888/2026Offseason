@@ -13,7 +13,11 @@ import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StringTopic;
 
+/**
+ * Utility class for interacting with the Elastic Dashboard.
+ */
 public final class Elastic {
+        private Elastic() {}
         private static final StringTopic notificationTopic =
             NetworkTableInstance.getDefault().getStringTopic("/Elastic/RobotNotifications");
         private static final StringPublisher notificationPublisher = notificationTopic.publish(
@@ -150,7 +154,7 @@ public final class Elastic {
                 }
 
                 /**
-                 * Updates the level of this notification
+                 * Sets the notification level.
                  *
                  * @param level the level to set the notification to
                  */
@@ -159,6 +163,8 @@ public final class Elastic {
                 }
 
                 /**
+                 * Gets the notification level.
+                 *
                  * @return the level of this notification
                  */
                 public NotificationLevel getLevel() {
@@ -192,6 +198,11 @@ public final class Elastic {
                         this.description = description;
                 }
 
+                /**
+                 * Gets the description text of this notification.
+                 *
+                 * @return Description text.
+                 */
                 public String getDescription() {
                         return description;
                 }
