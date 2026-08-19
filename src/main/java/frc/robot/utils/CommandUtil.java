@@ -73,7 +73,9 @@ public class CommandUtil {
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand(
-                    "ShootAutoAim", new CMD_AimBotAuto(drivetrain, photonVision, shooter, index));
+                    "ShootAutoAim", new CMD_AimBotAuto( drivetrain,  photonVision,
+             index,  hood,  metering,  shooter)
+                );
 
                 NamedCommands.registerCommand("IntakeAgitate", getLinearCompress());
 

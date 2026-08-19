@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,77 +23,95 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
+import frc.robot.Constants.Operator;
+import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 /**
- * Autonomous command for vision-guided target heading alignment and automatic firing.
+ * Command for automated vision-guided target alignment, hood positioning, and shooting feed control.
  *
- * <p>Requires {@link CommandSwerveDrivetrain}, {@link SUB_Shooter}, and {@link SUB_Index}.
- * Controls rotation towards the alliance Hub target while stationary, setting shooter RPM based
- * on distance and triggering indexer feed when rotation tolerance and flywheel speeds are satisfied.
+ * <p>Requires {@link CommandSwerveDrivetrain}, {@link SUB_Metering}, {@link SUB_Index}, and {@link SUB_Hood}.
+ * Allows driver translation via joystick inputs while automatically calculating and maintaining chassis rotation
+ * towards the alliance Hub target center.
  */
 public class CMD_AimBotAuto extends RunCommand {
-        /** Subsystems and state variables for autonomous targeting */
+        /** Subsystems and state variables used for targeting and control */
         private final SUB_PhotonVision photonVision;
         private final CommandSwerveDrivetrain drivetrain;
         private Pose2d targetPose = new Pose2d();
         private static boolean running;
-        private final SUB_Shooter shooter;
         private final SUB_Index index;
+        private final SUB_Hood hood;
+        private final SUB_Metering metering;
+        private final SUB_Shooter shooter;
+        private boolean isLocked;
 
-        /** Physical offset from robot center to shooter exit */
+        /** Physical offsets for targeting calibration */
         Translation2d shooterOffset =
             new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
+        Rotation2d shooterThetaOffset =
+            new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
 
         /** Motion profiling constraints for rotation (1.6 rot/s max velocity, 12 rot/s^2 max acceleration). */
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(1.6).in(RadiansPerSecond),
                 RotationsPerSecond.of(12).in(RadiansPerSecond));
 
-        /** Profiled PID controller for robot heading alignment during autonomous (P=3.0, I=0.0, D=0.2). */
+        /** Profiled PID controller for heading alignment (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(3.0, 0, 0.2,
+            new ProfiledPIDController(5.0, 0, 0.2,
                 thetaConstraints);
 
-        /** Status flag indicating whether heading error is within 3 degrees tolerance during autonomous. */
+        /** Status flag indicating whether heading error is within 5 degrees tolerance. */
         public static boolean isThetaErrorCorrect = false;
 
+        private final SwerveRequest.SwerveDriveBrake brakeRequest =
+            new SwerveRequest.SwerveDriveBrake();
+        private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         private final SwerveRequest.FieldCentric drive =
-            new SwerveRequest.FieldCentric().withRotationalDeadband(0).withDriveRequestType(
-                DriveRequestType.OpenLoopVoltage);
+            new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
         /**
-         * Constructs a new autonomous AimBot command.
+         * Constructs a new AimBot command.
          *
          * @param drivetrain The swerve drivetrain subsystem.
-         * @param photonVision The vision subsystem.
-         * @param shooter The shooter subsystem.
+         * @param photonVision The vision subsystem for target tracking.
          * @param index The indexer subsystem.
+         * @param hood The hood subsystem.
+         * @param metering The metering subsystem.
+         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
+         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
          */
         public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Shooter shooter, SUB_Index index) {
+            SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
-                this.shooter = shooter;
                 this.index = index;
+                this.hood = hood;
+                this.shooter = shooter;
+                this.metering = metering;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
 
-                addRequirements(drivetrain, shooter, index);
+                addRequirements(drivetrain, metering, index, hood, shooter);
         }
 
         /**
-         * Command initialization. Resolves target AprilTag pose based on alliance color and resets heading PID controller.
+         * Command initialization. Resolves target AprilTag pose based on alliance color, resets
+         * heading PID controller, and sets high current limit shooting mode.
          */
         @Override
         public void initialize() {
+                // Determine the correct target tag based on the current alliance
                 robotAngleController.setTolerance(Units.degreesToRadians(0.0));
 
-                // Determine the correct target tag based on current alliance
                 Pose2d tagPose = (DriverStation.getAlliance().equals(Optional.of(Alliance.Red)))
                     ? photonVision.at_field.getTagPose(10).orElse(new Pose3d()).toPose2d()
                     : photonVision.at_field.getTagPose(26).orElse(new Pose3d()).toPose2d();
@@ -105,46 +124,52 @@ public class CMD_AimBotAuto extends RunCommand {
 
                 targetPose = new Pose2d(hubCenterTranslation, new Rotation2d());
 
-                // Reset PID controller to the current state of the robot
+                // Reset the PID controller to the current state of the robot
                 robotAngleController.reset(drivetrain.getPose().getRotation().getRadians(),
                     drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond);
+                isLocked = false;
                 running = true;
+                SUB_Shooter.isShooting = true;
         }
 
         /**
-         * Command execution loop (20ms). Calculates rotational velocity, sets distance-interpolated shooter RPM,
-         * and activates indexer feed when rotational error is within 3 degrees and flywheels are at target speed.
+         * Command execution loop (20ms). Calculates angle to target, computes rotational velocity,
+         * updates hood angle and metering speed, and feeds indexer when alignment error is within 5 degrees.
          */
         @Override
         public void execute() {
+                // Set up poses
                 Pose2d currentPose = drivetrain.getPose();
 
                 Translation2d targetTranslation = targetPose.getTranslation();
                 Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
                     shooterOffset.rotateBy(currentPose.getRotation()));
 
-                // Calculate target heading directly from shooter position to the hub
+                // 2. Calculate the angle directly from the SHOOTER to the target
                 Rotation2d targetRotation =
                     new Rotation2d(targetTranslation.getX() - shooterFieldPosition.getX(),
                         targetTranslation.getY() - shooterFieldPosition.getY());
 
-                drivetrain.publisher2.set(new Pose2d(shooterFieldPosition, targetRotation));
+                targetRotation = targetRotation.plus(shooterThetaOffset);
+
+                // Update telemetry
                 drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
 
+                // 3. Calculate rotational velocity (omega) using the PID controller
                 double omegaSpeed = robotAngleController.calculate(
                     currentPose.getRotation().getRadians(), targetRotation.getRadians());
 
-                // Update alignment status for automated firing
+                // Calculate error for deadband checking
                 double thetaErrorRads = Math.abs(MathUtil.angleModulus(
                     currentPose.getRotation().getRadians() - targetRotation.getRadians()));
                 SmartDashboard.putNumber(
                     "CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
 
-                isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(3)
+                isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5)
                     && Math.abs(
                            drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
                         <= 20;
-
+                SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
                 double distance = drivetrain.getPose().getTranslation().getDistance(
                     SUB_PhotonVision.getInstance()
                         .at_field
@@ -160,31 +185,46 @@ public class CMD_AimBotAuto extends RunCommand {
                                         : 23.5),
                                 0)))
                         .orElse(drivetrain.getPose().getTranslation()));
-                shooter.shootMeters(distance);
+                double targetFlywheelRPM = shooter.getZonedRPM(distance);
+                shooter.setRPM(targetFlywheelRPM);
+                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)/(720  * 3.281);
+                hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance,exitVelocity,true)));
+                metering.setRPM(100);
 
-                // Automated firing trigger
-                boolean isShooterReady = shooter.atDesiredRPM();
-
-                if (isThetaErrorCorrect && isShooterReady) {
+                if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                } else if (!isThetaErrorCorrect) {
+                } else {
                         index.setVolts(0);
                 }
 
-                // Drive request with PID rotation (no translation in static auto aim)
-                drivetrain.setControl(drive.withVelocityX(0).withVelocityY(0).withRotationalRate(
-                    omegaSpeed * MaxAngularRate
-                    + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+
+                // Wheel locking logic
+                if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
+                        isLocked = true;
+                } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
+                        isLocked = false;
+                }
+
+                // Lock wheels or drive
+                if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
+                        drivetrain.setControl(brakeRequest);
+                } else {
+                        drivetrain.setControl(drive
+                                .withRotationalRate(omegaSpeed * MaxAngularRate
+                                    + Math.copySign(Units.degreesToRadians(9),
+                                        omegaSpeed * MaxAngularRate)));
+                }
         }
 
         /**
-         * Resets running state when ended or interrupted.
+         * Clears running flags and disables high current limit shooting mode when ended or interrupted.
          *
          * @param interrupted True if command was interrupted.
          */
         @Override
         public void end(boolean interrupted) {
                 running = false;
+                SUB_Shooter.isShooting = false;
         }
 
         /**
@@ -198,7 +238,7 @@ public class CMD_AimBotAuto extends RunCommand {
         }
 
         /**
-         * Returns whether the autonomous AimBot command is currently active.
+         * Returns whether the AimBot command is currently active.
          *
          * @return True if running, false otherwise.
          */
