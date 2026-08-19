@@ -114,7 +114,7 @@ public class RobotContainer {
             new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter);
 
         /** Dashboard chooser for autonomous routines. */
-        private final SendableChooser<Command> autoChooser;
+        // private final SendableChooser<Command> autoChooser;
 
         /** Slew rate limiters for smooth driver translation (X and Y) and rotation. */
         private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
@@ -228,8 +228,8 @@ public class RobotContainer {
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();
                 configureBindings();
-                autoChooser = AutoBuilder.buildAutoChooser();
-                SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
+                // autoChooser = AutoBuilder.buildAutoChooser();
+                // SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
                 SmartDashboard.putData("Autos/Active Auto Path", autoField);
         }
 
@@ -362,7 +362,8 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                return autoChooser.getSelected();
+                // return autoChooser.getSelected();
+                return Commands.none();
         }
 
         /**

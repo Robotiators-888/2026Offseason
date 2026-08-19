@@ -26,6 +26,8 @@ public class SUB_Hood extends SubsystemBase {
 
         private final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0).withSlot(0);
 
+        private double desiredAngle = 0;
+
         /**
          * Singleton pattern provider for the hood subsystem.
          *
@@ -68,6 +70,7 @@ public class SUB_Hood extends SubsystemBase {
          * @param angle Target position in motor rotations.
          */
         public void setPosition(final double angle) {
+                desiredAngle = angle;
                 hood.setControl(positionRequest.withPosition(Degrees.of(angle)));
         }
 
@@ -120,6 +123,7 @@ public class SUB_Hood extends SubsystemBase {
          */
         @Override
         public void periodic() {
+                SmartDashboard.putNumber("Hood/Desired Angle", desiredAngle);
                 SmartDashboard.putNumber("Hood/Position", getPosition());
                 SmartDashboard.putNumber(
                     "Hood/Stator Current", hood.getStatorCurrent().getValueAsDouble());

@@ -48,10 +48,10 @@ public class SUB_Shooter extends SubsystemBase {
         private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
         private double currentZoneRPM = RPMIdle;
-        public static final double RPMIdle = 1100.0;
-        public static final double RPMZone1 = 1350.0;
-        public static final double RPMZone2 = 1750.0;
-        public static final double RPMZone3 = 2400.0;
+        public static final double RPMZone1 = 2200.0;
+        public static final double RPMZone2 = 2750.0;
+        public static final double RPMZone3 = 3750.0;
+        public static final double RPMIdle = RPMZone2;
 
 
         /**
