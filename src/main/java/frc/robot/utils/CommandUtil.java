@@ -63,12 +63,12 @@ public class CommandUtil {
                         ()
                             -> {
                                 linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
-                                roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                                roller.setRPM(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
                         },
                         linear, roller));
 
                 NamedCommands.registerCommand("StopIntake",
-                    new InstantCommand(() -> roller.set(0), roller)
+                    new InstantCommand(() -> roller.setRPM(0), roller)
                         );
 
                 // Shooter and Indexer

@@ -39,7 +39,6 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
@@ -296,7 +295,7 @@ public class RobotContainer {
                     }))
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
-                        roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
+                        roller.setRPM(10);
                         linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
                 }, roller, linear));
                 Driver1.rightTrigger().whileTrue(new ParallelCommandGroup(
