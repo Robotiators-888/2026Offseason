@@ -50,22 +50,22 @@ public final class Constants {
                 public static final double ShooterDiameter = 3;
 
                 /** Static friction feedforward gain kS for shooter flywheel (volts). */
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kS = 1.0;
 
                 /** Velocity feedforward gain kV for shooter flywheel (volts per RPM). */
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.14;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;
 
                 /** Acceleration feedforward gain kA for shooter flywheel (volts per RPM/s). */
-                public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kA = 0.05;
 
                 /** Proportional gain kP for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kP = 0.5;
+                public static final double kSHOOTER_FLYWHEEL_kP = 3.0;
 
                 /** Integral gain kI for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kI = 0;
+                public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
 
                 /** Derivative gain kD for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kD = 0;
+                public static final double kSHOOTER_FLYWHEEL_kD = 0.01;
 
                 /** Compression ratio applied to game piece during launch (ratio &lt;= 1.0). */
                 public static final double kSHOOTER_COMPRESSION_RATIO = .8;

@@ -66,19 +66,19 @@ public class SUB_Roller extends SubsystemBase {
          */
         private void configureMotors() {
                 // Configure TalonFX motor controller with current limits and inversion
-                TalonFXConfiguration talonConfig = new TalonFXConfiguration();
+                final TalonFXConfiguration talonConfig = new TalonFXConfiguration();
                 talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
                 talonConfig.CurrentLimits.SupplyCurrentLimit = 30;
                 talonConfig.CurrentLimits.SupplyCurrentLowerLimit = 15;
                 talonConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
                 talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
                 talonConfig.Slot0
-                        .withKS(0)
-                        .withKV(0)
-                        .withKA(1)
-                        .withKP(1)
-                        .withKI(0)
-                        .withKD(0);
+                        .withKS(1.0)
+                        .withKV(0.0)
+                        .withKA(0.05)
+                        .withKP(3.0)
+                        .withKI(0.0)
+                        .withKD(0.01);
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
 

@@ -60,12 +60,12 @@ public class SUB_Metering extends SubsystemBase {
                             .withSupplyCurrentLowerLimit(25)
                             .withSupplyCurrentLowerTime(.5));
                 config.Slot0
-                        .withKS(0)
-                        .withKV(0)
-                        .withKA(1)
-                        .withKP(1)
-                        .withKI(0)
-                        .withKD(0);
+                        .withKS(1.0)
+                        .withKV(0.0)
+                        .withKA(0.05)
+                        .withKP(3.0)
+                        .withKI(0.0)
+                        .withKD(0.01);
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
                 meteringFollower.setControl(
