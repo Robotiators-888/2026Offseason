@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
+import java.util.OptionalDouble;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
@@ -139,5 +141,29 @@ public class SUB_Hood extends SubsystemBase {
 
         public boolean atDesiredAngle() {
                 return Math.abs(getPosition() - Constants.Hood.kHOOD_PID_CONTROLLER.getSetpoint()) < 0.05;
+        }
+
+        public static double calculateLaunchAngle(
+                double distanceMeters, 
+                double exitVelocityMps, 
+                boolean highArc) {
+                double deltaHeightMeters = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+                double v2 = exitVelocityMps * exitVelocityMps;
+                double v4 = v2 * v2;
+                double x = distanceMeters;
+                double y = deltaHeightMeters;
+
+                // Discriminant check (feasibility)
+                double discriminant = v4 - Constants.Shooter.kGRAVITATIONAL_CONSTANT * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
+                if (discriminant < 0) {
+                        return 0; 
+                }
+
+                double sqrtDisc = Math.sqrt(discriminant);
+                double sign = highArc ? 1.0 : -1.0;
+                double tanTheta = (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
+
+                double angleRadians = Math.atan(tanTheta);
+                return angleRadians;
         }
 }
