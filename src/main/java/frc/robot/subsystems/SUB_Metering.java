@@ -1,10 +1,15 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -23,6 +28,8 @@ public class SUB_Metering extends SubsystemBase {
 
         /** Follower TalonFX motor controller for metering wheel. */
         private final TalonFX meteringFollower;
+
+        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
 
         private static SUB_Metering INSTANCE = null;
 
@@ -53,6 +60,13 @@ public class SUB_Metering extends SubsystemBase {
                             .withSupplyCurrentLimit(60)
                             .withSupplyCurrentLowerLimit(25)
                             .withSupplyCurrentLowerTime(.5));
+                config.Slot0
+                        .withKS(0)
+                        .withKV(0)
+                        .withKA(1)
+                        .withKP(1)
+                        .withKI(0)
+                        .withKD(0);
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
                 meteringFollower.setControl(
@@ -64,8 +78,13 @@ public class SUB_Metering extends SubsystemBase {
          *
          * @param speed Percent duty cycle power.
          */
+        @Deprecated
         public void set(final double speed) {
                 metering.set(speed);
+        }
+
+        public void setRPM (final double rpm) {
+            metering.setControl(velocityRequest.withVelocity(AngularVelocity.ofBaseUnits(rpm, RPM)));
         }
 
         /**

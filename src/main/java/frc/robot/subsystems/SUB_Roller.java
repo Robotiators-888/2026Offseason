@@ -1,12 +1,17 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -30,6 +35,8 @@ public class SUB_Roller extends SubsystemBase {
 
         /** Duty cycle percent output control request object with Field Oriented Control (FOC) enabled. */
         private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
+
+        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
 
         private static SUB_Roller INSTANCE = null;
 
@@ -66,6 +73,13 @@ public class SUB_Roller extends SubsystemBase {
                 talonConfig.CurrentLimits.SupplyCurrentLowerLimit = 15;
                 talonConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
                 talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+                talonConfig.Slot0
+                        .withKS(0)
+                        .withKV(0)
+                        .withKA(1)
+                        .withKP(1)
+                        .withKI(0)
+                        .withKD(0);
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
 
@@ -78,8 +92,13 @@ public class SUB_Roller extends SubsystemBase {
          *
          * @param speed Target output in volts.
          */
-        public void setVolts(double speed) {
-                LeftRollerMotor.setControl(voltageRequest.withOutput(speed));
+        @Deprecated
+        public void setVolts(final double volts) {
+            LeftRollerMotor.setControl(voltageRequest.withOutput(volts));
+        }
+
+        public void setRPM (final double rpm) {
+            LeftRollerMotor.setControl(velocityRequest.withVelocity(AngularVelocity.ofBaseUnits(rpm, RPM)));
         }
 
         /**
@@ -87,7 +106,8 @@ public class SUB_Roller extends SubsystemBase {
          *
          * @param speed Target percent duty cycle.
          */
-        public void set(double speed) {
+        @Deprecated
+        public void set(final double speed) {
                 LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
         }
 
@@ -97,8 +117,8 @@ public class SUB_Roller extends SubsystemBase {
          * @return Average rotational velocity in RPM.
          */
         public double rollerRPM() {
-                return (LeftRollerMotor.getVelocity().getValue().baseUnitMagnitude()
-                           + RightRollerMotor.getVelocity().getValue().baseUnitMagnitude())
+                return (LeftRollerMotor.getVelocity().getValue().in(RPM)
+                           + RightRollerMotor.getVelocity().getValue().in(RPM))
                     / 2;
         }
 

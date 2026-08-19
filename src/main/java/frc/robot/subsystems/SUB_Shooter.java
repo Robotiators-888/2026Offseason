@@ -4,7 +4,8 @@ import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+// import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -12,6 +13,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -33,7 +35,9 @@ public class SUB_Shooter extends SubsystemBase {
         private final TalonFX shooterLeader;
         private final TalonFX shooterFollower;
         private final VoltageOut voltageRequest = new VoltageOut(0);
-        private final VelocityVoltage m_request = new VelocityVoltage(0);
+        // Not used since it is replaced by velocityRequest
+        // private final VelocityVoltage m_request = new VelocityVoltage(0);
+        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
         private double desiredSpeed = 0;
         private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
@@ -166,7 +170,7 @@ public class SUB_Shooter extends SubsystemBase {
          */
         public void setRPM(final double rpm) {
                 this.desiredSpeed = rpm;
-                shooterLeader.setControl(m_request.withVelocity(rpm / 60.0));
+                shooterLeader.setControl(velocityRequest.withVelocity(AngularVelocity.ofRelativeUnits(rpm, RPM)));
         }
 
         /**
@@ -222,6 +226,7 @@ public class SUB_Shooter extends SubsystemBase {
          *
          * @param volts Target voltage output in volts.
          */
+        @Deprecated
         public void setVolts(final double volts) {
                 shooterLeader.setControl(voltageRequest.withOutput(volts));
         }
