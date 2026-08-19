@@ -7,7 +7,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -65,8 +64,8 @@ public class SUB_Hood extends SubsystemBase {
          *
          * @param angle Target position in motor rotations.
          */
-        public void setToPosition(final double angle) {
-                hood.setControl(positionRequest.withPosition(Angle.ofBaseUnits(angle, Degrees)));
+        public void setPosition(final double angle) {
+                hood.setControl(positionRequest.withPosition(Degrees.of(angle)));
         }
 
         /**
@@ -93,7 +92,7 @@ public class SUB_Hood extends SubsystemBase {
          * Resets the hood towards position 0 safely.
          */
         public void resetSafe() {
-                setToPosition(0);
+                setPosition(0);
         }
 
         /**

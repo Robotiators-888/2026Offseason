@@ -13,7 +13,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -170,7 +169,7 @@ public class SUB_Shooter extends SubsystemBase {
          */
         public void setRPM(final double rpm) {
                 this.desiredSpeed = rpm;
-                shooterLeader.setControl(velocityRequest.withVelocity(AngularVelocity.ofRelativeUnits(rpm, RPM)));
+                shooterLeader.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**

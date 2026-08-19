@@ -196,7 +196,7 @@ public class CMD_AimBot extends RunCommand {
                         .orElse(drivetrain.getPose().getTranslation()));
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
-                hood.setToPosition(Units.radiansToRotations(SUB_Hood.findoptimalangle(distance)));
+                hood.setPosition(Units.radiansToRotations(SUB_Hood.findoptimalangle(distance)));
                 metering.set(1);
 
                 if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {

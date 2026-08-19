@@ -11,7 +11,6 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -98,7 +97,7 @@ public class SUB_Roller extends SubsystemBase {
         }
 
         public void setRPM (final double rpm) {
-            LeftRollerMotor.setControl(velocityRequest.withVelocity(AngularVelocity.ofBaseUnits(rpm, RPM)));
+            LeftRollerMotor.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**
