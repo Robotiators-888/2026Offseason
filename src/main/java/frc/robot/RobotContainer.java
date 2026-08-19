@@ -214,7 +214,7 @@ public class RobotContainer {
                                     .withRotationalRate(rotInput * MaxAngularRate);
                         }
                 }));
-                roller.setDefaultCommand(new RunCommand(() -> { roller.set(0); }, roller));
+                roller.setDefaultCommand(new RunCommand(() -> { roller.setRPM(0); }, roller));
                 linear.setDefaultCommand(new InstantCommand(() -> {
                         linear.set(0);
                 }, linear));
@@ -223,7 +223,7 @@ public class RobotContainer {
                 }, shooter));
                 index.setDefaultCommand(new InstantCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(
-                    new InstantCommand(() -> { metering.set(0); }, metering));
+                    new InstantCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
