@@ -8,8 +8,10 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBotAuto;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
+import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
@@ -24,6 +26,8 @@ public class CommandUtil {
         private SUB_Index index;
         private SUB_PhotonVision photonVision;
         private SUB_Shooter shooter;
+        private SUB_Metering metering;
+        private SUB_Hood hood;
 
         /**
          * Constructs a new CommandUtil instance with subsystem references.
@@ -36,13 +40,15 @@ public class CommandUtil {
          * @param shooter Shooter flywheel subsystem instance.
          */
         public CommandUtil(CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller,
-            SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter) {
+            SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering) {
                 this.drivetrain = drivetrain;
                 this.linear = linear;
                 this.roller = roller;
                 this.index = index;
                 this.photonVision = photonVision;
                 this.shooter = shooter;
+                this.hood = hood;
+                this.metering = metering;
         }
 
         /**

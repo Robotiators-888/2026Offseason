@@ -206,7 +206,7 @@ public class CMD_AimBotAuto extends RunCommand {
                 }
 
                 // Lock wheels or drive
-                if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
+                if (isThetaErrorCorrect && isLocked) {
                         drivetrain.setControl(brakeRequest);
                 } else {
                         drivetrain.setControl(drive
