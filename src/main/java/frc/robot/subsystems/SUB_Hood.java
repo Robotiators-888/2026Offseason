@@ -124,4 +124,8 @@ public class SUB_Hood extends SubsystemBase {
                 SmartDashboard.putNumber("Hood/Velocity", hood.getVelocity().getValueAsDouble());
                 Alert.alertKraken(hood);
         }
+
+        public boolean atDesiredAngle() {
+                return Math.abs(getPosition() - Constants.Hood.kHOOD_PID_CONTROLLER.getSetpoint()) < 0.05;
+        }
 }

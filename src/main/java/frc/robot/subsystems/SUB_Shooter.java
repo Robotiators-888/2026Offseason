@@ -40,9 +40,16 @@ public class SUB_Shooter extends SubsystemBase {
 
         /** Active shooting state flag used for dynamic current limit switching. */
         public static boolean isShooting;
-
+        public static boolean wasShooting = false;
         /** Interpolation map for distance-based RPM calibration (distance in meters -> RPM). */
         private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
+
+        private double currentZoneRPM = RPMIdle;
+        public static final double RPMIdle = 1100.0;
+        public static final double RPMZone1 = 1350.0;
+        public static final double RPMZone2 = 1750.0;
+        public static final double RPMZone3 = 2400.0;
+
 
         /**
          * Singleton pattern provider for the shooter subsystem.
@@ -128,15 +135,15 @@ public class SUB_Shooter extends SubsystemBase {
          * Calculates required flywheel exit RPM using kinematic projectile equations based on distance and hood angle.
          *
          * @param distance Distance to target in meters.
-         * @param angle Hood launch angle in degrees.
+         * @param angle Hood launch angle in radians.
          * @return Calculated target exit velocity in RPM.
          */
         public static double findoptimalRPM(final double distance, final double angle) {
                 double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-                double exitvelocity = (1 / Math.cos(Units.degreesToRadians(angle)))
+                double exitvelocity = (1 / Math.cos(angle))
                     * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance)
                         / (2 * (distance * Math.tan(angle) - height)));
-                double exitRPM = ((720 / Constants.Shooter.ShooterDiameter) * exitvelocity)
+                double exitRPM = ((720 / Constants.Shooter.ShooterDiameter) * exitvelocity * 3.281)
                     / (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI);
                 return exitRPM;
         }
@@ -273,13 +280,15 @@ public class SUB_Shooter extends SubsystemBase {
                 Alert.alertKraken(shooterLeader);
                 Alert.alertKraken(shooterFollower);
 
-                if (SUB_Shooter.isShooting) {
+                if (SUB_Shooter.isShooting && !SUB_Shooter.wasShooting) {
                         shooterLeader.getConfigurator().apply(shooterConfig);
                         shooterFollower.getConfigurator().apply(shooterConfig);
-                } else {
+                } else if (!SUB_Shooter.isShooting && SUB_Shooter.wasShooting) {
                         shooterLeader.getConfigurator().apply(shooterLowConfig);
                         shooterFollower.getConfigurator().apply(shooterLowConfig);
                 }
+
+                SUB_Shooter.wasShooting = SUB_Shooter.isShooting;
         }
 
         /**
@@ -290,5 +299,18 @@ public class SUB_Shooter extends SubsystemBase {
          */
         public double getExpectedTOF(final double distanceMeters) {
                 return distanceMeters * 0.215298795 + 0.753755412;
+        }
+
+        public double getZonedRPM(double distanceMeters) {
+            if (distanceMeters > 6.0) {
+                currentZoneRPM = RPMZone3;
+            } else if (currentZoneRPM == RPMIdle || currentZoneRPM == RPMZone3) {
+                currentZoneRPM = (distanceMeters > 3.2) ? RPMZone2 : RPMZone1;
+            } else if (currentZoneRPM == RPMZone1 && distanceMeters > 3.35) {
+                    currentZoneRPM = RPMZone2;
+            } else if (currentZoneRPM == RPMZone2 && distanceMeters < 3.05) {
+                currentZoneRPM = RPMZone1;
+            }
+            return currentZoneRPM;
         }
 }

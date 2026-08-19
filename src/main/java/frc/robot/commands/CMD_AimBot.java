@@ -51,6 +51,7 @@ public class CMD_AimBot extends RunCommand {
         private final SUB_Index index;
         private final SUB_Hood hood;
         private final SUB_Metering metering;
+        private final SUB_Shooter shooter;
         private boolean isLocked;
 
         /** Physical offsets for targeting calibration */
@@ -95,19 +96,20 @@ public class CMD_AimBot extends RunCommand {
          * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Index index, SUB_Hood hood, SUB_Metering metering,
+            SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter,
             DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
                 this.index = index;
                 this.hood = hood;
+                this.shooter = shooter;
                 this.metering = metering;
                 this.translationXSupplier = translationXSupplier;
                 this.translationYSupplier = translationYSupplier;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
 
-                addRequirements(drivetrain, metering, index, hood);
+                addRequirements(drivetrain, metering, index, hood, shooter);
         }
 
         /**
@@ -192,12 +194,14 @@ public class CMD_AimBot extends RunCommand {
                                         : 23.5),
                                 0)))
                         .orElse(drivetrain.getPose().getTranslation()));
-                hood.setToPosition(SUB_Hood.findoptimalangle(distance));
+                double targetFlywheelRPM = shooter.getZonedRPM(distance);
+                shooter.setRPM(targetFlywheelRPM);
+                hood.setToPosition(Units.radiansToRotations(SUB_Hood.findoptimalangle(distance)));
                 metering.set(1);
 
-                if (isThetaErrorCorrect) {
+                if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                } else if (!isThetaErrorCorrect) {
+                } else {
                         index.setVolts(0);
                 }
                 double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(
