@@ -49,12 +49,13 @@ public class SUB_Hood extends SubsystemBase {
                             .withSupplyCurrentLowerLimit(5)
                             .withSupplyCurrentLowerTime(.5));
                 config.Slot0
-                        .withKS(1.0)
+                        .withKS(0.5)
                         .withKV(0.0)
                         .withKA(0.05)
-                        .withKP(3.0)
+                        .withKP(5.0)
                         .withKI(0.0)
-                        .withKD(0.01);
+                        .withKD(0.1)
+                        .withKG(0);
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
         }
