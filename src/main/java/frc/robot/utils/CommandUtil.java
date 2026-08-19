@@ -63,83 +63,24 @@ public class CommandUtil {
                     new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
                 // Intake
-
                 NamedCommands.registerCommand("Intake",
                     new RunCommand(
                         ()
                             -> {
                                 linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
                                 roller.setVolts(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        }
-
-                        ,
+                        },
                         linear, roller));
 
                 NamedCommands.registerCommand("StopIntake",
-                    Commands.parallel(new InstantCommand(() -> roller.set(0), roller)
-                        ));
-
-                NamedCommands.registerCommand("DeployIntakeEncoder",
-                    new InstantCommand(
-                        ()
-                            -> linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER),
-                        linear));
+                    new InstantCommand(() -> roller.set(0), roller)
+                        );
 
                 // Shooter and Indexer
-                NamedCommands.registerCommand("ManualShoot",
-                    Commands.sequence(
-                        Commands
-                            .run(()
-                                     -> shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM),
-                                shooter)
-                            .until(() -> shooter.atDesiredRPM()),
-                        Commands.run(() -> {
-                                shooter.setRPM(Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
-
-                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        }, shooter, index)));
-
                 NamedCommands.registerCommand(
                     "ShootAutoAim", new CMD_AimBotAuto(drivetrain, photonVision, shooter, index));
 
                 NamedCommands.registerCommand("IntakeAgitate", getLinearCompress());
-
-                NamedCommands.registerCommand("ShootDistance",
-                    new SequentialCommandGroup(
-                        Commands
-                            .run(
-                                ()
-                                    -> {
-                                        double distance =
-                                            drivetrain.getPose().getTranslation().getDistance(
-                                                SUB_PhotonVision.getInstance()
-                                                    .at_field
-                                                    .getTagPose(DriverStation.getAlliance().orElse(
-                                                                    Alliance.Blue)
-                                                                == Alliance.Red
-                                                            ? 10
-                                                            : 26)
-                                                    .map(pose
-                                                        -> pose.toPose2d().getTranslation().plus(
-                                                            new Translation2d(
-                                                                Units.inchesToMeters(
-                                                                    DriverStation.getAlliance()
-                                                                                .orElse(
-                                                                                    Alliance.Blue)
-                                                                            == Alliance.Red
-                                                                        ? -23.5
-                                                                        : 23.5),
-                                                                0)))
-                                                    .orElse(drivetrain.getPose().getTranslation()));
-                                        shooter.shootMeters(distance);
-
-                                        index.setVolts(-1.0);
-                                },
-                                shooter, index)
-                            .until(() -> shooter.atDesiredRPM()),
-                        Commands.run(() -> {
-                                index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                        }, shooter, index)));
 
                 NamedCommands.registerCommand(
                     "StopShooting", Commands.parallel(new InstantCommand(() -> {
