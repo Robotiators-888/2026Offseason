@@ -9,15 +9,22 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "L-FirstTap-Bump"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "L-Shoot-Bump-L-Start-Trench"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-FirstTap-Bump"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-Shoot-Bump-L-Start-Trench"
+                      }
+                    }
+                  ]
                 }
               },
               {
@@ -91,15 +98,22 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "L-Shoot-Bump-L-Start-Trench"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "L-ThirdTap-Bump"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-Shoot-Bump-L-Start-Trench"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-ThirdTap-Bump"
+                      }
+                    }
+                  ]
                 }
               },
               {
