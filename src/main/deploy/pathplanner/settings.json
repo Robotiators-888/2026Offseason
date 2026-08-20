@@ -3,20 +3,8 @@
   "robotLength": 0.851,
   "holonomicMode": true,
   "pathFolders": [
-    "CenterTroughPath",
-    "Climb",
-    "Depot",
-    "LeftTroughPath",
-    "Neutralzone",
-    "Outpost",
-    "RightTroughPath"
   ],
   "autoFolders": [
-    "Fits20s",
-    "TrenchShoot",
-    "TOFIX",
-    "Test",
-    "TooLong"
   ],
   "defaultMaxVel": 5.25,
   "defaultMaxAccel": 5.2,

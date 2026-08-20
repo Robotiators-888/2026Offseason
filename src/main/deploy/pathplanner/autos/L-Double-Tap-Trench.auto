@@ -5,47 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "DeployIntakeEncoder"
+            "pathName": "L-FirstTap-Bump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "RightTrough-RightTroughCenter"
-          }
-        },
-        {
-          "type": "race",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake"
-                }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "Righttroughcenter-NZRDiagonalSweep"
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
+            "pathName": "L-Shoot-Bump-L-Start-Trench"
           }
         },
         {
@@ -59,18 +27,49 @@
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "IntakeAgitate"
+                  "waitTime": 2.5
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L-SecondTap-Bump"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L-Shoot-Bump-L-Start-Trench"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Fits20s",
+  "folder": null,
   "choreoAuto": false
 }
