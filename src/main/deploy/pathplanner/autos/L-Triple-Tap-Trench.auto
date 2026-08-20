@@ -9,22 +9,9 @@
           "data": {
             "commands": [
               {
-                "type": "sequential",
+                "type": "path",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "L-FirstTap-Bump"
-                      }
-                    },
-                    {
-                      "type": "path",
-                      "data": {
-                        "pathName": "L-Shoot-Bump-L-Start-Trench"
-                      }
-                    }
-                  ]
+                  "pathName": "L-FirstTap-Bump"
                 }
               },
               {
@@ -60,9 +47,22 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "sequential",
                 "data": {
-                  "pathName": "L-SecondTap-Bump"
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-Shoot-Bump-L-Start-Trench"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-SecondTap-Bump"
+                      }
+                    }
+                  ]
                 }
               },
               {

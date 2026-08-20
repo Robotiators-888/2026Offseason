@@ -65,7 +65,7 @@ public class CommandUtil {
 
                 // Intake
                 NamedCommands.registerCommand("Intake",
-                    new RunCommand(
+                    new InstantCommand(
                         ()
                             -> {
                                 linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
