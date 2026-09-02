@@ -167,6 +167,8 @@ public class CMD_Shuttle extends RunCommand {
 
                 if (isThetaErrorCorrect && isShooterReady) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                // TODO: BUG: If the robot is aligned (!isThetaErrorCorrect is false) but the shooter RPM dips (isShooterReady is false), 
+                // the indexer will never stop feeding. Change `else if (!isThetaErrorCorrect)` to just `else`.
                 } else if (!isThetaErrorCorrect) {
                         index.setVolts(0);
                 }

@@ -284,7 +284,7 @@ public class SUB_Shooter extends SubsystemBase {
                 Alert.alertKraken(shooterLeader);
                 Alert.alertKraken(shooterFollower);
 
-                if (SUB_Shooter.isShooting && !SUB_Shooter.wasShooting) {
+                if (SUB_Shooter.isShooting && !SUB_Shooter.wasShooting) { // TODO: Use TorqueCurrentFOC which allows you to pass a MaxAbsDutyCycle or consider using a command to set the current limit when shooting starts and ends
                         shooterLeader.getConfigurator().apply(shooterConfig);
                         shooterFollower.getConfigurator().apply(shooterConfig);
                 } else if (!SUB_Shooter.isShooting && SUB_Shooter.wasShooting) {

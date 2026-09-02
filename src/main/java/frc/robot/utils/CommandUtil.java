@@ -65,17 +65,11 @@ public class CommandUtil {
 
                 // Intake
                 NamedCommands.registerCommand("Intake",
-                    new InstantCommand(
-                        ()
-                            -> {
-                                linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
-                                roller.setRPM(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        },
-                        linear, roller));
+                    new RunCommand(
+                        () -> roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM), roller));
 
-                NamedCommands.registerCommand("StopIntake",
-                    new InstantCommand(() -> roller.setRPM(0), roller)
-                        );
+                // NamedCommands.registerCommand("StopIntake",
+                //     new InstantCommand(() -> roller.setRPM(0), roller));
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand(
@@ -83,21 +77,10 @@ public class CommandUtil {
              index,  hood,  metering,  shooter)
                 );
 
-                NamedCommands.registerCommand("IntakeAgitate", getLinearCompress());
-
                 NamedCommands.registerCommand(
                     "StopShooting", Commands.parallel(new InstantCommand(() -> {
                             index.set(0);
                     }, index), new InstantCommand(() -> shooter.stop(), shooter)));
         }
 
-        /**
-         * Creates a command to retract the linear intake mechanism.
-         *
-         * @return Retraction command.
-         */
-        public Command getLinearCompress() {
-                return new RunCommand(
-                    () -> linear.backward(Constants.Linear.kLINEAR_SLOW_PID_CONTROLLER), linear);
-        }
 }

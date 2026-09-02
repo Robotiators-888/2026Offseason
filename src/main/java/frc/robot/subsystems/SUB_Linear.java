@@ -90,9 +90,19 @@ public class SUB_Linear extends SubsystemBase {
          *
          * @param controller Positional PIDController for motion calculations.
          */
-        public void forward(final PIDController controller) {
-                linear.set(controller.calculate(
+        public void forward() {
+                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT));
+        }
+
+        /**
+         * Drives linear mechanism toward extended forward setpoint using specified PIDController.
+         *
+         * @param controller Positional PIDController for motion calculations.
+         */
+        public void setPosition(double position) {
+                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
+                    linear.getEncoder().getPosition(), position));
         }
 
         /**
@@ -100,8 +110,8 @@ public class SUB_Linear extends SubsystemBase {
          *
          * @param controller Positional PIDController for motion calculations.
          */
-        public void backward(final PIDController controller) {
-                linear.set(controller.calculate(
+        public void backward() {
+                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT));
         }
 
@@ -113,7 +123,7 @@ public class SUB_Linear extends SubsystemBase {
         public boolean isForward() {
                 return Math.abs(linear.getEncoder().getPosition()
                            - Constants.Linear.kLINEAR_FORWARD_SETPOINT)
-                    < 3.0;
+                    < 0.1;
         }
 
         /**
@@ -124,7 +134,7 @@ public class SUB_Linear extends SubsystemBase {
         public boolean isBackward() {
                 return Math.abs(linear.getEncoder().getPosition()
                            - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
-                    < 3.0;
+                    < 0.1;
         }
 
         /**

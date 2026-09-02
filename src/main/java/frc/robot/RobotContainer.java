@@ -214,15 +214,15 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.setRPM(0); }, roller));
-                linear.setDefaultCommand(new InstantCommand(() -> {
-                        linear.set(0);
+                linear.setDefaultCommand(new RunCommand(() -> {
+                        linear.forward();
                 }, linear));
                 shooter.setDefaultCommand(new RunCommand(() -> {                                
                         shooter.setRPM(SUB_Shooter.RPMIdle);
                 }, shooter));
-                index.setDefaultCommand(new InstantCommand(() -> { index.set(0); }, index));
+                index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(
-                    new InstantCommand(() -> { metering.setRPM(0); }, metering));
+                    new RunCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
@@ -295,13 +295,11 @@ public class RobotContainer {
                     }))
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 Driver1.rightBumper().whileTrue(Commands.run(() -> {
-                        roller.setRPM(10);
-                        linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
+                        roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM);
                 }, roller, linear));
-                Driver1.rightTrigger().whileTrue(new ParallelCommandGroup(
-                    new CMD_AimBot(drivetrain, photonVision, index, hood, metering, shooter,
-                        () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX())),
-                    commandUtil.getLinearCompress()));
+                Driver1.rightTrigger().whileTrue(
+                    new CMD_AimBot(drivetrain, photonVision, index, hood, metering, shooter, linear,
+                        () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX()), Constants.Linear.kLinearAgitatePeriodics));
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
 
@@ -318,9 +316,9 @@ public class RobotContainer {
                         shooter.setVolts(-2.5);
                 }, index, shooter));
                 Driver2.povDown().onTrue(Commands.run(
-                    () -> linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
+                    () -> linear.forward(), linear));
                 Driver2.povUp().onTrue(Commands.run(
-                    () -> linear.backward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER), linear));
+                    () -> linear.backward(), linear));
                 Driver2.rightTrigger()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));

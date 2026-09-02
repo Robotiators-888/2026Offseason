@@ -144,7 +144,7 @@ public class SUB_Hood extends SubsystemBase {
         }
 
         public boolean atDesiredAngle() {
-                return Math.abs(getPosition() - Constants.Hood.kHOOD_PID_CONTROLLER.getSetpoint()) < 0.05;
+                return Math.abs(getPosition() - (desiredAngle)/360) < 0.05;
         }
 
         public static double calculateLaunchAngle(
