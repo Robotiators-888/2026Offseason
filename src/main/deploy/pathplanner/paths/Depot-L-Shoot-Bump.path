@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 0.5,
+        "y": 6.887
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.041204819277108,
+        "y": 6.952698795180722
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.0684096385542166,
+        "y": 5.477457831325301
+      },
+      "prevControl": {
+        "x": 2.8498554216867467,
+        "y": 6.439096385542168
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "L-Shoot-Bump"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.25,
+    "maxAcceleration": 5.2,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": 125.00000000000001
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 3.0,
+    "rotation": 90.0
+  },
+  "useDefaultConstraints": true
+}

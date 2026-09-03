@@ -1,0 +1,114 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "L-FirstTap-Bump"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-Shoot-Bump-L-Start-Trench"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-SecondTap-Bump-EndFast"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "L-Shoot-Bump-Depot"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "Depot-L-Shoot-Bump"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
