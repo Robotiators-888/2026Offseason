@@ -12,7 +12,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
@@ -23,7 +22,6 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -34,15 +32,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
-import frc.robot.commands.CMD_AimBot;
-import frc.robot.commands.CMD_Shuttle;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
@@ -52,14 +45,12 @@ import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 import frc.robot.utils.Alert;
-import frc.robot.utils.AllianceFlipUtil;
 import frc.robot.utils.CommandUtil;
 import frc.robot.utils.ControllerUtil;
 import frc.robot.utils.Elastic;
 import frc.robot.utils.Hub;
 import frc.robot.utils.RobotTelemetry;
 import java.io.IOException;
-import java.lang.ModuleLayer.Controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -123,7 +114,7 @@ public class RobotContainer {
 
         /** Command utility helper for registering PathPlanner named commands and macro routines. */
         public final CommandUtil commandUtil =
-            new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
+            new CommandUtil(drivetrain, roller, index, photonVision, shooter, hood, metering);
         
         
         public final ControllerUtil controllerUtil =

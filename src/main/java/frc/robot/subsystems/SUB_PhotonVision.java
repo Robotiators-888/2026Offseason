@@ -60,7 +60,6 @@ public class SUB_PhotonVision extends SubsystemBase {
          * Private constructor initializing camera pipelines, 2026 AprilTag field layout,
          * and PhotonPoseEstimators with MULTI_TAG_PNP_ON_COPROCESSOR strategy.
          */
-        @SuppressWarnings("removal")
         private SUB_PhotonVision() {
                 // Load the 2026 field layout
                 at_field = AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
@@ -88,7 +87,6 @@ public class SUB_PhotonVision extends SubsystemBase {
          *
          * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
          */
-        @SuppressWarnings("removal")
         public Optional<EstimatedRobotPose> getCam1Pose() {
                 List<PhotonPipelineResult> results1 = cam1.getAllUnreadResults();
 
@@ -112,7 +110,6 @@ public class SUB_PhotonVision extends SubsystemBase {
          *
          * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
          */
-        @SuppressWarnings("removal")
         public Optional<EstimatedRobotPose> getCam2Pose() {
                 List<PhotonPipelineResult> results2 = cam2.getAllUnreadResults();
                 Optional<EstimatedRobotPose> finalPose2 = Optional.empty();
@@ -134,8 +131,7 @@ public class SUB_PhotonVision extends SubsystemBase {
          *
          * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
          */
-        @SuppressWarnings("removal")
-        public Optional<EstimatedRobotPose> getCam3Pose() {
+       public Optional<EstimatedRobotPose> getCam3Pose() {
                 List<PhotonPipelineResult> results3 = cam3.getAllUnreadResults();
                 Optional<EstimatedRobotPose> finalPose3 = Optional.empty();
                 java.util.ListIterator<PhotonPipelineResult> iterator =
