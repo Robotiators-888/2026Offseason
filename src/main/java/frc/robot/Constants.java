@@ -89,6 +89,9 @@ public final class Constants {
 
                 /** Target output voltage for intake roller motors in volts. */
                 public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254;
+
+                /** Target RPM for intake roller motors. */
+                public static final double kROLLER_MOTOR_RPM = 1000;
         }
 
         /** Linear intake deploy motor CAN ID, position setpoints, stall limits, and PID controllers. */
@@ -96,15 +99,15 @@ public final class Constants {
                 private Linear() {}
 
                 /** CAN ID for linear intake deploy SPARK Max motor controller. */
-                public static final int kLINEAR_MOTOR_CANID = 31;
+                public static final int kLINEAR_MOTOR_CANID = 32;
 
                 /** Open-loop speed factor for linear intake deployment (scaled -1.0 to 1.0). */
                 public static final double kLINEAR_MOTOR_SPEED = 0.1;
 
-                /** Extended forward setpoint position in relative encoder degrees. */
-                public static final double kLINEAR_FORWARD_SETPOINT = 360.0 * 4.2;
+                /** Extended forward setpoint position in relative encoder rotations. */
+                public static final double kLINEAR_FORWARD_SETPOINT =  4.2;
 
-                /** Retracted backward setpoint position in relative encoder degrees. */
+                /** Retracted backward setpoint position in relative encoder rotations. */
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;
 
                 /** Motor stall detection threshold limit in amperes. */
@@ -115,8 +118,10 @@ public final class Constants {
                     new PIDController(4, 0, 0);
 
                 /** Low-speed positional PID controller for fine linear intake movement. */
-                public static final PIDController kLINEAR_SLOW_PID_CONTROLLER =
-                    new PIDController(1, 0, 0);
+                // public static final PIDController kLINEAR_SLOW_PID_CONTROLLER =
+                //     new PIDController(1, 0, 0);
+
+                public static final double kLinearAgitatePeriodics = 100; // Number of periodic cycles for linear intake movement
         }
 
         /** Spindexer and metering wheel CAN IDs, voltage limits, and calculated RPM values. */

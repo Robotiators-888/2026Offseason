@@ -1,7 +1,6 @@
 package frc.robot.utils;
 
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -10,7 +9,6 @@ import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBotAuto;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
-import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
@@ -21,7 +19,6 @@ import frc.robot.subsystems.SUB_Shooter;
  */
 public class CommandUtil {
         private CommandSwerveDrivetrain drivetrain;
-        private SUB_Linear linear;
         private SUB_Roller roller;
         private SUB_Index index;
         private SUB_PhotonVision photonVision;
@@ -39,10 +36,9 @@ public class CommandUtil {
          * @param photonVision Vision subsystem instance.
          * @param shooter Shooter flywheel subsystem instance.
          */
-        public CommandUtil(CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller,
+        public CommandUtil(CommandSwerveDrivetrain drivetrain, SUB_Roller roller,
             SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering) {
                 this.drivetrain = drivetrain;
-                this.linear = linear;
                 this.roller = roller;
                 this.index = index;
                 this.photonVision = photonVision;
@@ -65,17 +61,11 @@ public class CommandUtil {
 
                 // Intake
                 NamedCommands.registerCommand("Intake",
-                    new InstantCommand(
-                        ()
-                            -> {
-                                linear.forward(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER);
-                                roller.setRPM(Constants.Roller.kROLLER_MOTOR_VOLTAGE);
-                        },
-                        linear, roller));
+                    new RunCommand(
+                        () -> roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM), roller));
 
-                NamedCommands.registerCommand("StopIntake",
-                    new InstantCommand(() -> roller.setRPM(0), roller)
-                        );
+                // NamedCommands.registerCommand("StopIntake",
+                //     new InstantCommand(() -> roller.setRPM(0), roller));
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand(
@@ -83,21 +73,10 @@ public class CommandUtil {
              index,  hood,  metering,  shooter)
                 );
 
-                NamedCommands.registerCommand("IntakeAgitate", getLinearCompress());
-
                 NamedCommands.registerCommand(
                     "StopShooting", Commands.parallel(new InstantCommand(() -> {
                             index.set(0);
                     }, index), new InstantCommand(() -> shooter.stop(), shooter)));
         }
 
-        /**
-         * Creates a command to retract the linear intake mechanism.
-         *
-         * @return Retraction command.
-         */
-        public Command getLinearCompress() {
-                return new RunCommand(
-                    () -> linear.backward(Constants.Linear.kLINEAR_SLOW_PID_CONTROLLER), linear);
-        }
 }

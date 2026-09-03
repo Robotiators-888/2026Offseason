@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
-import java.util.OptionalDouble;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -144,7 +143,7 @@ public class SUB_Hood extends SubsystemBase {
         }
 
         public boolean atDesiredAngle() {
-                return Math.abs(getPosition() - Constants.Hood.kHOOD_PID_CONTROLLER.getSetpoint()) < 0.05;
+                return Math.abs(getPosition() - (desiredAngle)/360) < 0.05;
         }
 
         public static double calculateLaunchAngle(
