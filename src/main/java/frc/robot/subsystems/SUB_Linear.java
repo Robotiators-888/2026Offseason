@@ -50,9 +50,8 @@ public class SUB_Linear extends SubsystemBase {
          */
         @SuppressWarnings("removal")
         private void configureMotors() {
-                // Creates config for motor and encoder (23:1 cycloidal gearbox)
                 SparkMaxConfig config = new SparkMaxConfig();
-                config.smartCurrentLimit(35, 5); // Sets stall limit in amps
+                config.smartCurrentLimit(Constants.Linear.kStallLimit, Constants.Linear.kFreeLimit);
                 config.inverted(true);
                 linear.configure(config, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
@@ -122,7 +121,7 @@ public class SUB_Linear extends SubsystemBase {
         public boolean isForward() {
                 return Math.abs(linear.getEncoder().getPosition()
                            - Constants.Linear.kLINEAR_FORWARD_SETPOINT)
-                    < 0.1;
+                    < Constants.Linear.kTolerance;
         }
 
         /**
@@ -133,7 +132,7 @@ public class SUB_Linear extends SubsystemBase {
         public boolean isBackward() {
                 return Math.abs(linear.getEncoder().getPosition()
                            - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
-                    < 0.1;
+                    < Constants.Linear.kTolerance;
         }
 
         /**

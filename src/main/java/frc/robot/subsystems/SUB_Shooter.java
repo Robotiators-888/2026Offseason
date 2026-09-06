@@ -48,10 +48,10 @@ public class SUB_Shooter extends SubsystemBase {
         private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
         private double currentZoneRPM = RPMIdle;
-        public static final double RPMZone1 = 2200.0;
-        public static final double RPMZone2 = 2750.0;
-        public static final double RPMZone3 = 3750.0;
-        public static final double RPMIdle = RPMZone2;
+        public static final double RPMZone1 = Constants.Shooter.kRPMZone1;
+        public static final double RPMZone2 = Constants.Shooter.kRPMZone2;
+        public static final double RPMZone3 = Constants.Shooter.kRPMZone3;
+        public static final double RPMIdle = Constants.Shooter.kRPMIdle;
 
 
         /**
@@ -93,11 +93,11 @@ public class SUB_Shooter extends SubsystemBase {
         private void configFlywheel() {
                 // Configure current limits and neutral mode
                 shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.StatorCurrentLimit = 100;
+                shooterConfig.CurrentLimits.StatorCurrentLimit = Constants.Shooter.kStatorCurrentLimit;
                 shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.SupplyCurrentLimit = 60;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = 40;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
+                shooterConfig.CurrentLimits.SupplyCurrentLimit = Constants.Shooter.kSupplyCurrentLimit;
+                shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Shooter.kSupplyCurrentLowerLimit;
+                shooterConfig.CurrentLimits.SupplyCurrentLowerTime = Constants.Shooter.kSupplyCurrentLowerTime;
                 shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
                 shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -110,11 +110,11 @@ public class SUB_Shooter extends SubsystemBase {
                 shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
 
                 shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.StatorCurrentLimit = 100;
+                shooterLowConfig.CurrentLimits.StatorCurrentLimit = Constants.Shooter.kStatorCurrentLimit;
                 shooterLowConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLimit = 10;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit = 5;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime = 1.0;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLimit = Constants.Shooter.kLowSupplyCurrentLimit;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Shooter.kLowSupplyCurrentLowerLimit;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime = Constants.Shooter.kLowSupplyCurrentLowerTime;
                 shooterLowConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
                 shooterLowConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -189,7 +189,7 @@ public class SUB_Shooter extends SubsystemBase {
          * @return True if flywheels are at target RPM, false otherwise.
          */
         public boolean atDesiredRPM() {
-                return Math.abs(flywheelRPM() - desiredSpeed) < 75;
+                return Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPMTolerance;
         }
 
         /**
@@ -302,17 +302,17 @@ public class SUB_Shooter extends SubsystemBase {
          * @return Estimated time of flight in seconds.
          */
         public double getExpectedTOF(final double distanceMeters) {
-                return distanceMeters * 0.215298795 + 0.753755412;
+                return distanceMeters * Constants.Shooter.kTOFLinearSlope + Constants.Shooter.kTOFLinearIntercept;
         }
 
         public double getZonedRPM(double distanceMeters) {
-            if (distanceMeters > 6.0) {
+            if (distanceMeters > Constants.Shooter.kZone3ThresholdMeters) {
                 currentZoneRPM = RPMZone3;
             } else if (currentZoneRPM == RPMIdle || currentZoneRPM == RPMZone3) {
-                currentZoneRPM = (distanceMeters > 3.2) ? RPMZone2 : RPMZone1;
-            } else if (currentZoneRPM == RPMZone1 && distanceMeters > 3.35) {
+                currentZoneRPM = (distanceMeters > Constants.Shooter.kZone2InitialThresholdMeters) ? RPMZone2 : RPMZone1;
+            } else if (currentZoneRPM == RPMZone1 && distanceMeters > Constants.Shooter.kZone1To2HysteresisMeters) {
                     currentZoneRPM = RPMZone2;
-            } else if (currentZoneRPM == RPMZone2 && distanceMeters < 3.05) {
+            } else if (currentZoneRPM == RPMZone2 && distanceMeters < Constants.Shooter.kZone2To1HysteresisMeters) {
                 currentZoneRPM = RPMZone1;
             }
             return currentZoneRPM;

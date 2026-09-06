@@ -46,19 +46,19 @@ public class SUB_Hood extends SubsystemBase {
                 final TalonFXConfiguration config =
                     new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
                             .withStatorCurrentLimitEnable(true)
-                            .withStatorCurrentLimit(25)
+                            .withStatorCurrentLimit(Constants.Hood.kStatorCurrentLimit)
                             .withSupplyCurrentLimitEnable(true)
-                            .withSupplyCurrentLimit(7)
-                            .withSupplyCurrentLowerLimit(5)
-                            .withSupplyCurrentLowerTime(.5));
+                            .withSupplyCurrentLimit(Constants.Hood.kSupplyCurrentLimit)
+                            .withSupplyCurrentLowerLimit(Constants.Hood.kSupplyCurrentLowerLimit)
+                            .withSupplyCurrentLowerTime(Constants.Hood.kSupplyCurrentLowerTime));
                 config.Slot0
-                        .withKS(0.5)
-                        .withKV(0.0)
-                        .withKA(0.05)
-                        .withKP(5.0)
-                        .withKI(0.0)
-                        .withKD(0.1)
-                        .withKG(0);
+                        .withKS(Constants.Hood.kS)
+                        .withKV(Constants.Hood.kV)
+                        .withKA(Constants.Hood.kA)
+                        .withKP(Constants.Hood.kP)
+                        .withKI(Constants.Hood.kI)
+                        .withKD(Constants.Hood.kD)
+                        .withKG(Constants.Hood.kG);
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
         }
@@ -143,7 +143,7 @@ public class SUB_Hood extends SubsystemBase {
         }
 
         public boolean atDesiredAngle() {
-                return Math.abs(getPosition() - (desiredAngle)/360) < 0.05;
+                return Math.abs(getPosition() - (desiredAngle/360)) < Constants.Hood.kHoodTolerance;
         }
 
         public static double calculateLaunchAngle(

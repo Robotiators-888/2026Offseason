@@ -54,18 +54,18 @@ public class SUB_Metering extends SubsystemBase {
                 final TalonFXConfiguration config =
                     new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
                             .withStatorCurrentLimitEnable(true)
-                            .withStatorCurrentLimit(120)
+                            .withStatorCurrentLimit(Constants.Metering.kStatorCurrentLimit)
                             .withSupplyCurrentLimitEnable(true)
-                            .withSupplyCurrentLimit(60)
-                            .withSupplyCurrentLowerLimit(25)
-                            .withSupplyCurrentLowerTime(.5));
+                            .withSupplyCurrentLimit(Constants.Metering.kSupplyCurrentLimit)
+                            .withSupplyCurrentLowerLimit(Constants.Metering.kSupplyCurrentLowerLimit)
+                            .withSupplyCurrentLowerTime(Constants.Metering.kSupplyCurrentLowerTime));
                 config.Slot0
-                        .withKS(1.0)
-                        .withKV(0.0)
-                        .withKA(0.05)
-                        .withKP(3.0)
-                        .withKI(0.0)
-                        .withKD(0.01);
+                        .withKS(Constants.Metering.kS)
+                        .withKV(Constants.Metering.kV)
+                        .withKA(Constants.Metering.kA)
+                        .withKP(Constants.Metering.kP)
+                        .withKI(Constants.Metering.kI)
+                        .withKD(Constants.Metering.kD);
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
                 meteringFollower.setControl(

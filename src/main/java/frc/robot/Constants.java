@@ -72,6 +72,30 @@ public final class Constants {
 
                 /** Standard acceleration due to gravity in m/s^2. */
                 public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
+
+                public static final double kStatorCurrentLimit = 100; // Amperes
+                public static final double kSupplyCurrentLimit = 60; // Amperes
+                public static final double kSupplyCurrentLowerLimit = 40; // Amperes
+                public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
+
+                public static final double kLowSupplyCurrentLimit = 10; // Amperes
+                public static final double kLowSupplyCurrentLowerLimit = 5; // Amperes
+                public static final double kLowSupplyCurrentLowerTime = 1.0; // Seconds
+
+                public static final double kRPMTolerance = 75; // RPM
+
+                public static final double kRPMZone1 = 2200.0;
+                public static final double kRPMZone2 = 2750.0;
+                public static final double kRPMZone3 = 3750.0;
+                public static final double kRPMIdle = kRPMZone2;
+
+                public static final double kTOFLinearSlope = 0.215298795;
+                public static final double kTOFLinearIntercept = 0.753755412;
+
+                public static final double kZone3ThresholdMeters = 6.0;
+                public static final double kZone2InitialThresholdMeters = 3.2;
+                public static final double kZone1To2HysteresisMeters = 3.35;
+                public static final double kZone2To1HysteresisMeters = 3.05;
         }
 
         /** Intake roller motor CAN IDs, speeds, and target voltages. */
@@ -92,6 +116,17 @@ public final class Constants {
 
                 /** Target RPM for intake roller motors. */
                 public static final double kROLLER_MOTOR_RPM = 1000;
+
+                public static final double kSupplyCurrentLimit = 30; // Amperes
+                public static final double kSupplyCurrentLowerLimit = 15; // Amperes
+                public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
+
+                public static final double kS = 1.0;
+                public static final double kV = 0.0;
+                public static final double kA = 0.05;
+                public static final double kP = 3.0;
+                public static final double kI = 0.0;
+                public static final double kD = 0.01;
         }
 
         /** Linear intake deploy motor CAN ID, position setpoints, stall limits, and PID controllers. */
@@ -122,6 +157,11 @@ public final class Constants {
                 //     new PIDController(1, 0, 0);
 
                 public static final double kLinearAgitatePeriodics = 100; // Number of periodic cycles for linear intake movement
+
+                public static final int kStallLimit = 35; // Amperes
+                public static final int kFreeLimit = 5; // Amperes
+
+                public static final double kTolerance = 0.1; // Tolerance for linear intake position in rotations
         }
 
         /** Spindexer and metering wheel CAN IDs, voltage limits, and calculated RPM values. */
@@ -143,6 +183,8 @@ public final class Constants {
                 /** Calculated metering wheel RPM based on scaled 12V NEO free speed. */
                 public static final double kINDEX_METERING_MOTOR_RPM =
                     5676 * (kINDEX_METERING_MOTOR_VOLTS / 12.0);
+
+                public static final int kSmartCurrentLimit = 15; // Amperes
         }
 
         /** Field geometry and physical dimension constants in meters. */
@@ -246,6 +288,23 @@ public final class Constants {
 
                 /** Scoring target height in inches. */
                 public static final double ScoreHeight = 55;
+
+                public static final double kStatorCurrentLimit = 25; // Amperes
+                public static final double kSupplyCurrentLimit = 7; // Amperes
+                public static final double kSupplyCurrentLowerLimit = 5; // Amperes
+                public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
+
+
+                public static final double kS = 0.5; 
+                public static final double kV = 0.0; 
+                public static final double kA = 0.05; 
+                public static final double kP = 5.0; 
+                public static final double kI = 0.0; 
+                public static final double kD = 0.1; 
+                public static final double kG = 0; //
+        
+                public static final double kHoodTolerance = 0.05; // Tolerance for hood position in rotations
+        
         }
 
         /** Metering system motor CAN IDs. */
@@ -257,5 +316,17 @@ public final class Constants {
 
                 /** CAN ID for follower metering motor controller. */
                 public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;
+
+                public static final double kStatorCurrentLimit = 120; // Amperes
+                public static final double kSupplyCurrentLimit = 60; // Amperes
+                public static final double kSupplyCurrentLowerLimit = 25; // Amperes
+                public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
+
+                public static final double kS = 1.0;
+                public static final double kV = 0.0;
+                public static final double kA = 0.05;
+                public static final double kP = 3.0;
+                public static final double kI = 0.0;
+                public static final double kD = 0.01;
         }
 }
