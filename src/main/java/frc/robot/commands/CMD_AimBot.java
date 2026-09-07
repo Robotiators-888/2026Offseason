@@ -157,8 +157,8 @@ public class CMD_AimBot extends RunCommand {
 
                 // 2. Calculate the angle directly from the SHOOTER to the target
                 Rotation2d targetRotation =
-                    new Rotation2d(targetTranslation.getX() - shooterFieldPosition.getX(),
-                        targetTranslation.getY() - shooterFieldPosition.getY());
+                    new Rotation2d(shooterFieldPosition.getX() - targetTranslation.getX(),
+                        shooterFieldPosition.getY() - targetTranslation.getY());
 
                 targetRotation = targetRotation.plus(shooterThetaOffset);
 
