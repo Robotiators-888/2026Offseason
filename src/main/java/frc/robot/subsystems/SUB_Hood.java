@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 
-
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
@@ -23,7 +22,8 @@ public class SUB_Hood extends SubsystemBase {
         private static SUB_Hood INSTANCE = null;
         private final TalonFX hood;
 
-        private final PositionTorqueCurrentFOC positionRequest = new PositionTorqueCurrentFOC(0).withSlot(0);
+        private final PositionTorqueCurrentFOC positionRequest =
+            new PositionTorqueCurrentFOC(0).withSlot(0);
 
         private double desiredAngle = 0;
 
@@ -51,14 +51,13 @@ public class SUB_Hood extends SubsystemBase {
                             .withSupplyCurrentLimit(Constants.Hood.kSupplyCurrentLimit)
                             .withSupplyCurrentLowerLimit(Constants.Hood.kSupplyCurrentLowerLimit)
                             .withSupplyCurrentLowerTime(Constants.Hood.kSupplyCurrentLowerTime));
-                config.Slot0
-                        .withKS(Constants.Hood.kS)
-                        .withKV(Constants.Hood.kV)
-                        .withKA(Constants.Hood.kA)
-                        .withKP(Constants.Hood.kP)
-                        .withKI(Constants.Hood.kI)
-                        .withKD(Constants.Hood.kD)
-                        .withKG(Constants.Hood.kG);
+                config.Slot0.withKS(Constants.Hood.kS)
+                    .withKV(Constants.Hood.kV)
+                    .withKA(Constants.Hood.kA)
+                    .withKP(Constants.Hood.kP)
+                    .withKI(Constants.Hood.kI)
+                    .withKD(Constants.Hood.kD)
+                    .withKG(Constants.Hood.kG);
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
         }
@@ -143,13 +142,12 @@ public class SUB_Hood extends SubsystemBase {
         }
 
         public boolean atDesiredAngle() {
-                return Math.abs(getPosition() - (desiredAngle/360)) < Constants.Hood.kHoodTolerance;
+                return Math.abs(getPosition() - (desiredAngle / 360))
+                    < Constants.Hood.kHoodTolerance;
         }
 
         public static double calculateLaunchAngle(
-                double distanceMeters, 
-                double exitVelocityMps, 
-                boolean highArc) {
+            double distanceMeters, double exitVelocityMps, boolean highArc) {
                 double deltaHeightMeters = Units.inchesToMeters(Constants.Hood.ScoreHeight);
                 double v2 = exitVelocityMps * exitVelocityMps;
                 double v4 = v2 * v2;
@@ -157,34 +155,41 @@ public class SUB_Hood extends SubsystemBase {
                 double y = deltaHeightMeters;
 
                 // Discriminant check (feasibility)
-                double discriminant = v4 - Constants.Shooter.kGRAVITATIONAL_CONSTANT * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
+                double discriminant = v4
+                    - Constants.Shooter.kGRAVITATIONAL_CONSTANT
+                        * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
                 if (discriminant < 0) {
-                        return 0; 
+                        return 0;
                 }
 
                 double sqrtDisc = Math.sqrt(discriminant);
                 double sign = highArc ? 1.0 : -1.0;
-                double tanTheta = (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
+                double tanTheta =
+                    (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
 
                 double angleRadians = Math.atan(tanTheta);
                 return angleRadians;
         }
 
-        public static double calculateLaunchAngle(double distanceMeters, double deltaHeightMeters, double exitVelocityMps, boolean highArc) {
+        public static double calculateLaunchAngle(double distanceMeters, double deltaHeightMeters,
+            double exitVelocityMps, boolean highArc) {
                 double v2 = exitVelocityMps * exitVelocityMps;
                 double v4 = v2 * v2;
                 double x = distanceMeters;
                 double y = deltaHeightMeters;
 
                 // Discriminant check (feasibility)
-                double discriminant = v4 - Constants.Shooter.kGRAVITATIONAL_CONSTANT * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
+                double discriminant = v4
+                    - Constants.Shooter.kGRAVITATIONAL_CONSTANT
+                        * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
                 if (discriminant < 0) {
-                        return 0; 
+                        return 0;
                 }
 
                 double sqrtDisc = Math.sqrt(discriminant);
                 double sign = highArc ? 1.0 : -1.0;
-                double tanTheta = (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
+                double tanTheta =
+                    (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
 
                 double angleRadians = Math.atan(tanTheta);
                 return angleRadians;

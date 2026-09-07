@@ -120,7 +120,8 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Flips field-relative chassis speeds to current alliance perspective using default flip type.
+         * Flips field-relative chassis speeds to current alliance perspective using default flip
+         * type.
          *
          * @param speeds Field-relative chassis speeds.
          * @return Alliance-adjusted chassis speeds.
@@ -130,7 +131,8 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Flips field-relative chassis speeds to current alliance perspective using specified flip type.
+         * Flips field-relative chassis speeds to current alliance perspective using specified flip
+         * type.
          *
          * @param speeds Field-relative chassis speeds.
          * @param flipType Specified field flip mode.
@@ -152,7 +154,8 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Flips robot-relative chassis speeds to current alliance perspective using default flip type.
+         * Flips robot-relative chassis speeds to current alliance perspective using default flip
+         * type.
          *
          * @param speeds Robot-relative chassis speeds.
          * @param robotRotation Current robot rotation.
@@ -164,7 +167,8 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Flips robot-relative chassis speeds to current alliance perspective using specified flip type.
+         * Flips robot-relative chassis speeds to current alliance perspective using specified flip
+         * type.
          *
          * @param speeds Robot-relative chassis speeds.
          * @param robotRotation Current robot rotation.
@@ -180,7 +184,8 @@ public class AllianceFlipUtil {
         }
 
         /**
-         * Returns whether pose and rotation coordinates should be flipped (true if current alliance is Red).
+         * Returns whether pose and rotation coordinates should be flipped (true if current alliance
+         * is Red).
          *
          * @return True if on Red alliance, false otherwise.
          */

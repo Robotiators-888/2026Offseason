@@ -17,7 +17,8 @@ import org.littletonrobotics.junction.Logger;
  * Main Robot class extending AdvantageKit's {@link LoggedRobot}.
  *
  * <p>Manages the lifecycle of the robot across different match phases (Disabled, Autonomous,
- * Teleoperated, Test, and Simulation) and ensures periodic execution of the {@link CommandScheduler}.
+ * Teleoperated, Test, and Simulation) and ensures periodic execution of the {@link
+ * CommandScheduler}.
  */
 public class Robot extends LoggedRobot {
         private Command m_autonomousCommand;

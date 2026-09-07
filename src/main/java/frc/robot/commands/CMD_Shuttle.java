@@ -26,8 +26,9 @@ import frc.robot.subsystems.SUB_Shooter;
 /**
  * Command for shuttling game pieces across the field with velocity feedforward motion compensation.
  *
- * <p>Requires {@link SUB_PhotonVision}, {@link CommandSwerveDrivetrain}, {@link SUB_Index}, and {@link SUB_Shooter}.
- * Calculates a virtual target position compensating for robot translation velocity and time-of-flight (TOF).
+ * <p>Requires {@link SUB_PhotonVision}, {@link CommandSwerveDrivetrain}, {@link SUB_Index}, and
+ * {@link SUB_Shooter}. Calculates a virtual target position compensating for robot translation
+ * velocity and time-of-flight (TOF).
  */
 public class CMD_Shuttle extends RunCommand {
         /** Physical offsets for targeting calibration */
@@ -50,12 +51,18 @@ public class CMD_Shuttle extends RunCommand {
                 .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
                 .withCenterOfRotation(shooterOffset);
 
-        /** Motion profiling constraints for rotation (0.75 rot/s max velocity, 1.5 rot/s^2 max acceleration). */
+        /**
+         * Motion profiling constraints for rotation (0.75 rot/s max velocity, 1.5 rot/s^2 max
+         * acceleration).
+         */
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(0.75).in(RadiansPerSecond),
                 RotationsPerSecond.of(1.5).in(RadiansPerSecond));
 
-        /** Profiled PID controller for robot heading alignment during shuttle (P=5.0, I=0.0, D=0.2). */
+        /**
+         * Profiled PID controller for robot heading alignment during shuttle (P=5.0, I=0.0,
+         * D=0.2).
+         */
         private final ProfiledPIDController robotAngleController =
             new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
         private Pose2d targetPose = new Pose2d();
@@ -99,15 +106,17 @@ public class CMD_Shuttle extends RunCommand {
         }
 
         /**
-         * Command execution loop (20ms). Computes virtual shuttle target using time-of-flight compensation,
-         * aligns drivetrain heading towards virtual target, and feeds game piece when rotational error is within 14 degrees.
+         * Command execution loop (20ms). Computes virtual shuttle target using time-of-flight
+         * compensation, aligns drivetrain heading towards virtual target, and feeds game piece when
+         * rotational error is within 14 degrees.
          */
         @Override
         public void execute() {
                 targetPose =
                     photonVision.at_field
                         .getTagPose(
-                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26)
+                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10
+                                                                                              : 26)
                         .map(pose
                             -> pose.toPose2d().relativeTo(new Pose2d(
                                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
@@ -123,9 +132,9 @@ public class CMD_Shuttle extends RunCommand {
                     shooterOffset.rotateBy(currentPose.getRotation()));
 
                 Translation2d targetTranslation = targetPose.getTranslation();
-                Rotation2d targetRotation = new Rotation2d(
-                    targetTranslation.getX() - shooterPosition.getX(),
-                    targetTranslation.getY() - shooterPosition.getY());
+                Rotation2d targetRotation =
+                    new Rotation2d(targetTranslation.getX() - shooterPosition.getX(),
+                        targetTranslation.getY() - shooterPosition.getY());
 
                 double omegaSpeed = robotAngleController.calculate(
                     currentPose.getRotation().getRadians(), targetRotation.getRadians());
@@ -133,14 +142,19 @@ public class CMD_Shuttle extends RunCommand {
                 double thetaErrorRads = Math.abs(MathUtil.angleModulus(
                     currentPose.getRotation().getRadians() - targetRotation.getRadians()));
                 isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(14)
-                    && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 40;
+                    && Math.abs(
+                           drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
+                        <= 40;
 
                 double distance = shooterPosition.getDistance(targetTranslation);
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
                 metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
-                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
-                hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, false)));
+                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
+                                          * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)
+                    / (720 * 3.281);
+                hood.setPosition(Units.radiansToDegrees(
+                    SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, false)));
 
                 boolean isShooterReady = shooter.atDesiredRPM();
 
@@ -159,9 +173,9 @@ public class CMD_Shuttle extends RunCommand {
                 if (isThetaErrorCorrect && isLocked) {
                         drivetrain.setControl(brakeRequest);
                 } else {
-                        drivetrain.setControl(drive
-                                .withRotationalRate(omegaSpeed * MaxAngularRate
-                                    + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
+                            + Math.copySign(
+                                Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
                 }
         }
 

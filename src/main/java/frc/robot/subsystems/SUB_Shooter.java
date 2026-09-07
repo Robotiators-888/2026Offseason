@@ -21,8 +21,9 @@ import frc.robot.utils.Alert;
  *
  * <p>Hardware:
  * <ul>
- *   <li>Leader TalonFX motor controller on CAN ID 43 ({@link Constants.Shooter#kSHOOTER_LEADER_MOTOR_CANID})</li>
- *   <li>Follower TalonFX motor controller on CAN ID 44 ({@link Constants.Shooter#kSHOOTER_FOLLOWER_MOTOR_CANID})</li>
+ *   <li>Leader TalonFX motor controller on CAN ID 43 ({@link
+ * Constants.Shooter#kSHOOTER_LEADER_MOTOR_CANID})</li> <li>Follower TalonFX motor controller on CAN
+ * ID 44 ({@link Constants.Shooter#kSHOOTER_FOLLOWER_MOTOR_CANID})</li>
  * </ul>
  */
 public class SUB_Shooter extends SubsystemBase {
@@ -34,7 +35,8 @@ public class SUB_Shooter extends SubsystemBase {
         private final VoltageOut voltageRequest = new VoltageOut(0);
         // Not used since it is replaced by velocityRequest
         // private final VelocityVoltage m_request = new VelocityVoltage(0);
-        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityTorqueCurrentFOC velocityRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
         private double desiredSpeed = 0;
         private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
@@ -47,7 +49,6 @@ public class SUB_Shooter extends SubsystemBase {
         public static final double RPMZone2 = Constants.Shooter.kRPMZone2;
         public static final double RPMZone3 = Constants.Shooter.kRPMZone3;
         public static final double RPMIdle = Constants.Shooter.kRPMIdle;
-
 
         /**
          * Singleton pattern provider for the shooter subsystem.
@@ -80,11 +81,15 @@ public class SUB_Shooter extends SubsystemBase {
         private void configFlywheel() {
                 // Configure current limits and neutral mode
                 shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.StatorCurrentLimit = Constants.Shooter.kStatorCurrentLimit;
+                shooterConfig.CurrentLimits.StatorCurrentLimit =
+                    Constants.Shooter.kStatorCurrentLimit;
                 shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.SupplyCurrentLimit = Constants.Shooter.kSupplyCurrentLimit;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Shooter.kSupplyCurrentLowerLimit;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerTime = Constants.Shooter.kSupplyCurrentLowerTime;
+                shooterConfig.CurrentLimits.SupplyCurrentLimit =
+                    Constants.Shooter.kSupplyCurrentLimit;
+                shooterConfig.CurrentLimits.SupplyCurrentLowerLimit =
+                    Constants.Shooter.kSupplyCurrentLowerLimit;
+                shooterConfig.CurrentLimits.SupplyCurrentLowerTime =
+                    Constants.Shooter.kSupplyCurrentLowerTime;
                 shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
                 shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -97,11 +102,15 @@ public class SUB_Shooter extends SubsystemBase {
                 shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
 
                 shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.StatorCurrentLimit = Constants.Shooter.kStatorCurrentLimit;
+                shooterLowConfig.CurrentLimits.StatorCurrentLimit =
+                    Constants.Shooter.kStatorCurrentLimit;
                 shooterLowConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLimit = Constants.Shooter.kLowSupplyCurrentLimit;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Shooter.kLowSupplyCurrentLowerLimit;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime = Constants.Shooter.kLowSupplyCurrentLowerTime;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLimit =
+                    Constants.Shooter.kLowSupplyCurrentLimit;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit =
+                    Constants.Shooter.kLowSupplyCurrentLowerLimit;
+                shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime =
+                    Constants.Shooter.kLowSupplyCurrentLowerTime;
                 shooterLowConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
                 shooterLowConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
@@ -122,7 +131,8 @@ public class SUB_Shooter extends SubsystemBase {
         }
 
         /**
-         * Calculates required flywheel exit RPM using kinematic projectile equations based on distance and hood angle.
+         * Calculates required flywheel exit RPM using kinematic projectile equations based on
+         * distance and hood angle.
          *
          * @param distance Distance to target in meters.
          * @param angle Hood launch angle in radians.
@@ -180,7 +190,6 @@ public class SUB_Shooter extends SubsystemBase {
                 return Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPMTolerance;
         }
 
-
         /**
          * Stops flywheel motors by outputting 0 volts.
          */
@@ -200,8 +209,9 @@ public class SUB_Shooter extends SubsystemBase {
         }
 
         /**
-         * Subsystem periodic loop (20ms). Telemeters flywheel RPM, motor current, supply/motor voltages,
-         * temperatures, and encoder values for both motors to SmartDashboard, dynamically updating current limit profiles.
+         * Subsystem periodic loop (20ms). Telemeters flywheel RPM, motor current, supply/motor
+         * voltages, temperatures, and encoder values for both motors to SmartDashboard, dynamically
+         * updating current limit profiles.
          */
         @Override
         public void periodic() {
@@ -253,7 +263,11 @@ public class SUB_Shooter extends SubsystemBase {
                 Alert.alertKraken(shooterLeader);
                 Alert.alertKraken(shooterFollower);
 
-                if (SUB_Shooter.isShooting && !SUB_Shooter.wasShooting) { // TODO: Use TorqueCurrentFOC which allows you to pass a MaxAbsDutyCycle or consider using a command to set the current limit when shooting starts and ends
+                if (SUB_Shooter.isShooting
+                    && !SUB_Shooter
+                        .wasShooting) { // TODO: Use TorqueCurrentFOC which allows you to pass a
+                                        // MaxAbsDutyCycle or consider using a command to set the
+                                        // current limit when shooting starts and ends
                         shooterLeader.getConfigurator().apply(shooterConfig);
                         shooterFollower.getConfigurator().apply(shooterConfig);
                 } else if (!SUB_Shooter.isShooting && SUB_Shooter.wasShooting) {
@@ -264,17 +278,21 @@ public class SUB_Shooter extends SubsystemBase {
                 SUB_Shooter.wasShooting = SUB_Shooter.isShooting;
         }
 
-
         public double getZonedRPM(double distanceMeters) {
-            if (distanceMeters > Constants.Shooter.kZone3ThresholdMeters) {
-                currentZoneRPM = RPMZone3;
-            } else if (currentZoneRPM == RPMIdle || currentZoneRPM == RPMZone3) {
-                currentZoneRPM = (distanceMeters > Constants.Shooter.kZone2InitialThresholdMeters) ? RPMZone2 : RPMZone1;
-            } else if (currentZoneRPM == RPMZone1 && distanceMeters > Constants.Shooter.kZone1To2HysteresisMeters) {
-                    currentZoneRPM = RPMZone2;
-            } else if (currentZoneRPM == RPMZone2 && distanceMeters < Constants.Shooter.kZone2To1HysteresisMeters) {
-                currentZoneRPM = RPMZone1;
-            }
-            return currentZoneRPM;
+                if (distanceMeters > Constants.Shooter.kZone3ThresholdMeters) {
+                        currentZoneRPM = RPMZone3;
+                } else if (currentZoneRPM == RPMIdle || currentZoneRPM == RPMZone3) {
+                        currentZoneRPM =
+                            (distanceMeters > Constants.Shooter.kZone2InitialThresholdMeters)
+                            ? RPMZone2
+                            : RPMZone1;
+                } else if (currentZoneRPM == RPMZone1
+                    && distanceMeters > Constants.Shooter.kZone1To2HysteresisMeters) {
+                        currentZoneRPM = RPMZone2;
+                } else if (currentZoneRPM == RPMZone2
+                    && distanceMeters < Constants.Shooter.kZone2To1HysteresisMeters) {
+                        currentZoneRPM = RPMZone1;
+                }
+                return currentZoneRPM;
         }
 }

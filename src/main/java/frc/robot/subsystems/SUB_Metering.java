@@ -8,7 +8,6 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -17,9 +16,10 @@ import frc.robot.utils.Alert;
 /**
  * Subsystem controlling the metering feed wheel system feeding game pieces into shooter flywheels.
  *
- * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 45 and 46 ({@link Constants.Metering#kMETERING_MOTOR_CAN_ID}
- * and {@link Constants.Metering#kMETERING_MOTOR_FOLLOWER_CAN_ID}) configured in leader-follower mode with stator
- * current limits (120A) and supply limits (60A/25A).
+ * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 45 and 46 ({@link
+ * Constants.Metering#kMETERING_MOTOR_CAN_ID} and {@link
+ * Constants.Metering#kMETERING_MOTOR_FOLLOWER_CAN_ID}) configured in leader-follower mode with
+ * stator current limits (120A) and supply limits (60A/25A).
  */
 public class SUB_Metering extends SubsystemBase {
         /** Leader TalonFX motor controller for metering wheel. */
@@ -28,7 +28,8 @@ public class SUB_Metering extends SubsystemBase {
         /** Follower TalonFX motor controller for metering wheel. */
         private final TalonFX meteringFollower;
 
-        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityTorqueCurrentFOC velocityRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
 
         private static SUB_Metering INSTANCE = null;
 
@@ -45,27 +46,26 @@ public class SUB_Metering extends SubsystemBase {
         }
 
         /**
-         * Private constructor initializing leader and follower TalonFX motor controllers, applying current limits,
-         * and establishing follower relationships.
+         * Private constructor initializing leader and follower TalonFX motor controllers, applying
+         * current limits, and establishing follower relationships.
          */
         private SUB_Metering() {
                 metering = new TalonFX(Constants.Metering.kMETERING_MOTOR_CAN_ID);
                 meteringFollower = new TalonFX(Constants.Metering.kMETERING_MOTOR_FOLLOWER_CAN_ID);
-                final TalonFXConfiguration config =
-                    new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
-                            .withStatorCurrentLimitEnable(true)
-                            .withStatorCurrentLimit(Constants.Metering.kStatorCurrentLimit)
-                            .withSupplyCurrentLimitEnable(true)
-                            .withSupplyCurrentLimit(Constants.Metering.kSupplyCurrentLimit)
-                            .withSupplyCurrentLowerLimit(Constants.Metering.kSupplyCurrentLowerLimit)
-                            .withSupplyCurrentLowerTime(Constants.Metering.kSupplyCurrentLowerTime));
-                config.Slot0
-                        .withKS(Constants.Metering.kS)
-                        .withKV(Constants.Metering.kV)
-                        .withKA(Constants.Metering.kA)
-                        .withKP(Constants.Metering.kP)
-                        .withKI(Constants.Metering.kI)
-                        .withKD(Constants.Metering.kD);
+                final TalonFXConfiguration config = new TalonFXConfiguration().withCurrentLimits(
+                    new CurrentLimitsConfigs()
+                        .withStatorCurrentLimitEnable(true)
+                        .withStatorCurrentLimit(Constants.Metering.kStatorCurrentLimit)
+                        .withSupplyCurrentLimitEnable(true)
+                        .withSupplyCurrentLimit(Constants.Metering.kSupplyCurrentLimit)
+                        .withSupplyCurrentLowerLimit(Constants.Metering.kSupplyCurrentLowerLimit)
+                        .withSupplyCurrentLowerTime(Constants.Metering.kSupplyCurrentLowerTime));
+                config.Slot0.withKS(Constants.Metering.kS)
+                    .withKV(Constants.Metering.kV)
+                    .withKA(Constants.Metering.kA)
+                    .withKP(Constants.Metering.kP)
+                    .withKI(Constants.Metering.kI)
+                    .withKD(Constants.Metering.kD);
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
                 meteringFollower.setControl(
@@ -82,13 +82,14 @@ public class SUB_Metering extends SubsystemBase {
                 metering.set(speed);
         }
 
-        public void setRPM (final double rpm) {
-            metering.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+        public void setRPM(final double rpm) {
+                metering.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**
-         * Subsystem periodic loop (20ms). Telemeters position, current draw, supply/motor voltage, torque current,
-         * device temperature, and velocity for both leader and follower Kraken motors to SmartDashboard.
+         * Subsystem periodic loop (20ms). Telemeters position, current draw, supply/motor voltage,
+         * torque current, device temperature, and velocity for both leader and follower Kraken
+         * motors to SmartDashboard.
          */
         @Override
         public void periodic() {

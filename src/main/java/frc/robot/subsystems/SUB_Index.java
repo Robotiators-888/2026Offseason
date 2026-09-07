@@ -13,8 +13,9 @@ import frc.robot.utils.Alert;
  *
  * <p>Hardware:
  * <ul>
- *   <li>Primary spindexer SPARK Max motor controller on CAN ID 41 ({@link Constants.Index#KINDEX_MOTOR_CANID})</li>
- *   <li>High-speed metering SPARK Max motor controller on CAN ID 42 ({@link Constants.Index#kMETERING_WHEEL_CANID})</li>
+ *   <li>Primary spindexer SPARK Max motor controller on CAN ID 41 ({@link
+ * Constants.Index#KINDEX_MOTOR_CANID})</li> <li>High-speed metering SPARK Max motor controller on
+ * CAN ID 42 ({@link Constants.Index#kMETERING_WHEEL_CANID})</li>
  * </ul>
  */
 public class SUB_Index extends SubsystemBase {
@@ -39,7 +40,8 @@ public class SUB_Index extends SubsystemBase {
         }
 
         /**
-         * Private constructor initializing SPARK Max motor controllers, current limits (15A), and follower relationships.
+         * Private constructor initializing SPARK Max motor controllers, current limits (15A), and
+         * follower relationships.
          */
         @SuppressWarnings("removal")
         private SUB_Index() {
@@ -92,8 +94,9 @@ public class SUB_Index extends SubsystemBase {
         }
 
         /**
-         * Periodic subsystem loop (20ms). Telemeters average RPM, output current, bus voltage, encoder position,
-         * and motor temperature for both SPARK Max controllers to SmartDashboard, checking for REV hardware faults.
+         * Periodic subsystem loop (20ms). Telemeters average RPM, output current, bus voltage,
+         * encoder position, and motor temperature for both SPARK Max controllers to SmartDashboard,
+         * checking for REV hardware faults.
          */
         @Override
         public void periodic() {

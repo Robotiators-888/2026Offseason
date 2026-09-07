@@ -12,7 +12,8 @@ import frc.robot.utils.Elastic.Notification.NotificationLevel;
 import java.util.Optional;
 
 /**
- * Utility helper class for tracking game-specific Hub activation timing and providing controller haptic rumble feedback.
+ * Utility helper class for tracking game-specific Hub activation timing and providing controller
+ * haptic rumble feedback.
  */
 public class Hub {
         private Hub() {}
@@ -23,7 +24,8 @@ public class Hub {
         /**
          * Checks whether the team's alliance Hub is currently active for scoring.
          *
-         * @return Optional containing true if our alliance Hub is active, false if inactive, or empty if unknown/autonomous.
+         * @return Optional containing true if our alliance Hub is active, false if inactive, or
+         *     empty if unknown/autonomous.
          */
         public static Optional<Boolean> isAllianceHubActive() {
                 if (getActiveAlliance().isEmpty()) {
@@ -34,9 +36,11 @@ public class Hub {
         }
 
         /**
-         * Determines the active alliance Hub based on FMS match time and game-specific data message.
+         * Determines the active alliance Hub based on FMS match time and game-specific data
+         * message.
          *
-         * @return Optional containing the active {@link Alliance}, or empty if during autonomous/uninitialized.
+         * @return Optional containing the active {@link Alliance}, or empty if during
+         *     autonomous/uninitialized.
          */
         public static Optional<Alliance> getActiveAlliance() {
                 if (DriverStation.isAutonomous()) {

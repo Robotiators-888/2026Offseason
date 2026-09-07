@@ -102,7 +102,6 @@ public class RobotContainer {
         /** REV Power Distribution Module for monitoring current and switchable channels. */
         public static final PowerDistribution powerDistribution = new PowerDistribution();
 
-
         /** Xbox controller on port 0 for primary driver controls. */
         private final CommandXboxController Driver1 =
             new CommandXboxController(Operator.kDriver1ControllerPort);
@@ -111,14 +110,12 @@ public class RobotContainer {
         private final CommandXboxController Driver2 =
             new CommandXboxController(Operator.kDriver2ControllerPort);
 
-
         /** Command utility helper for registering PathPlanner named commands and macro routines. */
-        public final CommandUtil commandUtil =
-            new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
-        
-        
-        public final ControllerUtil controllerUtil =
-            new ControllerUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering, Driver1, Driver2);
+        public final CommandUtil commandUtil = new CommandUtil(
+            drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
+
+        public final ControllerUtil controllerUtil = new ControllerUtil(drivetrain, linear, roller,
+            index, photonVision, shooter, hood, metering, Driver1, Driver2);
 
         /** Dashboard chooser for autonomous routines. */
         private final SendableChooser<Command> autoChooser;
@@ -128,22 +125,13 @@ public class RobotContainer {
         private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
         private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
 
-
-
-        
-
-        
-
-        
-
         /** Swerve request object for robot-centric velocity driving. */
         private final SwerveRequest.RobotCentric driveRobot =
             new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.Velocity);
 
         /** Swerve request object for field-centric velocity driving. */
         private final SwerveRequest.FieldCentric drive =
-            new SwerveRequest.FieldCentric().withDriveRequestType(
-                DriveRequestType.Velocity);
+            new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity);
 
         /** Cache for tracking auto name changes in dashboard. */
         private static String autoName, newAutoName;
@@ -159,8 +147,6 @@ public class RobotContainer {
 
         /** List index for logging/debugging. */
         public int listIndex = 0;
-
-        
 
         /** Field2d display object for robot pose visualization. */
         Field2d field;
@@ -192,15 +178,11 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.setRPM(0); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> {
-                        linear.forward();
-                }, linear));
-                shooter.setDefaultCommand(new RunCommand(() -> {                                
-                        shooter.setRPM(SUB_Shooter.RPMIdle);
-                }, shooter));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
+                shooter.setDefaultCommand(
+                    new RunCommand(() -> { shooter.setRPM(SUB_Shooter.RPMIdle); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
-                metering.setDefaultCommand(
-                    new RunCommand(() -> { metering.setRPM(0); }, metering));
+                metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
@@ -210,7 +192,6 @@ public class RobotContainer {
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
                 SmartDashboard.putData("Autos/Active Auto Path", autoField);
         }
-
 
         /**
          * Initializes robot hardware settings such as pathfinding algorithm and power distribution.
@@ -241,7 +222,8 @@ public class RobotContainer {
                 field.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putData("Drivetrain/Field", field);
                 SmartDashboard.putNumber(autoName, listIndex);
-                SmartDashboard.putNumber("Shooter/Set RPM (In RobotContainer)", controllerUtil.targetRPM);
+                SmartDashboard.putNumber(
+                    "Shooter/Set RPM (In RobotContainer)", controllerUtil.targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)",
                     drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
                 robotTelemetry.update();
@@ -271,7 +253,9 @@ public class RobotContainer {
                 });
         }
 
-        /** Periodic method called every 20ms during autonomous mode. Updates vision localization. */
+        /**
+         * Periodic method called every 20ms during autonomous mode. Updates vision localization.
+         */
         public void autonomousPeriodic() {
                 photonPoseUpdate();
         }
@@ -294,15 +278,18 @@ public class RobotContainer {
                 Hub.fetchMatchData();
         }
 
-        /** Periodic method called every 20ms during teleoperated mode. Handles vision updates and Hub logic. */
+        /**
+         * Periodic method called every 20ms during teleoperated mode. Handles vision updates and
+         * Hub logic.
+         */
         public void teleopPeriodic() {
                 photonPoseUpdate();
                 Hub.start(Driver1, Driver2, shooter);
         }
 
         /**
-         * Periodic method called every 20ms while the robot is disabled. Updates active auto trajectory
-         * visualization on field dashboard when auto selection or alliance changes.
+         * Periodic method called every 20ms while the robot is disabled. Updates active auto
+         * trajectory visualization on field dashboard when auto selection or alliance changes.
          */
         public void disabledPeriodic() {
                 newAutoName = getAutonomousCommand().getName();
@@ -354,7 +341,8 @@ public class RobotContainer {
         }
 
         /**
-         * Polls vision estimations from all three PhotonVision cameras and updates drivetrain odometry.
+         * Polls vision estimations from all three PhotonVision cameras and updates drivetrain
+         * odometry.
          */
         public void photonPoseUpdate() {
                 processCameraPose(photonVision.getCam1Pose(), drivetrain.publisher3);
@@ -363,8 +351,8 @@ public class RobotContainer {
         }
 
         /**
-         * Filters and processes estimated pose from a PhotonVision camera, feeding valid measurements
-         * to the drivetrain pose estimator.
+         * Filters and processes estimated pose from a PhotonVision camera, feeding valid
+         * measurements to the drivetrain pose estimator.
          *
          * @param poseOptional Estimated camera pose optional wrapper.
          * @param publisher NetworkTable publisher for camera pose visualization.

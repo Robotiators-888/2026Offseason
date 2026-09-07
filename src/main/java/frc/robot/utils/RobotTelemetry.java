@@ -6,7 +6,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.CommandSwerveDrivetrain;
 
 /**
- * Utility helper for real-time telemetry logging of swerve drivetrain modules and REV Power Distribution Hub (PDH).
+ * Utility helper for real-time telemetry logging of swerve drivetrain modules and REV Power
+ * Distribution Hub (PDH).
  */
 public class RobotTelemetry {
         private final CommandSwerveDrivetrain drivetrain;
@@ -25,7 +26,8 @@ public class RobotTelemetry {
         }
 
         /**
-         * Telemetry update loop. Logs drivetrain module states, PDH status, and checks motor alerts.
+         * Telemetry update loop. Logs drivetrain module states, PDH status, and checks motor
+         * alerts.
          */
         public void update() {
                 logDrivetrain();
@@ -34,7 +36,8 @@ public class RobotTelemetry {
         }
 
         /**
-         * Logs individual swerve module states, motor currents, voltages, velocities, positions, and temperatures to SmartDashboard.
+         * Logs individual swerve module states, motor currents, voltages, velocities, positions,
+         * and temperatures to SmartDashboard.
          */
         private void logDrivetrain() {
                 drivetrain.swerveModuleStatesPublisher.set(drivetrain.getState().ModuleStates);
@@ -108,7 +111,8 @@ public class RobotTelemetry {
         }
 
         /**
-         * Logs Power Distribution Hub (PDH) battery voltage, channel currents, total current, total energy, and hardware breaker faults.
+         * Logs Power Distribution Hub (PDH) battery voltage, channel currents, total current, total
+         * energy, and hardware breaker faults.
          */
         public void logPDH() {
                 SmartDashboard.putNumber("PDH/Battery Voltage", powerDistribution.getVoltage());
@@ -169,7 +173,8 @@ public class RobotTelemetry {
         }
 
         /**
-         * Checks health status for all swerve module drive and steer Kraken motors via Alert utility.
+         * Checks health status for all swerve module drive and steer Kraken motors via Alert
+         * utility.
          */
         private void checkAlerts() {
                 for (int i = 0; i < drivetrain.getModules().length; i++) {

@@ -22,9 +22,10 @@ import org.photonvision.targeting.PhotonTrackedTarget;
  *
  * <p>Hardware:
  * <ul>
- *   <li>Back-Left Camera ("BackLeftCam") with 3D transform {@link PhotonVision#kRobotToCamera1}</li>
- *   <li>Back-Right Camera ("BackRightCam") with 3D transform {@link PhotonVision#kRobotToCamera2}</li>
- *   <li>High Camera ("HighCam") with 3D transform {@link PhotonVision#kRobotToCamera3}</li>
+ *   <li>Back-Left Camera ("BackLeftCam") with 3D transform {@link
+ * PhotonVision#kRobotToCamera1}</li> <li>Back-Right Camera ("BackRightCam") with 3D transform
+ * {@link PhotonVision#kRobotToCamera2}</li> <li>High Camera ("HighCam") with 3D transform {@link
+ * PhotonVision#kRobotToCamera3}</li>
  * </ul>
  */
 public class SUB_PhotonVision extends SubsystemBase {
@@ -131,7 +132,7 @@ public class SUB_PhotonVision extends SubsystemBase {
          *
          * @return Optional containing {@link EstimatedRobotPose} if valid targets were visible.
          */
-       public Optional<EstimatedRobotPose> getCam3Pose() {
+        public Optional<EstimatedRobotPose> getCam3Pose() {
                 List<PhotonPipelineResult> results3 = cam3.getAllUnreadResults();
                 Optional<EstimatedRobotPose> finalPose3 = Optional.empty();
                 java.util.ListIterator<PhotonPipelineResult> iterator =

@@ -39,7 +39,8 @@ public class CommandUtil {
          * @param shooter Shooter flywheel subsystem instance.
          */
         public CommandUtil(CommandSwerveDrivetrain drivetrain, SUB_Linear linear, SUB_Roller roller,
-            SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering) {
+            SUB_Index index, SUB_PhotonVision photonVision, SUB_Shooter shooter, SUB_Hood hood,
+            SUB_Metering metering) {
                 this.drivetrain = drivetrain;
                 this.linear = linear;
                 this.roller = roller;
@@ -51,7 +52,8 @@ public class CommandUtil {
         }
 
         /**
-         * Registers all named commands with PathPlanner {@link NamedCommands} for autonomous routines.
+         * Registers all named commands with PathPlanner {@link NamedCommands} for autonomous
+         * routines.
          */
         public void registerAllNamedCommands() {
                 NamedCommands.registerCommand("ReachedTarget",
@@ -71,15 +73,12 @@ public class CommandUtil {
                 //     new InstantCommand(() -> roller.setRPM(0), roller));
 
                 // Shooter and Indexer
-                NamedCommands.registerCommand(
-                    "ShootAutoAim", new CMD_AimBotAuto( drivetrain,  photonVision,
-             index,  hood,  metering,  shooter, linear)
-                );
+                NamedCommands.registerCommand("ShootAutoAim",
+                    new CMD_AimBotAuto(
+                        drivetrain, photonVision, index, hood, metering, shooter, linear));
 
-                NamedCommands.registerCommand(
-                    "StopShooting", Commands.parallel(new InstantCommand(() -> {
-                            index.set(0);
-                    }, index), new InstantCommand(() -> shooter.stop(), shooter)));
+                NamedCommands.registerCommand("StopShooting",
+                    Commands.parallel(new InstantCommand(() -> { index.set(0); }, index),
+                        new InstantCommand(() -> shooter.stop(), shooter)));
         }
-
 }

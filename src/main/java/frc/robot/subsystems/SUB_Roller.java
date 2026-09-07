@@ -10,7 +10,6 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -19,8 +18,9 @@ import frc.robot.utils.Alert;
 /**
  * Subsystem controlling the ground intake roller mechanism.
  *
- * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 30 and 31 ({@link Constants.Roller#kINTAKE_LEFTMOTOR_CANID}
- * and {@link Constants.Roller#kINTAKE_RIGHTMOTOR_CANID}) in opposed leader-follower configuration with FOC enabled.
+ * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 30 and 31 ({@link
+ * Constants.Roller#kINTAKE_LEFTMOTOR_CANID} and {@link Constants.Roller#kINTAKE_RIGHTMOTOR_CANID})
+ * in opposed leader-follower configuration with FOC enabled.
  */
 public class SUB_Roller extends SubsystemBase {
         /** Left roller TalonFX motor controller (Leader). */
@@ -32,10 +32,14 @@ public class SUB_Roller extends SubsystemBase {
         /** Voltage output control request object with Field Oriented Control (FOC) enabled. */
         private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
-        /** Duty cycle percent output control request object with Field Oriented Control (FOC) enabled. */
+        /**
+         * Duty cycle percent output control request object with Field Oriented Control (FOC)
+         * enabled.
+         */
         private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
 
-        private final VelocityTorqueCurrentFOC velocityRequest = new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityTorqueCurrentFOC velocityRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
 
         private static SUB_Roller INSTANCE = null;
 
@@ -69,16 +73,17 @@ public class SUB_Roller extends SubsystemBase {
                 final TalonFXConfiguration talonConfig = new TalonFXConfiguration();
                 talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
                 talonConfig.CurrentLimits.SupplyCurrentLimit = Constants.Roller.kSupplyCurrentLimit;
-                talonConfig.CurrentLimits.SupplyCurrentLowerLimit = Constants.Roller.kSupplyCurrentLowerLimit;
-                talonConfig.CurrentLimits.SupplyCurrentLowerTime = Constants.Roller.kSupplyCurrentLowerTime;
+                talonConfig.CurrentLimits.SupplyCurrentLowerLimit =
+                    Constants.Roller.kSupplyCurrentLowerLimit;
+                talonConfig.CurrentLimits.SupplyCurrentLowerTime =
+                    Constants.Roller.kSupplyCurrentLowerTime;
                 talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-                talonConfig.Slot0
-                        .withKS(Constants.Roller.kS)
-                        .withKV(Constants.Roller.kV)
-                        .withKA(Constants.Roller.kA)
-                        .withKP(Constants.Roller.kP)
-                        .withKI(Constants.Roller.kI)
-                        .withKD(Constants.Roller.kD);
+                talonConfig.Slot0.withKS(Constants.Roller.kS)
+                    .withKV(Constants.Roller.kV)
+                    .withKA(Constants.Roller.kA)
+                    .withKP(Constants.Roller.kP)
+                    .withKI(Constants.Roller.kI)
+                    .withKD(Constants.Roller.kD);
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
 
@@ -93,11 +98,11 @@ public class SUB_Roller extends SubsystemBase {
          */
         @Deprecated
         public void setVolts(final double volts) {
-            LeftRollerMotor.setControl(voltageRequest.withOutput(volts));
+                LeftRollerMotor.setControl(voltageRequest.withOutput(volts));
         }
 
-        public void setRPM (final double rpm) {
-            LeftRollerMotor.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+        public void setRPM(final double rpm) {
+                LeftRollerMotor.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**
@@ -122,8 +127,9 @@ public class SUB_Roller extends SubsystemBase {
         }
 
         /**
-         * Subsystem periodic loop (20ms). Telemeters roller RPM, positions, current draws, voltages,
-         * and device temperatures for both Kraken motors to SmartDashboard, monitoring motor health.
+         * Subsystem periodic loop (20ms). Telemeters roller RPM, positions, current draws,
+         * voltages, and device temperatures for both Kraken motors to SmartDashboard, monitoring
+         * motor health.
          */
         @Override
         public void periodic() {

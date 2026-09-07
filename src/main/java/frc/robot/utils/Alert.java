@@ -8,15 +8,15 @@ import edu.wpi.first.wpilibj.util.Color;
 import java.util.HashMap;
 
 /**
- * Utility class for logging, reporting, and dashboard management of robot alerts, warnings, and errors.
+ * Utility class for logging, reporting, and dashboard management of robot alerts, warnings, and
+ * errors.
  *
  * <p>Integrates with NetworkTables and Elastic dashboard notification UI.
  */
 public class Alert {
         // ArrayList required akward casting to work so I created Vector
         // Hashmaps to check if keys are present in O(1) time!
-        private static Elastic.Notification notification =
-            new Elastic.Notification();
+        private static Elastic.Notification notification = new Elastic.Notification();
         private static Vector<String> error = new Vector<String>(new String());
         private static Vector<String> warning = new Vector<String>(new String());
         private static Vector<String> info = new Vector<String>(new String());
@@ -175,7 +175,8 @@ public class Alert {
         }
 
         /**
-         * Inspects CTRE TalonFX motor status for active hardware faults and registers any errors found.
+         * Inspects CTRE TalonFX motor status for active hardware faults and registers any errors
+         * found.
          *
          * @param kraken Target CTRE TalonFX motor controller.
          */
@@ -238,7 +239,8 @@ public class Alert {
         }
 
         /**
-         * Inspects REV SPARK Max motor controller for active hardware faults and registers errors found.
+         * Inspects REV SPARK Max motor controller for active hardware faults and registers errors
+         * found.
          *
          * @param neo Target REV SPARK Max motor controller.
          */
@@ -265,7 +267,8 @@ public class Alert {
         }
 
         /**
-         * Inspects REV SPARK Max motor controller for active hardware warnings and registers warnings found.
+         * Inspects REV SPARK Max motor controller for active hardware warnings and registers
+         * warnings found.
          *
          * @param neo Target REV SPARK Max motor controller.
          */

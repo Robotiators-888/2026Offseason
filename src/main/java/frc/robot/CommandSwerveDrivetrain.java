@@ -68,9 +68,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         /** SysId characterization routine for drivetrain translation. */
         private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-            new SysIdRoutine.Config(null,
-                Volts.of(4),
-                null,
+            new SysIdRoutine.Config(null, Volts.of(4), null,
                 state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
             new SysIdRoutine.Mechanism(
                 output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
@@ -202,7 +200,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         /**
-         * Constructs a CTRE SwerveDrivetrain using specified constants, frequency, and standard deviations.
+         * Constructs a CTRE SwerveDrivetrain using specified constants, frequency, and standard
+         * deviations.
          *
          * @param drivetrainConstants Drivetrain-wide constants for swerve drive.
          * @param odometryUpdateFrequency Odometry update loop frequency in Hertz (Hz).
@@ -244,11 +243,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
                 AutoBuilder.configure(()
                                           -> this.getState().Pose,
-                    this::resetPose,
-                    this::getCurrentRobotChassisSpeeds,
+                    this::resetPose, this::getCurrentRobotChassisSpeeds,
                     (speeds, feedforwards)
-                        -> this.setControl(autoRequest.withSpeeds(
-                            speeds)),
+                        -> this.setControl(autoRequest.withSpeeds(speeds)),
                     new PPHolonomicDriveController(
                         new PIDConstants(10, 0, 0), new PIDConstants(10, 0, 0)),
                     config, () -> {
@@ -293,7 +290,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         /**
-         * Periodic subsystem loop called every 20ms. Updates alliance operator perspective orientation.
+         * Periodic subsystem loop called every 20ms. Updates alliance operator perspective
+         * orientation.
          */
         @Override
         public void periodic() {
@@ -342,7 +340,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          *
          * @param visionRobotPoseMeters The pose of the robot as measured by the vision camera.
          * @param timestampSeconds The timestamp of the vision measurement in seconds.
-         * @param visionMeasurementStdDevs Standard deviations of vision measurement [x, y, theta]ᵀ (meters, radians).
+         * @param visionMeasurementStdDevs Standard deviations of vision measurement [x, y, theta]ᵀ
+         *     (meters, radians).
          */
         @Override
         public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,

@@ -6,7 +6,8 @@ import java.util.function.Function;
 import org.opencv.core.Mat.Tuple2;
 
 /**
- * Custom dynamic array implementation capable of returning trimmed raw arrays for SmartDashboard publishing.
+ * Custom dynamic array implementation capable of returning trimmed raw arrays for SmartDashboard
+ * publishing.
  *
  * @param <T> Element type stored in the Vector.
  */
@@ -135,8 +136,7 @@ public class Vector<T> {
          * @param data Comparison target element.
          * @return Index of matching element, or -1 if not found.
          */
-        public int findFirst(Function<Tuple2<T>, Boolean> func,
-            T data) {
+        public int findFirst(Function<Tuple2<T>, Boolean> func, T data) {
                 for (int i = 0; i < usedSize; i++) {
                         if (func.apply(new Tuple2<T>(storage[i], data)))
                                 return i;

@@ -13,8 +13,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 /**
  * The Constants class provides a central location for robot-wide numerical and boolean constants.
  *
- * <p>All constants are declared globally (`public static final`). Every constant explicitly documents
- * its physical units (e.g. meters, volts, RPM, degrees, CAN IDs) and physical relevance.
+ * <p>All constants are declared globally (`public static final`). Every constant explicitly
+ * documents its physical units (e.g. meters, volts, RPM, degrees, CAN IDs) and physical relevance.
  */
 public final class Constants {
         private Constants() {}
@@ -89,7 +89,6 @@ public final class Constants {
                 public static final double kRPMZone3 = 3750.0;
                 public static final double kRPMIdle = kRPMZone2;
 
-
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
                 public static final double kZone1To2HysteresisMeters = 3.35;
@@ -127,7 +126,10 @@ public final class Constants {
                 public static final double kD = 0.01;
         }
 
-        /** Linear intake deploy motor CAN ID, position setpoints, stall limits, and PID controllers. */
+        /**
+         * Linear intake deploy motor CAN ID, position setpoints, stall limits, and PID
+         * controllers.
+         */
         public static final class Linear {
                 private Linear() {}
 
@@ -138,7 +140,7 @@ public final class Constants {
                 public static final double kLINEAR_MOTOR_SPEED = 0.1;
 
                 /** Extended forward setpoint position in relative encoder rotations. */
-                public static final double kLINEAR_FORWARD_SETPOINT =  4.2;
+                public static final double kLINEAR_FORWARD_SETPOINT = 4.2;
 
                 /** Retracted backward setpoint position in relative encoder rotations. */
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;
@@ -150,13 +152,14 @@ public final class Constants {
                 public static final PIDController kLINEAR_FAST_PID_CONTROLLER =
                     new PIDController(4, 0, 0);
 
-
-                public static final double kLinearAgitatePeriodics = 100; // Number of periodic cycles for linear intake movement
+                public static final double kLinearAgitatePeriodics =
+                    100; // Number of periodic cycles for linear intake movement
 
                 public static final int kStallLimit = 35; // Amperes
                 public static final int kFreeLimit = 5; // Amperes
 
-                public static final double kTolerance = 0.1; // Tolerance for linear intake position in rotations
+                public static final double kTolerance =
+                    0.1; // Tolerance for linear intake position in rotations
         }
 
         /** Spindexer and metering wheel CAN IDs, voltage limits, and calculated RPM values. */
@@ -278,8 +281,7 @@ public final class Constants {
                 public static final int kHOOD_CAN_ID = 47;
 
                 /** Positional PID controller for hood angle control. */
-                public static final PIDController kHOOD_PID_CONTROLLER =
-                    new PIDController(4, 0, 0);
+                public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0, 0);
 
                 /** Scoring target height in inches. */
                 public static final double ScoreHeight = 55;
@@ -289,17 +291,16 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 5; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-
-                public static final double kS = 0.5; 
-                public static final double kV = 0.0; 
-                public static final double kA = 0.05; 
-                public static final double kP = 5.0; 
-                public static final double kI = 0.0; 
-                public static final double kD = 0.1; 
+                public static final double kS = 0.5;
+                public static final double kV = 0.0;
+                public static final double kA = 0.05;
+                public static final double kP = 5.0;
+                public static final double kI = 0.0;
+                public static final double kD = 0.1;
                 public static final double kG = 0; //
-        
-                public static final double kHoodTolerance = 0.05; // Tolerance for hood position in rotations
-        
+
+                public static final double kHoodTolerance =
+                    0.05; // Tolerance for hood position in rotations
         }
 
         /** Metering system motor CAN IDs. */
@@ -324,7 +325,7 @@ public final class Constants {
                 public static final double kI = 0.0;
                 public static final double kD = 0.01;
 
-
-                public static final double kMETERING_MOTOR_RPM = 1000; // Target RPM for metering motor
+                public static final double kMETERING_MOTOR_RPM =
+                    1000; // Target RPM for metering motor
         }
 }
