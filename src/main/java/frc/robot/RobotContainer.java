@@ -114,7 +114,7 @@ public class RobotContainer {
 
         /** Command utility helper for registering PathPlanner named commands and macro routines. */
         public final CommandUtil commandUtil =
-            new CommandUtil(drivetrain, roller, index, photonVision, shooter, hood, metering);
+            new CommandUtil(drivetrain, linear, roller, index, photonVision, shooter, hood, metering);
         
         
         public final ControllerUtil controllerUtil =

@@ -195,12 +195,12 @@ public class ControllerUtil {
         // A Button: Decrease target RPM by 25
         Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
         // B Button: Shuttle
-        Driver2.b().whileTrue(new CMD_Shuttle(drivetrain, photonVision, index, shooter,
+        Driver2.b().whileTrue(new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood,
             () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX())));
         // X Button: Set RPM to distance-based value #TODO: Auto hood angle logic
             Driver2.x().onTrue(new InstantCommand(
             ()
-                -> targetRPM = shooter.getDistanceRPM(
+                -> targetRPM = shooter.getZonedRPM(
                         drivetrain.getPose().getTranslation().getDistance(
                             SUB_PhotonVision.getInstance()
                                 .at_field

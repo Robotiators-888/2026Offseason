@@ -169,4 +169,24 @@ public class SUB_Hood extends SubsystemBase {
                 double angleRadians = Math.atan(tanTheta);
                 return angleRadians;
         }
+
+        public static double calculateLaunchAngle(double distanceMeters, double deltaHeightMeters, double exitVelocityMps, boolean highArc) {
+                double v2 = exitVelocityMps * exitVelocityMps;
+                double v4 = v2 * v2;
+                double x = distanceMeters;
+                double y = deltaHeightMeters;
+
+                // Discriminant check (feasibility)
+                double discriminant = v4 - Constants.Shooter.kGRAVITATIONAL_CONSTANT * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
+                if (discriminant < 0) {
+                        return 0; 
+                }
+
+                double sqrtDisc = Math.sqrt(discriminant);
+                double sign = highArc ? 1.0 : -1.0;
+                double tanTheta = (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
+
+                double angleRadians = Math.atan(tanTheta);
+                return angleRadians;
+        }
 }

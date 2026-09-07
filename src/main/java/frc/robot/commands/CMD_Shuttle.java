@@ -12,7 +12,6 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -22,6 +21,7 @@ import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.Constants.Operator;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
@@ -40,6 +40,7 @@ public class CMD_Shuttle extends RunCommand {
         /** Subsystems and state variables for shuttle targeting */
         private SUB_Index index;
         private SUB_Shooter shooter;
+        private SUB_Hood hood;
         private SUB_PhotonVision photonVision;
         private CommandSwerveDrivetrain drivetrain;
         private final DoubleSupplier translationXSupplier;
@@ -77,18 +78,19 @@ public class CMD_Shuttle extends RunCommand {
          * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
          */
         public CMD_Shuttle(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Index index, SUB_Shooter shooter, DoubleSupplier translationXSupplier,
+            SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, DoubleSupplier translationXSupplier,
             DoubleSupplier translationYSupplier) {
                 super(() -> {});
                 this.index = index;
                 this.shooter = shooter;
+                this.hood = hood;
                 this.photonVision = photonVision;
                 this.drivetrain = drivetrain;
                 this.translationXSupplier = translationXSupplier;
                 this.translationYSupplier = translationYSupplier;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 isThetaErrorCorrect = false;
-                addRequirements(photonVision, drivetrain, index, shooter);
+                addRequirements(photonVision, drivetrain, index, shooter, hood);
         }
 
         /**
@@ -108,12 +110,10 @@ public class CMD_Shuttle extends RunCommand {
          */
         @Override
         public void execute() {
-                // Calculate a target pose shifted away from the hub for shuttling/passing
                 targetPose =
                     photonVision.at_field
                         .getTagPose(
-                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10
-                                                                                              : 26)
+                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10 : 26)
                         .map(pose
                             -> pose.toPose2d().relativeTo(new Pose2d(
                                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
@@ -125,50 +125,32 @@ public class CMD_Shuttle extends RunCommand {
                         .orElse(drivetrain.getPose());
 
                 Pose2d currentPose = drivetrain.getPose();
-                ChassisSpeeds fieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
-                    drivetrain.getCurrentRobotChassisSpeeds(), currentPose.getRotation());
-
-                Translation2d shooterFieldPosition = currentPose.getTranslation().plus(
+                Translation2d shooterPosition = currentPose.getTranslation().plus(
                     shooterOffset.rotateBy(currentPose.getRotation()));
 
-                double distanceToTarget =
-                    shooterFieldPosition.getDistance(targetPose.getTranslation());
-                double tof = shooter.getExpectedTOF(distanceToTarget);
-
-                Translation2d virtualTargetTranslation =
-                    new Translation2d(targetPose.getX() - (fieldSpeeds.vxMetersPerSecond * tof),
-                        targetPose.getY() - (fieldSpeeds.vyMetersPerSecond * tof));
-
-                drivetrain.publisher2.set(new Pose2d(virtualTargetTranslation, new Rotation2d()));
-
-                Translation2d targetTranslation = virtualTargetTranslation;
-
-                // Calculate the required heading to face the shuttle target
-                Rotation2d targetRotation =
-                    new Rotation2d(targetTranslation.getX() - shooterFieldPosition.getX(),
-                        targetTranslation.getY() - shooterFieldPosition.getY());
+                Translation2d targetTranslation = targetPose.getTranslation();
+                Rotation2d targetRotation = new Rotation2d(
+                    targetTranslation.getX() - shooterPosition.getX(),
+                    targetTranslation.getY() - shooterPosition.getY());
 
                 double omegaSpeed = robotAngleController.calculate(
                     currentPose.getRotation().getRadians(), targetRotation.getRadians());
 
-                // Check if the rotation error is within an acceptable threshold for firing
                 double thetaErrorRads = Math.abs(MathUtil.angleModulus(
                     currentPose.getRotation().getRadians() - targetRotation.getRadians()));
                 isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(14)
-                    && Math.abs(
-                           drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
-                        <= 40;
+                    && Math.abs(drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble()) <= 40;
 
-                double distance = shooterFieldPosition.getDistance(virtualTargetTranslation);
-                shooter.shootMeters(distance);
+                double distance = shooterPosition.getDistance(targetTranslation);
+                double targetFlywheelRPM = shooter.getZonedRPM(distance);
+                shooter.setRPM(targetFlywheelRPM);
+                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
+                hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, false)));
 
-                // Automated firing when aligned and up to speed
                 boolean isShooterReady = shooter.atDesiredRPM();
 
-                if (isThetaErrorCorrect && isShooterReady) {
+                if (isThetaErrorCorrect && isShooterReady && hood.atDesiredAngle()) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
-                // TODO: BUG: If the robot is aligned (!isThetaErrorCorrect is false) but the shooter RPM dips (isShooterReady is false), 
-                // the indexer will never stop feeding. Change `else if (!isThetaErrorCorrect)` to just `else`.
                 } else if (!isThetaErrorCorrect) {
                         index.setVolts(0);
                 }
@@ -178,11 +160,9 @@ public class CMD_Shuttle extends RunCommand {
                 double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(
                     translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
 
-                // Apply swerve drive request with PID-calculated rotation
                 drivetrain.setControl(drive.withVelocityX(xInput * MaxSpeed)
                         .withVelocityY(yInput * MaxSpeed)
                         .withRotationalRate(omegaSpeed * MaxAngularRate
-                            + Math.copySign(
-                                Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                            + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
         }
 }

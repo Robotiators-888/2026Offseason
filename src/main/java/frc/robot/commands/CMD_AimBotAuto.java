@@ -24,6 +24,7 @@ import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
@@ -46,6 +47,7 @@ public class CMD_AimBotAuto extends RunCommand {
         private final SUB_Hood hood;
         private final SUB_Metering metering;
         private final SUB_Shooter shooter;
+        private final SUB_Linear linear;
         private boolean isLocked;
 
         /** Physical offsets for targeting calibration */
@@ -73,6 +75,9 @@ public class CMD_AimBotAuto extends RunCommand {
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+        private double linearPosition;
+        private final double linearDelta;
+
         /**
          * Constructs a new AimBot command.
          *
@@ -81,11 +86,11 @@ public class CMD_AimBotAuto extends RunCommand {
          * @param index The indexer subsystem.
          * @param hood The hood subsystem.
          * @param metering The metering subsystem.
-         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
-         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
+         * @param shooter The shooter subsystem.
+         * @param linear The linear intake deploy subsystem.
          */
         public CMD_AimBotAuto(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter) {
+            SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter, SUB_Linear linear) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
@@ -93,7 +98,9 @@ public class CMD_AimBotAuto extends RunCommand {
                 this.hood = hood;
                 this.shooter = shooter;
                 this.metering = metering;
+                this.linear = linear;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
+                linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT - Constants.Linear.kLINEAR_BACKWARD_SETPOINT) / Constants.Linear.kLinearAgitatePeriodics;
 
                 addRequirements(drivetrain, metering, index, hood, shooter);
         }
@@ -125,6 +132,7 @@ public class CMD_AimBotAuto extends RunCommand {
                 isLocked = false;
                 running = true;
                 SUB_Shooter.isShooting = true;
+                linearPosition = Constants.Linear.kLINEAR_FORWARD_SETPOINT;
         }
 
         /**
@@ -196,6 +204,9 @@ public class CMD_AimBotAuto extends RunCommand {
                 // Wheel locking logic
                 if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
                         isLocked = true;
+                        if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
+                            linearPosition -= linearDelta;
+                        }
                 } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
                         isLocked = false;
                 }
@@ -209,6 +220,8 @@ public class CMD_AimBotAuto extends RunCommand {
                                     + Math.copySign(Units.degreesToRadians(9),
                                         omegaSpeed * MaxAngularRate)));
                 }
+
+                linear.setPosition(linearPosition);
         }
 
         /**

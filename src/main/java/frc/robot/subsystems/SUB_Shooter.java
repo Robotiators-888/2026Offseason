@@ -5,13 +5,11 @@ import static edu.wpi.first.units.Units.RPM;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-// import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,9 +42,6 @@ public class SUB_Shooter extends SubsystemBase {
         /** Active shooting state flag used for dynamic current limit switching. */
         public static boolean isShooting;
         public static boolean wasShooting = false;
-        /** Interpolation map for distance-based RPM calibration (distance in meters -> RPM). */
-        private final InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
-
         private double currentZoneRPM = RPMIdle;
         public static final double RPMZone1 = Constants.Shooter.kRPMZone1;
         public static final double RPMZone2 = Constants.Shooter.kRPMZone2;
@@ -75,14 +70,6 @@ public class SUB_Shooter extends SubsystemBase {
                 // Initialize dual flywheel motors
                 shooterLeader = new TalonFX(Constants.Shooter.kSHOOTER_LEADER_MOTOR_CANID);
                 shooterFollower = new TalonFX(Constants.Shooter.kSHOOTER_FOLLOWER_MOTOR_CANID);
-
-                // Populate distance-to-RPM look-up table (meters -> RPM)
-                distanceToRPM.put(2.49493587092, 1250.0);
-                distanceToRPM.put(3.03308176613, 1375.0 + 15);
-                distanceToRPM.put(1.6346195276, 1075.0 - 25);
-                distanceToRPM.put(4.10526503, 1575.0 + 25);
-                distanceToRPM.put(5.34766117, 1750.0 + 40);
-                distanceToRPM.put(10.5, 2400.0);
 
                 configFlywheel();
         }
@@ -141,6 +128,7 @@ public class SUB_Shooter extends SubsystemBase {
          * @param angle Hood launch angle in radians.
          * @return Calculated target exit velocity in RPM.
          */
+        @Deprecated
         public static double findoptimalRPM(final double distance, final double angle) {
                 double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
                 double exitvelocity = (1 / Math.cos(angle))
@@ -192,25 +180,6 @@ public class SUB_Shooter extends SubsystemBase {
                 return Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPMTolerance;
         }
 
-        /**
-         * Sets target RPM based on distance interpolation table lookup.
-         *
-         * @param meters Distance to target in meters.
-         */
-        public void shootMeters(final double meters) {
-                double targetRPM = distanceToRPM.get(meters);
-                setRPM(targetRPM);
-        }
-
-        /**
-         * Returns required RPM from interpolation table for a given distance in meters.
-         *
-         * @param meters Distance to target in meters.
-         * @return Interpolated target speed in RPM.
-         */
-        public double getDistanceRPM(final double meters) {
-                return distanceToRPM.get(meters);
-        }
 
         /**
          * Stops flywheel motors by outputting 0 volts.
@@ -295,15 +264,6 @@ public class SUB_Shooter extends SubsystemBase {
                 SUB_Shooter.wasShooting = SUB_Shooter.isShooting;
         }
 
-        /**
-         * Calculates expected game piece time-of-flight (TOF) in seconds based on linear distance curve.
-         *
-         * @param distanceMeters Distance to target in meters.
-         * @return Estimated time of flight in seconds.
-         */
-        public double getExpectedTOF(final double distanceMeters) {
-                return distanceMeters * Constants.Shooter.kTOFLinearSlope + Constants.Shooter.kTOFLinearIntercept;
-        }
 
         public double getZonedRPM(double distanceMeters) {
             if (distanceMeters > Constants.Shooter.kZone3ThresholdMeters) {

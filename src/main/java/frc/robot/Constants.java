@@ -89,8 +89,6 @@ public final class Constants {
                 public static final double kRPMZone3 = 3750.0;
                 public static final double kRPMIdle = kRPMZone2;
 
-                public static final double kTOFLinearSlope = 0.215298795;
-                public static final double kTOFLinearIntercept = 0.753755412;
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
