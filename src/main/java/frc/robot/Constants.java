@@ -150,9 +150,6 @@ public final class Constants {
                 public static final PIDController kLINEAR_FAST_PID_CONTROLLER =
                     new PIDController(4, 0, 0);
 
-                /** Low-speed positional PID controller for fine linear intake movement. */
-                // public static final PIDController kLINEAR_SLOW_PID_CONTROLLER =
-                //     new PIDController(1, 0, 0);
 
                 public static final double kLinearAgitatePeriodics = 100; // Number of periodic cycles for linear intake movement
 
@@ -326,5 +323,8 @@ public final class Constants {
                 public static final double kP = 3.0;
                 public static final double kI = 0.0;
                 public static final double kD = 0.01;
+
+
+                public static final double kMETERING_MOTOR_RPM = 1000; // Target RPM for metering motor
         }
 }

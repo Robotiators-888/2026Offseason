@@ -10,7 +10,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -23,8 +22,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
-import frc.robot.Constants.Operator;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
@@ -32,7 +29,6 @@ import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
 import java.util.Optional;
-import java.util.function.DoubleSupplier;
 
 /**
  * Command for automated vision-guided target alignment, hood positioning, and shooting feed control.
@@ -46,8 +42,6 @@ public class CMD_AimBot extends RunCommand {
         private final SUB_PhotonVision photonVision;
         private final CommandSwerveDrivetrain drivetrain;
         private Pose2d targetPose = new Pose2d();
-        private final DoubleSupplier translationXSupplier;
-        private final DoubleSupplier translationYSupplier;
         private static boolean running;
         private final SUB_Index index;
         private final SUB_Hood hood;
@@ -77,14 +71,9 @@ public class CMD_AimBot extends RunCommand {
 
         private final SwerveRequest.SwerveDriveBrake brakeRequest =
             new SwerveRequest.SwerveDriveBrake();
-        private double MaxSpeed = 2.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-        private final SlewRateLimiter xSlewRateLimiter =
-            new SlewRateLimiter(3.0, -8.0, 0.0);
-        private final SlewRateLimiter ySlewRateLimiter =
-            new SlewRateLimiter(3.0, -8.0, 0.0);
 
         private double linearPosition;
         private final double linearDelta;
@@ -97,12 +86,13 @@ public class CMD_AimBot extends RunCommand {
          * @param index The indexer subsystem.
          * @param hood The hood subsystem.
          * @param metering The metering subsystem.
-         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
-         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
+         * @param shooter The shooter subsystem.
+         * @param linear The linear intake deploy subsystem.
+         * @param periodics Periodics count for linear agitation.
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter, SUB_Linear linear,
-            DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier, double periodics) {
+            double periodics) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
@@ -111,8 +101,6 @@ public class CMD_AimBot extends RunCommand {
                 this.shooter = shooter;
                 this.metering = metering;
                 this.linear = linear;
-                this.translationXSupplier = translationXSupplier;
-                this.translationYSupplier = translationYSupplier;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT - Constants.Linear.kLINEAR_BACKWARD_SETPOINT) / periodics;
                 addRequirements(drivetrain, metering, index, hood, shooter);
@@ -207,17 +195,13 @@ public class CMD_AimBot extends RunCommand {
                 shooter.setRPM(targetFlywheelRPM);
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)/(720  * 3.281);
                 hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance,exitVelocity,true)));
-                metering.setRPM(100);
+                metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
 
                 if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 } else {
                         index.setVolts(0);
                 }
-                double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(
-                    translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-                double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(
-                    translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
 
                 // Wheel locking logic
                 if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
@@ -230,11 +214,10 @@ public class CMD_AimBot extends RunCommand {
                 }
 
                 // Lock wheels or drive
-                if (xInput == 0.0 && yInput == 0.0 && isThetaErrorCorrect && isLocked) {
+                if (isThetaErrorCorrect && isLocked) {
                         drivetrain.setControl(brakeRequest);
                 } else {
-                        drivetrain.setControl(drive.withVelocityX(xInput * MaxSpeed)
-                                .withVelocityY(yInput * MaxSpeed)
+                        drivetrain.setControl(drive
                                 .withRotationalRate(omegaSpeed * MaxAngularRate
                                     + Math.copySign(Units.degreesToRadians(9),
                                         omegaSpeed * MaxAngularRate)));

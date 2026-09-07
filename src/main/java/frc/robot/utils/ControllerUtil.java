@@ -173,7 +173,7 @@ public class ControllerUtil {
         // Right Trigger: AimBot while held
         Driver1.rightTrigger().whileTrue(
             new CMD_AimBot(drivetrain, photonVision, index, hood, metering, shooter, linear,
-                () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX()), Constants.Linear.kLinearAgitatePeriodics));
+                Constants.Linear.kLinearAgitatePeriodics));
         // Left Stick Button: Toggle field-relative driving mode
         Driver1.leftStick().onTrue(
             new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
@@ -185,7 +185,29 @@ public class ControllerUtil {
 
         // Left Trigger: Manual Shooter RPM control while held
         Driver2.leftTrigger().whileTrue(
-            new RunCommand(() -> shooter.setRPM(targetRPM), shooter));
+            new RunCommand(() -> {
+                shooter.setRPM(targetRPM);
+                metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
+                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetRPM)/(720  * 3.281);
+                double distance = drivetrain.getPose().getTranslation().getDistance(
+                                SUB_PhotonVision.getInstance()
+                                    .at_field
+                                    .getTagPose(DriverStation.getAlliance().orElse(Alliance.Blue)
+                                                == Alliance.Red
+                                            ? 10
+                                            : 26)
+                                    .map(pose
+                                        -> pose.toPose2d().getTranslation().plus(
+                                            new Translation2d(
+                                                Units.inchesToMeters(DriverStation.getAlliance()
+                                                                        .orElse(Alliance.Blue)
+                                                            == Alliance.Red
+                                                        ? -23.5
+                                                        : 23.5),
+                                                0)))
+                                    .orElse(drivetrain.getPose().getTranslation()));
+                hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance,exitVelocity,true)));
+            }, shooter, hood, metering));
         // Right Trigger: Manual Indexer control while held
         Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
             index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
@@ -195,29 +217,30 @@ public class ControllerUtil {
         // A Button: Decrease target RPM by 25
         Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
         // B Button: Shuttle
-        Driver2.b().whileTrue(new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood,
-            () -> - (Driver1.getLeftY()), () -> - (Driver1.getLeftX())));
-        // X Button: Set RPM to distance-based value #TODO: Auto hood angle logic
+        Driver2.b().whileTrue(new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
+        // X Button: Set RPM to distance-based value
             Driver2.x().onTrue(new InstantCommand(
             ()
-                -> targetRPM = shooter.getZonedRPM(
-                        drivetrain.getPose().getTranslation().getDistance(
-                            SUB_PhotonVision.getInstance()
-                                .at_field
-                                .getTagPose(DriverStation.getAlliance().orElse(Alliance.Blue)
-                                            == Alliance.Red
-                                        ? 10
-                                        : 26)
-                                .map(pose
-                                    -> pose.toPose2d().getTranslation().plus(
-                                        new Translation2d(
-                                            Units.inchesToMeters(DriverStation.getAlliance()
-                                                                    .orElse(Alliance.Blue)
-                                                        == Alliance.Red
-                                                    ? -23.5
-                                                    : 23.5),
-                                            0)))
-                                .orElse(drivetrain.getPose().getTranslation())))));
+                -> {
+                        targetRPM = shooter.getZonedRPM(
+                            drivetrain.getPose().getTranslation().getDistance(
+                                SUB_PhotonVision.getInstance()
+                                    .at_field
+                                    .getTagPose(DriverStation.getAlliance().orElse(Alliance.Blue)
+                                                == Alliance.Red
+                                            ? 10
+                                            : 26)
+                                    .map(pose
+                                        -> pose.toPose2d().getTranslation().plus(
+                                            new Translation2d(
+                                                Units.inchesToMeters(DriverStation.getAlliance()
+                                                                        .orElse(Alliance.Blue)
+                                                            == Alliance.Red
+                                                        ? -23.5
+                                                        : 23.5),
+                                                0)))
+                                    .orElse(drivetrain.getPose().getTranslation())));
+                    }));
     
         // Left Bumper: Unclog indexer and shooter 
         Driver2.leftBumper().whileTrue(new RunCommand(() -> {

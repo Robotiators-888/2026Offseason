@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -8,7 +7,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -19,13 +17,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
-import frc.robot.Constants.Operator;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
+import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Shooter;
-import java.util.function.DoubleSupplier;
 
 /**
  * Command for shuttling game pieces across the field with velocity feedforward motion compensation.
@@ -41,12 +37,12 @@ public class CMD_Shuttle extends RunCommand {
         private SUB_Index index;
         private SUB_Shooter shooter;
         private SUB_Hood hood;
+        private SUB_Metering metering;
         private SUB_PhotonVision photonVision;
         private CommandSwerveDrivetrain drivetrain;
-        private final DoubleSupplier translationXSupplier;
-        private final DoubleSupplier translationYSupplier;
 
-        private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+        private final SwerveRequest.SwerveDriveBrake brakeRequest =
+            new SwerveRequest.SwerveDriveBrake();
         private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond);
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric()
@@ -58,14 +54,13 @@ public class CMD_Shuttle extends RunCommand {
         private final TrapezoidProfile.Constraints thetaConstraints =
             new TrapezoidProfile.Constraints(RotationsPerSecond.of(0.75).in(RadiansPerSecond),
                 RotationsPerSecond.of(1.5).in(RadiansPerSecond));
-        private final SlewRateLimiter xSlewRateLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
-        private final SlewRateLimiter ySlewRateLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
 
         /** Profiled PID controller for robot heading alignment during shuttle (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
             new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
         private Pose2d targetPose = new Pose2d();
         private boolean isThetaErrorCorrect;
+        private boolean isLocked = false;
 
         /**
          * Constructs a new CMD_Shuttle command for long-range scoring or passing.
@@ -74,23 +69,21 @@ public class CMD_Shuttle extends RunCommand {
          * @param photonVision The vision subsystem.
          * @param index The indexer subsystem.
          * @param shooter The shooter subsystem.
-         * @param translationXSupplier Supplier for X translation input (-1.0 to 1.0).
-         * @param translationYSupplier Supplier for Y translation input (-1.0 to 1.0).
+         * @param hood The hood subsystem.
+         * @param metering The metering subsystem.
          */
         public CMD_Shuttle(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, DoubleSupplier translationXSupplier,
-            DoubleSupplier translationYSupplier) {
+            SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering) {
                 super(() -> {});
                 this.index = index;
                 this.shooter = shooter;
                 this.hood = hood;
+                this.metering = metering;
                 this.photonVision = photonVision;
                 this.drivetrain = drivetrain;
-                this.translationXSupplier = translationXSupplier;
-                this.translationYSupplier = translationYSupplier;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 isThetaErrorCorrect = false;
-                addRequirements(photonVision, drivetrain, index, shooter, hood);
+                addRequirements(photonVision, drivetrain, index, shooter, hood, metering);
         }
 
         /**
@@ -98,6 +91,7 @@ public class CMD_Shuttle extends RunCommand {
          */
         @Override
         public void initialize() {
+                isLocked = false;
                 robotAngleController.setTolerance(Units.degreesToRadians(0.0));
                 // Reset the PID controller to the current state of the robot
                 robotAngleController.reset(drivetrain.getPose().getRotation().getRadians(),
@@ -144,6 +138,7 @@ public class CMD_Shuttle extends RunCommand {
                 double distance = shooterPosition.getDistance(targetTranslation);
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
+                metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
                 hood.setPosition(Units.radiansToDegrees(SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, false)));
 
@@ -155,14 +150,24 @@ public class CMD_Shuttle extends RunCommand {
                         index.setVolts(0);
                 }
 
-                double xInput = xSlewRateLimiter.calculate(MathUtil.applyDeadband(
-                    translationXSupplier.getAsDouble(), Operator.kDriveDeadband));
-                double yInput = ySlewRateLimiter.calculate(MathUtil.applyDeadband(
-                    translationYSupplier.getAsDouble(), Operator.kDriveDeadband));
+                if (!isLocked && thetaErrorRads <= Units.degreesToRadians(5)) {
+                        isLocked = true;
+                } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(10)) {
+                        isLocked = false;
+                }
 
-                drivetrain.setControl(drive.withVelocityX(xInput * MaxSpeed)
-                        .withVelocityY(yInput * MaxSpeed)
-                        .withRotationalRate(omegaSpeed * MaxAngularRate
-                            + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                if (isThetaErrorCorrect && isLocked) {
+                        drivetrain.setControl(brakeRequest);
+                } else {
+                        drivetrain.setControl(drive
+                                .withRotationalRate(omegaSpeed * MaxAngularRate
+                                    + Math.copySign(Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                }
+        }
+
+        @Override
+        public void end(boolean interrupted) {
+                index.setVolts(0);
+                metering.setRPM(0);
         }
 }
