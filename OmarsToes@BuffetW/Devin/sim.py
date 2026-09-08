@@ -1,1250 +1,1064 @@
-"""FRC 2026 2D Multi-Robot Autonomous & Physics Simulation.
-
-This module provides a full-featured 2D physics simulation of the 2026 FRC game,
-including:
-    - Accurate field layout with neutral zone, depots, and alliance hubs.
-    - Ball-ball spatial hash grid collisions (zero clipping).
-    - Multi-robot swerve kinematics with bumper-to-bumper collision dynamics.
-    - High-throughput progressive roller intake (1,000 RPM, 2" diameter, 50-ball hopper limit).
-    - High-rate 10 balls/second shooter mechanism with continuous auto-feeding.
-    - AimBot autonomous targeting with zoned RPM hysteresis and 3D projectile arc physics.
-    - Native PathPlanner trajectory parsing and time-parameterized velocity profiling.
-    - Interactive Tkinter desktop GUI with live telemetry and autonomous routine controls.
-"""
-
-from __future__ import annotations
-
-import bisect
-from dataclasses import dataclass
-import json
-import math
-from pathlib import Path
-import random
-import time
 import tkinter as tk
 from tkinter import ttk
-from typing import Dict, List, Optional, Tuple
+import math, time, json, bisect, random
+from pathlib import Path
 
-# ==============================================================================
-# 1. FIELD DIMENSIONS & ROBOT PHYSICAL CONSTANTS
-# ==============================================================================
+rdir = Path(__file__).resolve().parent / "src" / "main" / "deploy" / "pathplanner"
+if not rdir.exists():
+    rdir = Path("src/main/deploy/pathplanner")
+sf = rdir / "settings.json"
+adir = rdir / "autos"
+pdir = rdir / "paths"
 
-# Field Dimensions (Meters)
-FIELD_LENGTH_METERS: float = 16.541
-FIELD_WIDTH_METERS: float = 8.211
+with open(sf) as f:
+    cfg = json.load(f)
 
-# Robot Dimensions & Dynamics
-ROBOT_WIDTH_METERS: float = 0.88
-ROBOT_LENGTH_METERS: float = 0.88
-ROBOT_COLLISION_RADIUS: float = math.hypot(ROBOT_WIDTH_METERS / 2.0, ROBOT_LENGTH_METERS / 2.0)
-MAX_LINEAR_VELOCITY: float = 4.5       # Meters per second
-MAX_LINEAR_ACCELERATION: float = 3.5   # Meters per second squared
-MAX_ANGULAR_VELOCITY: float = 6.28     # Radians per second
-MAX_ANGULAR_ACCELERATION: float = 9.42 # Radians per second squared
+RW = float(cfg.get("robotWidth", 0.864))
+RL = float(cfg.get("robotLength", 0.851))
+MV = float(cfg.get("defaultMaxVel", 5.25))
+MA = float(cfg.get("defaultMaxAccel", 5.2))
+MAW = math.radians(float(cfg.get("defaultMaxAngVel", 540.0)))
+MAA = math.radians(float(cfg.get("defaultMaxAngAccel", 720.0)))
+COF = float(cfg.get("wheelCOF", 2.255))
+G = 9.80665
 
-# Physics Constants
-SURFACE_FRICTION_COEFFICIENT: float = 0.94
-GRAVITATIONAL_ACCELERATION: float = 9.81  # Meters per second squared
+IX, IY, IW, IL = 0.5271, 0.0, 0.635, 0.203
+try:
+    ft = cfg.get("robotFeatures", [])
+    if ft:
+        fd = json.loads(ft[0])
+        IX = float(fd["data"]["center"]["x"])
+        IY = float(fd["data"]["center"]["y"])
+        IW = float(fd["data"]["size"]["width"])
+        IL = float(fd["data"]["size"]["length"])
+except Exception:
+    pass
 
-# Intake Geometry (Relative to Robot Center, in Meters)
-INTAKE_OFFSET_X: float = 0.35
-INTAKE_OFFSET_Y: float = 0.0
-INTAKE_WIDTH: float = 0.65
-INTAKE_LENGTH: float = 0.28
+R_RPM = 1000.0
+R_RAD = (2.0 * 0.0254) / 2.0
+R_SPD = math.pi * (2.0 * R_RAD) * (R_RPM / 60.0)
 
-# Intake Roller Dynamics
-INTAKE_ROLLER_RPM: float = 1000.0
-INTAKE_ROLLER_DIAMETER_INCHES: float = 2.0
-INTAKE_ROLLER_DIAMETER_METERS: float = INTAKE_ROLLER_DIAMETER_INCHES * 0.0254
-INTAKE_SURFACE_SPEED_MPS: float = (
-    INTAKE_ROLLER_RPM * math.pi * INTAKE_ROLLER_DIAMETER_METERS
-) / 60.0  # Approx 2.66 m/s
+SX = -0.38
+SY = 0.0
 
-# Shooter Geometry (Relative to Robot Center, in Meters)
-SHOOTER_OFFSET_X: float = -0.0762
-SHOOTER_OFFSET_Y: float = 0.1651
+FL = 16.532
+FW = 8.001
+BHUB = (3.465 + 23.5 * 0.0254, 4.0)
+RHUB = (13.067 - 23.5 * 0.0254, 4.0)
 
-# Alliance Hub Target Coordinates (Meters)
-BLUE_HUB_COORDINATES: Tuple[float, float] = (4.025, 4.105)
-RED_HUB_COORDINATES: Tuple[float, float] = (12.516, 4.105)
+BD = 5.91 * 0.0254
+BR = BD / 2.0
+MAX_HP = 50
 
-# Game Piece (Ball) Specifications
-BALL_DIAMETER_METERS: float = 0.150114  # 5.91 inches
-BALL_RADIUS_METERS: float = BALL_DIAMETER_METERS / 2.0
-MAX_HOPPER_CAPACITY: int = 50
+NZ_CX, NZ_CY = FL / 2.0, FW / 2.0
+NZ_X0, NZ_X1 = NZ_CX - 1.10, NZ_CX + 1.10
+NZ_Y0, NZ_Y1 = NZ_CY - 2.90, NZ_CY + 2.90
 
-# Neutral Zone Boundaries (Centered 30 ft x 12 ft)
-NEUTRAL_ZONE_CENTER_X: float = FIELD_LENGTH_METERS / 2.0
-NEUTRAL_ZONE_CENTER_Y: float = FIELD_WIDTH_METERS / 2.0
-NEUTRAL_ZONE_MIN_X: float = NEUTRAL_ZONE_CENTER_X - (15.0 * 0.3048)  # 30 ft span
-NEUTRAL_ZONE_MAX_X: float = NEUTRAL_ZONE_CENTER_X + (15.0 * 0.3048)
-NEUTRAL_ZONE_MIN_Y: float = NEUTRAL_ZONE_CENTER_Y - (6.0 * 0.3048)   # 12 ft span
-NEUTRAL_ZONE_MAX_Y: float = NEUTRAL_ZONE_CENTER_Y + (6.0 * 0.3048)
+DP_DX = 27.0 * 0.0254
+DP_WY = 42.0 * 0.0254
+BDP_X0, BDP_X1 = 0.0, DP_DX
+BDP_Y0, BDP_Y1 = 5.50, 5.50 + DP_WY
+RDP_X0, RDP_X1 = FL - DP_DX, FL
+RDP_Y0, RDP_Y1 = 1.434, 1.434 + DP_WY
 
-# Depot Boundaries (Red & Blue Alliances)
-DEPOT_DELTA_X: float = 2.0 * 0.3048
-DEPOT_HALF_WIDTH_Y: float = 2.0 * 0.3048
+Z3_T = 6.0
+Z2_T = 3.2
+Z12_H = 3.35
+Z21_H = 3.05
 
-BLUE_DEPOT_MIN_X: float = 0.0
-BLUE_DEPOT_MAX_X: float = DEPOT_DELTA_X
-BLUE_DEPOT_MIN_Y: float = (FIELD_WIDTH_METERS / 2.0) - DEPOT_HALF_WIDTH_Y
-BLUE_DEPOT_MAX_Y: float = (FIELD_WIDTH_METERS / 2.0) + DEPOT_HALF_WIDTH_Y
+def get_rpm(d, cur=2200.0):
+    if d >= Z3_T:
+        return 3750.0
+    if cur == 3750.0:
+        return 2750.0 if d < 5.8 else 3750.0
+    elif cur == 2200.0:
+        return 2750.0 if d >= Z12_H else 2200.0
+    else:
+        return 2200.0 if d < Z21_H else 2750.0
 
-RED_DEPOT_MIN_X: float = FIELD_LENGTH_METERS - DEPOT_DELTA_X
-RED_DEPOT_MAX_X: float = FIELD_LENGTH_METERS
-RED_DEPOT_MIN_Y: float = (FIELD_WIDTH_METERS / 2.0) - DEPOT_HALF_WIDTH_Y
-RED_DEPOT_MAX_Y: float = (FIELD_WIDTH_METERS / 2.0) + DEPOT_HALF_WIDTH_Y
+def calc_pitch(d, v=15.0):
+    y = 55.0 * 0.0254
+    v2 = v * v
+    term = v2 * v2 - G * (G * d * d + 2.0 * y * v2)
+    if term < 0:
+        return math.radians(45.0)
+    root = math.sqrt(term)
+    return math.atan2(v2 + root, G * d)
 
-# AimBot Hysteresis & Transitions
-AIMBOT_ZONE1_TO_2_THRESHOLD: float = 3.65
-AIMBOT_ZONE2_TO_1_THRESHOLD: float = 3.55
-AIMBOT_ZONE2_TARGET_RPM: float = 3000.0
-AIMBOT_ZONE3_TARGET_RPM: float = 3400.0
+def bz(p0, p1, p2, p3, t):
+    u = 1.0 - t
+    tt = t * t
+    uu = u * u
+    x = uu * u * p0[0] + 3.0 * uu * t * p1[0] + 3.0 * u * tt * p2[0] + tt * t * p3[0]
+    y = uu * u * p0[1] + 3.0 * uu * t * p1[1] + 3.0 * u * tt * p2[1] + tt * t * p3[1]
+    dx = 3.0 * uu * (p1[0] - p0[0]) + 6.0 * u * t * (p2[0] - p1[0]) + 3.0 * tt * (p3[0] - p2[0])
+    dy = 3.0 * uu * (p1[1] - p0[1]) + 6.0 * u * t * (p2[1] - p1[1]) + 3.0 * tt * (p3[1] - p2[1])
+    ddx = 6.0 * u * (p2[0] - 2.0 * p1[0] + p0[0]) + 6.0 * t * (p3[0] - 2.0 * p2[0] + p1[0])
+    ddy = 6.0 * u * (p2[1] - 2.0 * p1[1] + p0[1]) + 6.0 * t * (p3[1] - 2.0 * p2[1] + p1[1])
+    return x, y, dx, dy, ddx, ddy
 
+def n_ang(a):
+    return (a + math.pi) % (2.0 * math.pi) - math.pi
 
-# ==============================================================================
-# 2. MATHEMATICAL & GEOMETRICAL HELPERS
-# ==============================================================================
+def a_diff(a, b):
+    return (a - b + math.pi) % (2.0 * math.pi) - math.pi
 
-def normalize_angle(angle_radians: float) -> float:
-    """Normalize an angle in radians to the range [-pi, pi]."""
-    while angle_radians > math.pi:
-        angle_radians -= 2.0 * math.pi
-    while angle_radians < -math.pi:
-        angle_radians += 2.0 * math.pi
-    return angle_radians
+class Traj:
+    def __init__(self, fn, fp, mx=False, my=False):
+        self.fn = fn
+        self.fp = fp
+        self.mx = mx
+        self.my = my
+        self.pts = []
+        self.tms = []
+        self.tot_t = 0.0
+        self.tot_d = 0.0
+        self.v0 = 0.0
+        self.v1 = 0.0
+        self.p0 = (0.0, 0.0, 0.0)
+        self.p1 = (0.0, 0.0, 0.0)
+        self.bake()
 
-
-def angle_difference(target_angle_rad: float, current_angle_rad: float) -> float:
-    """Compute the shortest signed angular difference (target - current)."""
-    return normalize_angle(target_angle_rad - current_angle_rad)
-
-
-def compute_cubic_bezier(
-    p0: Tuple[float, float],
-    p1: Tuple[float, float],
-    p2: Tuple[float, float],
-    p3: Tuple[float, float],
-    t: float,
-) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
-    """Evaluate a cubic Bezier curve point, 1st derivative, and 2nd derivative at parameter t."""
-    u: float = 1.0 - t
-    u2: float = u * u
-    u3: float = u2 * u
-    t2: float = t * t
-    t3: float = t2 * t
-
-    # Position
-    pos_x = u3 * p0[0] + 3.0 * u2 * t * p1[0] + 3.0 * u * t2 * p2[0] + t3 * p3[0]
-    pos_y = u3 * p0[1] + 3.0 * u2 * t * p1[1] + 3.0 * u * t2 * p2[1] + t3 * p3[1]
-
-    # 1st Derivative (Velocity vector along curve)
-    vel_x = 3.0 * u2 * (p1[0] - p0[0]) + 6.0 * u * t * (p2[0] - p1[0]) + 3.0 * t2 * (p3[0] - p2[0])
-    vel_y = 3.0 * u2 * (p1[1] - p0[1]) + 6.0 * u * t * (p2[1] - p1[1]) + 3.0 * t2 * (p3[1] - p2[1])
-
-    # 2nd Derivative (Acceleration vector)
-    acc_x = 6.0 * u * (p2[0] - 2.0 * p1[0] + p0[0]) + 6.0 * t * (p3[0] - 2.0 * p2[0] + p1[0])
-    acc_y = 6.0 * u * (p2[1] - 2.0 * p1[1] + p0[1]) + 6.0 * t * (p3[1] - 2.0 * p2[1] + p1[1])
-
-    return (pos_x, pos_y), (vel_x, vel_y), (acc_x, acc_y)
-
-
-def calculate_aimbot_rpm(distance_meters: float, current_rpm: float) -> float:
-    """Calculate flywheel RPM setpoint using zoned hysteresis matching Java CMD_AimBotAuto."""
-    if distance_meters < AIMBOT_ZONE2_TO_1_THRESHOLD:
-        return 112.5 * distance_meters + 2337.5
-
-    if distance_meters <= AIMBOT_ZONE1_TO_2_THRESHOLD:
-        if current_rpm >= AIMBOT_ZONE2_TARGET_RPM - 150.0:
-            return AIMBOT_ZONE2_TARGET_RPM
-        return 112.5 * distance_meters + 2337.5
-
-    if distance_meters < 4.25:
-        return AIMBOT_ZONE2_TARGET_RPM
-
-    return AIMBOT_ZONE3_TARGET_RPM
-
-
-def calculate_shooter_pitch(distance_meters: float) -> float:
-    """Calculate shooter hood pitch in degrees based on distance to alliance hub."""
-    if distance_meters < 2.5:
-        return 52.0
-    if distance_meters < 3.8:
-        return 55.0
-    if distance_meters < 4.8:
-        return 58.0
-    return 61.0
-
-
-# ==============================================================================
-# 3. BALL & PROJECTILE PHYSICS
-# ==============================================================================
-
-class Ball:
-    """Represents a physical game piece on the field carpet."""
-
-    def __init__(self, x: float, y: float) -> None:
-        self.x: float = x
-        self.y: float = y
-        self.vx: float = 0.0
-        self.vy: float = 0.0
-        self.radius: float = BALL_RADIUS_METERS
-        self.is_collected: bool = False
-        self.intake_progress: float = 0.0
-
-    def update(self, dt: float) -> None:
-        """Update ball position and apply carpet rolling resistance."""
-        if self.is_collected:
+    def bake(self):
+        with open(self.fp) as f:
+            d = json.load(f)
+        wps = d.get("waypoints", [])
+        if not wps:
             return
+        iss = d.get("idealStartingState", {})
+        ges = d.get("goalEndState", {})
+        r0 = float(iss.get("rotation", 0.0))
+        r1 = float(ges.get("rotation", 0.0))
+        self.v0 = float(iss.get("velocity", 0.0))
+        self.v1 = float(ges.get("velocity", 0.0))
+        rts = d.get("rotationTargets", [])
+        gc = d.get("globalConstraints", {})
+        mv = float(gc.get("maxVelocity", MV))
+        ma = float(gc.get("maxAcceleration", MA))
 
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-
-        # Apply friction
-        self.vx *= SURFACE_FRICTION_COEFFICIENT
-        self.vy *= SURFACE_FRICTION_COEFFICIENT
-
-        # Stop micro-drifting
-        if math.hypot(self.vx, self.vy) < 0.01:
-            self.vx = 0.0
-            self.vy = 0.0
-
-        # Field boundary collision
-        if self.x < self.radius:
-            self.x = self.radius
-            self.vx = -self.vx * 0.5
-        elif self.x > FIELD_LENGTH_METERS - self.radius:
-            self.x = FIELD_LENGTH_METERS - self.radius
-            self.vx = -self.vx * 0.5
-
-        if self.y < self.radius:
-            self.y = self.radius
-            self.vy = -self.vy * 0.5
-        elif self.y > FIELD_WIDTH_METERS - self.radius:
-            self.y = FIELD_WIDTH_METERS - self.radius
-            self.vy = -self.vy * 0.5
-
-
-class Projectile:
-    """Represents a ball launched towards an alliance hub through 3D ballistic arc."""
-
-    def __init__(
-        self,
-        start_pos: Tuple[float, float],
-        target_pos: Tuple[float, float],
-        rpm: float,
-        pitch_deg: float,
-    ) -> None:
-        self.x: float = start_pos[0]
-        self.y: float = start_pos[1]
-        self.z: float = 0.45  # Shooter exit height in meters
-
-        self.target_x: float = target_pos[0]
-        self.target_y: float = target_pos[1]
-
-        # Muzzle velocity scaling from flywheel surface speed
-        wheel_radius_meters = 0.0508
-        muzzle_velocity = (rpm * 2.0 * math.pi / 60.0) * wheel_radius_meters * 0.72
-
-        pitch_rad = math.radians(pitch_deg)
-        horizontal_speed = muzzle_velocity * math.cos(pitch_rad)
-        self.vz: float = muzzle_velocity * math.sin(pitch_rad)
-
-        yaw = math.atan2(target_pos[1] - self.y, target_pos[0] - self.x)
-        self.vx: float = horizontal_speed * math.cos(yaw)
-        self.vy: float = horizontal_speed * math.sin(yaw)
-
-        self.is_active: bool = True
-        self.scored: bool = False
-
-    def update(self, dt: float) -> None:
-        """Advance ballistic projectile position under gravity."""
-        if not self.is_active:
-            return
-
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-        self.z += self.vz * dt
-        self.vz -= GRAVITATIONAL_ACCELERATION * dt
-
-        # Target hub proximity detection
-        dist_to_hub = math.hypot(self.x - self.target_x, self.y - self.target_y)
-        if dist_to_hub < 0.65 and 1.2 <= self.z <= 2.8:
-            self.scored = True
-            self.is_active = False
-
-        if self.z <= 0.0:
-            self.is_active = False
-
-
-# ==============================================================================
-# 4. ROBOT SUBSYSTEMS & STATE
-# ==============================================================================
-
-class Robot:
-    """Models an autonomous FRC robot with swerve drive, intake, and aimbot subsystems."""
-
-    def __init__(
-        self,
-        name: str,
-        alliance: str,
-        initial_x: float,
-        initial_y: float,
-        initial_heading: float,
-    ) -> None:
-        self.name: str = name
-        self.alliance: str = alliance.lower()
-        self.x: float = initial_x
-        self.y: float = initial_y
-        self.heading: float = initial_heading
-
-        # Velocity states
-        self.vx: float = 0.0
-        self.vy: float = 0.0
-        self.omega: float = 0.0
-
-        # Hardware states
-        self.hopper_balls: int = 0
-        self.intake_deployed: bool = True
-        self.is_shooting: bool = False
-        self.flywheel_rpm: float = 0.0
-        self.shots_fired: int = 0
-        self.score_count: int = 0
-
-        # Subsystem timers & rates
-        self.shot_cooldown: float = 0.0
-        self.shooting_rate_balls_per_sec: float = 10.0
-
-        # AimBot state
-        self.aimbot_locked: bool = False
-        self.distance_to_hub: float = 0.0
-        self.target_hub_pos: Tuple[float, float] = (
-            BLUE_HUB_COORDINATES if self.alliance == "blue" else RED_HUB_COORDINATES
-        )
-
-        # Autonomous mode assignment
-        self.auto_mode: str = "auto"
-
-    def get_shooter_field_position(self) -> Tuple[float, float]:
-        """Compute the world coordinates of the robot's shooter exit."""
-        cos_h = math.cos(self.heading)
-        sin_h = math.sin(self.heading)
-        shooter_x = self.x + (SHOOTER_OFFSET_X * cos_h - SHOOTER_OFFSET_Y * sin_h)
-        shooter_y = self.y + (SHOOTER_OFFSET_X * sin_h + SHOOTER_OFFSET_Y * cos_h)
-        return shooter_x, shooter_y
-
-    def get_bumper_polygon(self) -> List[Tuple[float, float]]:
-        """Compute the four corner vertices of the robot's perimeter bumper."""
-        cos_h = math.cos(self.heading)
-        sin_h = math.sin(self.heading)
-        half_w = ROBOT_WIDTH_METERS / 2.0
-        half_l = ROBOT_LENGTH_METERS / 2.0
-
-        corners = []
-        for dx, dy in [(-half_l, -half_w), (half_l, -half_w), (half_l, half_w), (-half_l, half_w)]:
-            wx = self.x + (dx * cos_h - dy * sin_h)
-            wy = self.y + (dx * sin_h + dy * cos_h)
-            corners.append((wx, wy))
-        return corners
-
-    def update(self, dt: float) -> None:
-        """Update robot kinematics, AimBot calculations, and shooter cooldowns."""
-        self.x += self.vx * dt
-        self.y += self.vy * dt
-        self.heading = normalize_angle(self.heading + self.omega * dt)
-
-        # Clamp position within field walls
-        half_diag = ROBOT_WIDTH_METERS / 2.0
-        self.x = max(half_diag, min(FIELD_LENGTH_METERS - half_diag, self.x))
-        self.y = max(half_diag, min(FIELD_WIDTH_METERS - half_diag, self.y))
-
-        # AimBot calculations
-        shooter_x, shooter_y = self.get_shooter_field_position()
-        delta_x = self.target_hub_pos[0] - shooter_x
-        delta_y = self.target_hub_pos[1] - shooter_y
-        self.distance_to_hub = math.hypot(delta_x, delta_y)
-
-        # Angular alignment to hub
-        target_heading = math.atan2(delta_y, delta_x)
-        alignment_error = abs(angle_difference(target_heading, self.heading))
-        self.aimbot_locked = alignment_error < math.radians(6.5)
-
-        # Flywheel speed ramp
-        target_rpm = calculate_aimbot_rpm(self.distance_to_hub, self.flywheel_rpm)
-        rpm_rate = 2500.0 * dt
-        if self.flywheel_rpm < target_rpm:
-            self.flywheel_rpm = min(target_rpm, self.flywheel_rpm + rpm_rate)
-        else:
-            self.flywheel_rpm = max(target_rpm, self.flywheel_rpm - rpm_rate)
-
-        # Shooter rate limiter
-        if self.shot_cooldown > 0.0:
-            self.shot_cooldown = max(0.0, self.shot_cooldown - dt)
-
-    def can_shoot(self) -> bool:
-        """Return True if robot is ready to launch a ball towards its hub."""
-        return (
-            self.is_shooting
-            and self.hopper_balls > 0
-            and self.shot_cooldown <= 0.0
-            and self.flywheel_rpm >= 2000.0
-        )
-
-    def shoot(self) -> Optional[Projectile]:
-        """Fire one ball from the hopper, returning a Projectile instance."""
-        if not self.can_shoot():
-            return None
-
-        self.hopper_balls -= 1
-        self.shots_fired += 1
-        self.shot_cooldown = 1.0 / self.shooting_rate_balls_per_sec
-
-        shooter_pos = self.get_shooter_field_position()
-        pitch = calculate_shooter_pitch(self.distance_to_hub)
-        return Projectile(shooter_pos, self.target_hub_pos, self.flywheel_rpm, pitch)
-
-
-# ==============================================================================
-# 5. MULTI-ROBOT COLLISION RESOLUTION
-# ==============================================================================
-
-def resolve_robot_collisions(robots: List[Robot]) -> None:
-    """Resolve physical bumper collisions between pairs of robots."""
-    bumper_clearance_limit = ROBOT_WIDTH_METERS * 0.98
-
-    for i in range(len(robots)):
-        for j in range(i + 1, len(robots)):
-            rob_a = robots[i]
-            rob_b = robots[j]
-
-            dx = rob_b.x - rob_a.x
-            dy = rob_b.y - rob_a.y
-            dist = math.hypot(dx, dy)
-
-            if 0.0001 < dist < bumper_clearance_limit:
-                overlap = bumper_clearance_limit - dist
-                normal_x = dx / dist
-                normal_y = dy / dist
-
-                # Positional separation
-                rob_a.x -= normal_x * (overlap * 0.5)
-                rob_a.y -= normal_y * (overlap * 0.5)
-                rob_b.x += normal_x * (overlap * 0.5)
-                rob_b.y += normal_y * (overlap * 0.5)
-
-                # Velocity dampening along normal
-                relative_vx = rob_b.vx - rob_a.vx
-                relative_vy = rob_b.vy - rob_a.vy
-                velocity_along_normal = relative_vx * normal_x + relative_vy * normal_y
-
-                if velocity_along_normal < 0:
-                    impulse = -1.15 * velocity_along_normal
-                    rob_a.vx -= normal_x * (impulse * 0.5)
-                    rob_a.vy -= normal_y * (impulse * 0.5)
-                    rob_b.vx += normal_x * (impulse * 0.5)
-                    rob_b.vy += normal_y * (impulse * 0.5)
-
-
-# ==============================================================================
-# 6. PATHPLANNER TRAJECTORY ENGINE
-# ==============================================================================
-
-@dataclass
-class TrajectoryPoint:
-    """A sampled trajectory state at time t."""
-    time: float
-    x: float
-    y: float
-    velocity: float
-    heading: float
-
-
-class PathTrajectory:
-    """Parses .path files and provides time-parameterized trajectory sampling."""
-
-    def __init__(self, path_file: Path) -> None:
-        self.path_file: Path = path_file
-        self.points: List[TrajectoryPoint] = []
-        self.total_duration: float = 0.0
-        self.initial_heading: float = 0.0
-        self._generate_trajectory()
-
-    def _generate_trajectory(self) -> None:
-        """Parse PathPlanner JSON and compute time-parameterized velocity profile."""
-        with open(self.path_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        waypoints = data.get("waypoints", [])
-        if len(waypoints) < 2:
-            return
-
-        # Parse global constraints
-        global_constraints = data.get("globalConstraints", {})
-        max_vel = global_constraints.get("maxVelocity", MAX_LINEAR_VELOCITY)
-        max_acc = global_constraints.get("maxAcceleration", MAX_LINEAR_ACCELERATION)
-
-        # Parse target rotations
-        rot_targets = data.get("rotationTargets", [])
-        ideal_start_rot = data.get("idealStartingState", {}).get("rotation", 0.0)
-        self.initial_heading = math.radians(ideal_start_rot)
-
-        # Generate dense geometric curve samples
-        dense_positions: List[Tuple[float, float]] = []
-        dense_headings: List[float] = []
-
-        num_segments = len(waypoints) - 1
-        samples_per_seg = 40
-
-        for seg_idx in range(num_segments):
-            w0 = waypoints[seg_idx]
-            w1 = waypoints[seg_idx + 1]
-
+        raw = []
+        seg_n = 50
+        for i in range(len(wps) - 1):
+            w0, w1 = wps[i], wps[i+1]
             p0 = (w0["anchor"]["x"], w0["anchor"]["y"])
-            p1 = (w0["nextControl"]["x"], w0["nextControl"]["y"]) if w0.get("nextControl") else p0
+            p1 = (w0["nextControl"]["x"], w0["nextControl"]["y"]) if w0["nextControl"] else p0
+            p2 = (w1["prevControl"]["x"], w1["prevControl"]["y"]) if w1["prevControl"] else (w1["anchor"]["x"], w1["anchor"]["y"])
             p3 = (w1["anchor"]["x"], w1["anchor"]["y"])
-            p2 = (w1["prevControl"]["x"], w1["prevControl"]["y"]) if w1.get("prevControl") else p3
+            for s in range(seg_n):
+                t = s / float(seg_n)
+                x, y, dx, dy, ddx, ddy = bz(p0, p1, p2, p3, t)
+                raw.append((x, y, dx, dy, ddx, ddy, i + t))
+        last_w = wps[-1]
+        raw.append((last_w["anchor"]["x"], last_w["anchor"]["y"], 0.0, 0.0, 0.0, 0.0, float(len(wps) - 1)))
 
-            for s in range(samples_per_seg if seg_idx < num_segments - 1 else samples_per_seg + 1):
-                t = s / float(samples_per_seg)
-                pos, vel, _ = compute_cubic_bezier(p0, p1, p2, p3, t)
-                dense_positions.append(pos)
+        cum = [0.0]
+        for k in range(1, len(raw)):
+            cum.append(cum[-1] + math.hypot(raw[k][0] - raw[k-1][0], raw[k][1] - raw[k-1][1]))
+        self.tot_d = cum[-1]
+        N = len(raw)
 
-                # Segment progress
-                seg_progress = seg_idx + t
-                target_head = self.initial_heading
+        def rot_at(rp, dist):
+            if not rts:
+                frac = dist / max(0.01, self.tot_d)
+                diff = (r1 - r0 + 180.0) % 360.0 - 180.0
+                return r0 + diff * frac
+            if rp <= rts[0]["waypointRelativePos"]:
+                frac = max(0.0, min(1.0, rp / max(0.01, rts[0]["waypointRelativePos"])))
+                diff = (rts[0]["rotationDegrees"] - r0 + 180.0) % 360.0 - 180.0
+                return r0 + diff * frac
+            elif rp >= rts[-1]["waypointRelativePos"]:
+                denom = max(0.01, len(wps) - 1 - rts[-1]["waypointRelativePos"])
+                frac = max(0.0, min(1.0, (rp - rts[-1]["waypointRelativePos"]) / denom))
+                diff = (r1 - rts[-1]["rotationDegrees"] + 180.0) % 360.0 - 180.0
+                return rts[-1]["rotationDegrees"] + diff * frac
+            else:
+                for k in range(len(rts) - 1):
+                    if rts[k]["waypointRelativePos"] <= rp <= rts[k+1]["waypointRelativePos"]:
+                        span = max(0.01, rts[k+1]["waypointRelativePos"] - rts[k]["waypointRelativePos"])
+                        frac = max(0.0, min(1.0, (rp - rts[k]["waypointRelativePos"]) / span))
+                        diff = (rts[k+1]["rotationDegrees"] - rts[k]["rotationDegrees"] + 180.0) % 360.0 - 180.0
+                        return rts[k]["rotationDegrees"] + diff * frac
+                return r1
 
-                # Check rotation targets
-                for rt in rot_targets:
-                    waypoint_rel_pos = rt.get("waypointRelativePos", 0.0)
-                    if seg_progress >= waypoint_rel_pos:
-                        target_head = math.radians(rt.get("rotationDegrees", 0.0))
+        ac = COF * G
+        vlim = []
+        for k in range(N):
+            x, y, dx, dy, ddx, ddy, rp = raw[k]
+            sp2 = dx * dx + dy * dy
+            curv = abs(dx * ddy - dy * ddx) / (sp2 ** 1.5) if sp2 > 1e-6 else 0.0
+            vc = math.sqrt(ac / curv) if curv > 1e-4 else mv
+            vlim.append(min(mv, max(1.0, vc)))
 
-                dense_headings.append(target_head)
+        vp = list(vlim)
+        vp[0] = min(vp[0], self.v0) if self.v0 > 0.0 else min(vp[0], 0.2)
+        vp[-1] = min(vp[-1], self.v1) if self.v1 > 0.0 else min(vp[-1], 0.0)
 
-        if not dense_positions:
-            return
+        for k in range(1, N):
+            ds = cum[k] - cum[k-1]
+            vp[k] = min(vp[k], math.sqrt(vp[k-1]**2 + 2.0 * ma * ds))
 
-        # Compute cumulative distance along curve
-        distances: List[float] = [0.0]
-        for idx in range(1, len(dense_positions)):
-            dx = dense_positions[idx][0] - dense_positions[idx - 1][0]
-            dy = dense_positions[idx][1] - dense_positions[idx - 1][1]
-            distances.append(distances[-1] + math.hypot(dx, dy))
+        for k in range(N - 2, -1, -1):
+            ds = cum[k+1] - cum[k]
+            vp[k] = min(vp[k], math.sqrt(vp[k+1]**2 + 2.0 * ma * ds))
 
-        total_length = distances[-1]
+        tms = [0.0]
+        for k in range(1, N):
+            ds = cum[k] - cum[k-1]
+            v_mid = (vp[k] + vp[k-1]) / 2.0
+            tms.append(tms[-1] + ds / max(0.15, v_mid))
+        self.tot_t = tms[-1]
+        self.tms = tms
 
-        # Forward-backward acceleration profile passes
-        speeds = [max_vel] * len(dense_positions)
-        speeds[0] = 0.0
-        speeds[-1] = 0.0
+        pts = []
+        for k in range(N):
+            x, y, dx, dy, ddx, ddy, rp = raw[k]
+            s = cum[k]
+            t = tms[k]
+            v = vp[k]
+            if math.hypot(dx, dy) > 1e-4:
+                hd = math.atan2(dy, dx)
+            elif k < N - 1:
+                ndx = raw[k+1][0] - x
+                ndy = raw[k+1][1] - y
+                hd = math.atan2(ndy, ndx) if math.hypot(ndx, ndy) > 1e-4 else 0.0
+            else:
+                hd = pts[-1]["hd"] if pts else 0.0
+            rot = math.radians(rot_at(rp, s))
+            vx = v * math.cos(hd)
+            vy = v * math.sin(hd)
+            if self.mx:
+                x = FL - x
+                vx = -vx
+                hd = math.pi - hd
+                rot = math.pi - rot
+            if self.my:
+                y = FW - y
+                vy = -vy
+                hd = -hd
+                rot = -rot
+            pts.append({
+                "t": t, "s": s, "x": x, "y": y, "v": v, "vx": vx, "vy": vy,
+                "hd": n_ang(hd), "rot": n_ang(rot), "w": 0.0
+            })
 
-        # Forward pass (acceleration limit)
-        for i in range(len(dense_positions) - 1):
-            ds = distances[i + 1] - distances[i]
-            if ds > 0:
-                speeds[i + 1] = min(speeds[i + 1], math.sqrt(speeds[i] ** 2 + 2.0 * max_acc * ds))
+        for k in range(len(pts)):
+            if k < len(pts) - 1:
+                dt_k = max(0.005, pts[k+1]["t"] - pts[k]["t"])
+                pts[k]["w"] = a_diff(pts[k+1]["rot"], pts[k]["rot"]) / dt_k
+            else:
+                pts[k]["w"] = pts[k-1]["w"] if k > 0 else 0.0
 
-        # Backward pass (deceleration limit)
-        for i in range(len(dense_positions) - 1, 0, -1):
-            ds = distances[i] - distances[i - 1]
-            if ds > 0:
-                speeds[i - 1] = min(speeds[i - 1], math.sqrt(speeds[i] ** 2 + 2.0 * max_acc * ds))
+        self.pts = pts
+        if pts:
+            self.p0 = (pts[0]["x"], pts[0]["y"], pts[0]["rot"])
+            self.p1 = (pts[-1]["x"], pts[-1]["y"], pts[-1]["rot"])
 
-        # Integrate time profile
-        time_elapsed = 0.0
-        self.points.append(TrajectoryPoint(0.0, dense_positions[0][0], dense_positions[0][1], 0.0, dense_headings[0]))
+    def sample(self, t):
+        if not self.pts:
+            return {"x": 0.0, "y": 0.0, "rot": 0.0, "v": 0.0, "vx": 0.0, "vy": 0.0, "w": 0.0, "hd": 0.0}
+        if t <= 0.0:
+            return self.pts[0]
+        if t >= self.tot_t:
+            return self.pts[-1]
+        k = bisect.bisect_right(self.tms, t) - 1
+        k = max(0, min(len(self.pts) - 2, k))
+        t0, t1 = self.tms[k], self.tms[k+1]
+        a = (t - t0) / max(1e-5, t1 - t0)
+        p0, p1 = self.pts[k], self.pts[k+1]
+        x = p0["x"] + a * (p1["x"] - p0["x"])
+        y = p0["y"] + a * (p1["y"] - p0["y"])
+        v = p0["v"] + a * (p1["v"] - p0["v"])
+        vx = p0["vx"] + a * (p1["vx"] - p0["vx"])
+        vy = p0["vy"] + a * (p1["vy"] - p0["vy"])
+        rot = n_ang(p0["rot"] + a * a_diff(p1["rot"], p0["rot"]))
+        w = p0["w"] + a * (p1["w"] - p0["w"])
+        hd = n_ang(p0["hd"] + a * a_diff(p1["hd"], p0["hd"]))
+        return {"x": x, "y": y, "v": v, "vx": vx, "vy": vy, "rot": rot, "w": w, "hd": hd}
 
-        for i in range(len(dense_positions) - 1):
-            ds = distances[i + 1] - distances[i]
-            avg_v = max(0.1, (speeds[i] + speeds[i + 1]) / 2.0)
-            dt_step = ds / avg_v
-            time_elapsed += dt_step
-            self.points.append(
-                TrajectoryPoint(
-                    time_elapsed,
-                    dense_positions[i + 1][0],
-                    dense_positions[i + 1][1],
-                    speeds[i + 1],
-                    dense_headings[i + 1],
-                )
-            )
+class B:
+    def __init__(self, x, y, bid, r=BR):
+        self.x = x
+        self.y = y
+        self.id = bid
+        self.r = r
+        self.vx = 0.0
+        self.vy = 0.0
+        self.iid = None
+        self.dep = 0.0
 
-        self.total_duration = time_elapsed
+class P:
+    def __init__(self, sx, sy, tx, ty, t_tot=0.6, h=1.5):
+        self.sx = sx
+        self.sy = sy
+        self.tx = tx
+        self.ty = ty
+        self.t_tot = t_tot
+        self.t = 0.0
+        self.h = h
+        self.done = False
+        self.cx = sx
+        self.cy = sy
+        self.ah = 0.0
 
-    def sample(self, current_time: float) -> TrajectoryPoint:
-        """Sample the trajectory at an elapsed time in seconds."""
-        if not self.points:
-            return TrajectoryPoint(0.0, 0.0, 0.0, 0.0, 0.0)
+    def update(self, dt):
+        self.t += dt
+        s = min(1.0, self.t / max(0.01, self.t_tot))
+        self.cx = self.sx + s * (self.tx - self.sx)
+        self.cy = self.sy + s * (self.ty - self.sy)
+        self.ah = 4.0 * self.h * s * (1.0 - s)
+        if self.t >= self.t_tot:
+            self.done = True
+            return True
+        return False
 
-        if current_time <= 0.0:
-            return self.points[0]
+class F:
+    def __init__(self, al="Red"):
+        self.al = al
+        self.balls = []
+        self.projs = []
+        self.scored = 0
+        self.reset_balls()
 
-        if current_time >= self.total_duration:
-            return self.points[-1]
-
-        times = [pt.time for pt in self.points]
-        idx = bisect.bisect_left(times, current_time)
-
-        pt_a = self.points[idx - 1]
-        pt_b = self.points[idx]
-        span = pt_b.time - pt_a.time
-
-        if span <= 0.0001:
-            return pt_a
-
-        alpha = (current_time - pt_a.time) / span
-        interp_x = pt_a.x + alpha * (pt_b.x - pt_a.x)
-        interp_y = pt_a.y + alpha * (pt_b.y - pt_a.y)
-        interp_v = pt_a.velocity + alpha * (pt_b.velocity - pt_a.velocity)
-
-        diff_h = angle_difference(pt_b.heading, pt_a.heading)
-        interp_h = normalize_angle(pt_a.heading + alpha * diff_h)
-
-        return TrajectoryPoint(current_time, interp_x, interp_y, interp_v, interp_h)
-
-
-# ==============================================================================
-# 7. AUTONOMOUS ROUTINE ENGINE
-# ==============================================================================
-
-class AutonomousEngine:
-    """Executes PathPlanner autonomous sequences using Holonomic Drive PID."""
-
-    def __init__(self, robot: Robot, paths_directory: Path) -> None:
-        self.robot: Robot = robot
-        self.paths_dir: Path = paths_directory
-        self.trajectories: List[Tuple[str, PathTrajectory]] = []
-        self.current_traj_idx: int = 0
-        self.elapsed_time: float = 0.0
-        self.is_finished: bool = False
-        self.is_active: bool = False
-
-        # Holonomic Tracking PID Gains
-        self.kp_translation: float = 4.8
-        self.kp_rotation: float = 5.2
-
-    def load_auto_file(self, auto_path: Path) -> bool:
-        """Load an autonomous routine file and all referenced .path files."""
-        self.trajectories.clear()
-        self.current_traj_idx = 0
-        self.elapsed_time = 0.0
-        self.is_finished = False
-
-        if not auto_path.exists():
-            return False
-
-        with open(auto_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        command_tree = data.get("command", {})
-
-        def extract_path_names(cmd_node: dict) -> List[str]:
-            names = []
-            if cmd_node.get("type") == "path":
-                p_name = cmd_node.get("data", {}).get("pathName")
-                if p_name:
-                    names.append(p_name)
-            for child in cmd_node.get("data", {}).get("commands", []):
-                names.extend(extract_path_names(child))
-            return names
-
-        path_names = extract_path_names(command_tree)
-        for name in path_names:
-            p_file = self.paths_dir / f"{name}.path"
-            if p_file.exists():
-                self.trajectories.append((name, PathTrajectory(p_file)))
-
-        if self.trajectories:
-            first_traj = self.trajectories[0][1]
-            if first_traj.points:
-                self.robot.x = first_traj.points[0].x
-                self.robot.y = first_traj.points[0].y
-                self.robot.heading = first_traj.points[0].heading
-
-        return len(self.trajectories) > 0
-
-    def start(self) -> None:
-        """Start or restart the loaded autonomous sequence."""
-        self.current_traj_idx = 0
-        self.elapsed_time = 0.0
-        self.is_finished = False
-        self.is_active = True
-
-    def update(self, dt: float) -> None:
-        """Step the autonomous trajectory execution and apply motor drive speeds."""
-        if not self.is_active or self.is_finished or not self.trajectories:
-            self.robot.vx = 0.0
-            self.robot.vy = 0.0
-            self.robot.omega = 0.0
-            return
-
-        name, traj = self.trajectories[self.current_traj_idx]
-        self.elapsed_time += dt
-
-        target_pt = traj.sample(self.elapsed_time)
-
-        # Translation error (Field coordinates)
-        err_x = target_pt.x - self.robot.x
-        err_y = target_pt.y - self.robot.y
-        err_heading = angle_difference(target_pt.heading, self.robot.heading)
-
-        # Holonomic PID speed generation
-        calc_vx = self.kp_translation * err_x
-        calc_vy = self.kp_translation * err_y
-        calc_omega = self.kp_rotation * err_heading
-
-        # Clamp to max dynamics
-        lin_speed = math.hypot(calc_vx, calc_vy)
-        if lin_speed > MAX_LINEAR_VELOCITY:
-            calc_vx = (calc_vx / lin_speed) * MAX_LINEAR_VELOCITY
-            calc_vy = (calc_vy / lin_speed) * MAX_LINEAR_VELOCITY
-
-        self.robot.vx = calc_vx
-        self.robot.vy = calc_vy
-        self.robot.omega = max(-MAX_ANGULAR_VELOCITY, min(MAX_ANGULAR_VELOCITY, calc_omega))
-
-        # Check trajectory completion
-        if self.elapsed_time >= traj.total_duration:
-            self.current_traj_idx += 1
-            self.elapsed_time = 0.0
-            if self.current_traj_idx >= len(self.trajectories):
-                self.is_finished = True
-                self.is_active = False
-                self.robot.vx = 0.0
-                self.robot.vy = 0.0
-                self.robot.omega = 0.0
-
-
-# ==============================================================================
-# 8. FIELD & ENVIRONMENT STATE
-# ==============================================================================
-
-class Field:
-    """Maintains field objects: balls, spatial hash grid, and collision logic."""
-
-    def __init__(self) -> None:
-        self.balls: List[Ball] = []
-        self.projectiles: List[Projectile] = []
-        self.spatial_grid_cell_size: float = BALL_DIAMETER_METERS
-        self.reset()
-
-    def reset(self) -> None:
-        """Reset balls on the field to standard competition starting positions."""
+    def reset_balls(self):
         self.balls.clear()
-        self.projectiles.clear()
+        self.projs.clear()
+        self.scored = 0
+        bid = 0
+        dx = (NZ_X1 - NZ_X0) / 11.0
+        dy = (NZ_Y1 - NZ_Y0) / 29.0
+        for c in range(12):
+            for r in range(30):
+                self.balls.append(B(NZ_X0 + c * dx, NZ_Y0 + r * dy, bid))
+                bid += 1
+        bd_dx = (BDP_X1 - BDP_X0) / 3.0
+        bd_dy = (BDP_Y1 - BDP_Y0) / 5.0
+        for c in range(4):
+            for r in range(6):
+                self.balls.append(B(BDP_X0 + 0.04 + c * bd_dx * 0.85, BDP_Y0 + 0.04 + r * bd_dy * 0.85, bid))
+                bid += 1
+        rd_dx = (RDP_X1 - RDP_X0) / 3.0
+        rd_dy = (RDP_Y1 - RDP_Y0) / 5.0
+        for c in range(4):
+            for r in range(6):
+                self.balls.append(B(RDP_X0 + 0.04 + c * rd_dx * 0.85, RDP_Y0 + 0.04 + r * rd_dy * 0.85, bid))
+                bid += 1
 
-        # 1. Neutral Zone: 30 ft x 12 ft centered, 18 rows x 20 cols = 360 balls
-        rows = 18
-        cols = 20
-        span_x = NEUTRAL_ZONE_MAX_X - NEUTRAL_ZONE_MIN_X
-        span_y = NEUTRAL_ZONE_MAX_Y - NEUTRAL_ZONE_MIN_Y
+    def tgt_hub(self, al):
+        return RHUB if al == "Red" else BHUB
 
-        for r in range(rows):
-            y = NEUTRAL_ZONE_MIN_Y + (r + 0.5) * (span_y / rows)
-            stagger = (BALL_RADIUS_METERS * 0.5) if (r % 2 == 1) else 0.0
-            for c in range(cols):
-                x = NEUTRAL_ZONE_MIN_X + (c + 0.5) * (span_x / cols) + stagger
-                if NEUTRAL_ZONE_MIN_X <= x <= NEUTRAL_ZONE_MAX_X and NEUTRAL_ZONE_MIN_Y <= y <= NEUTRAL_ZONE_MAX_Y:
-                    self.balls.append(Ball(x, y))
-
-        # 2. Blue Alliance Depot: 4 rows x 6 cols = 24 balls
-        depot_span_x = BLUE_DEPOT_MAX_X - BLUE_DEPOT_MIN_X
-        depot_span_y = BLUE_DEPOT_MAX_Y - BLUE_DEPOT_MIN_Y
-        for r in range(4):
-            y = BLUE_DEPOT_MIN_Y + (r + 0.5) * (depot_span_y / 4.0)
-            for c in range(6):
-                x = BLUE_DEPOT_MIN_X + (c + 0.5) * (depot_span_x / 6.0)
-                self.balls.append(Ball(x, y))
-
-        # 3. Red Alliance Depot: 4 rows x 6 cols = 24 balls
-        red_span_x = RED_DEPOT_MAX_X - RED_DEPOT_MIN_X
-        red_span_y = RED_DEPOT_MAX_Y - RED_DEPOT_MIN_Y
-        for r in range(4):
-            y = RED_DEPOT_MIN_Y + (r + 0.5) * (red_span_y / 4.0)
-            for c in range(6):
-                x = RED_DEPOT_MIN_X + (c + 0.5) * (red_span_x / 6.0)
-                self.balls.append(Ball(x, y))
-
-    def update(self, dt: float, robots: List[Robot]) -> None:
-        """Update ball physics, collisions, intake processing, and projectiles."""
-        # 1. Update loose balls
+    def col_balls(self):
+        csize = 0.20
+        grid = {}
         for b in self.balls:
-            b.update(dt)
-
-        # 2. Ball-Ball Collision Detection via Spatial Hash Grid
-        grid: Dict[Tuple[int, int], List[Ball]] = {}
-        for b in self.balls:
-            if b.is_collected:
-                continue
-            cx = int(b.x / self.spatial_grid_cell_size)
-            cy = int(b.y / self.spatial_grid_cell_size)
-            grid.setdefault((cx, cy), []).append(b)
-
-        min_ball_distance = BALL_DIAMETER_METERS
-        for (cx, cy), cell_balls in grid.items():
-            neighbor_cells = [
-                (cx, cy),
-                (cx + 1, cy),
-                (cx - 1, cy + 1),
-                (cx, cy + 1),
-                (cx + 1, cy + 1),
-            ]
-            for ncx, ncy in neighbor_cells:
-                if (ncx, ncy) not in grid:
-                    continue
-                other_balls = grid[(ncx, ncy)]
-                is_same_cell = (ncx == cx and ncy == cy)
-
-                for i, b1 in enumerate(cell_balls):
-                    start_j = (i + 1) if is_same_cell else 0
-                    for j in range(start_j, len(other_balls)):
-                        b2 = other_balls[j]
+            gx, gy = int(b.x / csize), int(b.y / csize)
+            grid.setdefault((gx, gy), []).append(b)
+        rad2 = BR * 2.0
+        rad2_sq = rad2 * rad2
+        for _ in range(2):
+            for (gx, gy), b_list in grid.items():
+                nbrs = []
+                for ox in (-1, 0, 1):
+                    for oy in (-1, 0, 1):
+                        nbrs.extend(grid.get((gx + ox, gy + oy), []))
+                for i in range(len(b_list)):
+                    b1 = b_list[i]
+                    for b2 in nbrs:
+                        if b1.id >= b2.id:
+                            continue
                         dx = b2.x - b1.x
                         dy = b2.y - b1.y
-                        dist = math.hypot(dx, dy)
+                        d2 = dx * dx + dy * dy
+                        if 1e-6 < d2 < rad2_sq:
+                            d = math.sqrt(d2)
+                            ol = rad2 - d
+                            nx, ny = dx / d, dy / d
+                            b1.x -= nx * ol * 0.5
+                            b1.y -= ny * ol * 0.5
+                            b2.x += nx * ol * 0.5
+                            b2.y += ny * ol * 0.5
+                            dvx = b1.vx - b2.vx
+                            dvy = b1.vy - b2.vy
+                            dot = dvx * nx + dvy * ny
+                            if dot > 0:
+                                b1.vx -= dot * nx * 0.7
+                                b1.vy -= dot * ny * 0.7
+                                b2.vx += dot * nx * 0.7
+                                b2.vy += dot * ny * 0.7
 
-                        if 0.0001 < dist < min_ball_distance:
-                            overlap = min_ball_distance - dist
-                            nx = dx / dist
-                            ny = dy / dist
+    def step(self, dt):
+        self.col_balls()
+        fric = max(0.0, 1.0 - 5.0 * dt)
+        for b in self.balls:
+            b.x += b.vx * dt
+            b.y += b.vy * dt
+            b.vx *= fric
+            b.vy *= fric
+            if math.hypot(b.vx, b.vy) < 0.05:
+                b.vx = 0.0
+                b.vy = 0.0
+            b.x = max(BR, min(FL - BR, b.x))
+            b.y = max(BR, min(FW - BR, b.y))
 
-                            # Zero-clipping separation
-                            b1.x -= nx * (overlap * 0.5)
-                            b1.y -= ny * (overlap * 0.5)
-                            b2.x += nx * (overlap * 0.5)
-                            b2.y += ny * (overlap * 0.5)
-
-                            # Normal impulse exchange
-                            rvx = b2.vx - b1.vx
-                            rvy = b2.vy - b1.vy
-                            vel_norm = rvx * nx + rvy * ny
-                            if vel_norm < 0:
-                                impulse = -0.75 * vel_norm
-                                b1.vx -= nx * (impulse * 0.5)
-                                b1.vy -= ny * (impulse * 0.5)
-                                b2.vx += nx * (impulse * 0.5)
-                                b2.vy += ny * (impulse * 0.5)
-
-        # 3. Robot-Ball Interaction (Intake Zone & Bumper Deflection)
-        for rob in robots:
-            cos_h = math.cos(rob.heading)
-            sin_h = math.sin(rob.heading)
-
-            # World position of intake zone
-            intake_center_wx = rob.x + (INTAKE_OFFSET_X * cos_h - INTAKE_OFFSET_Y * sin_h)
-            intake_center_wy = rob.y + (INTAKE_OFFSET_X * sin_h + INTAKE_OFFSET_Y * cos_h)
-
-            for b in self.balls:
-                if b.is_collected:
-                    continue
-
-                # Transform to robot local coordinates
-                rel_x = b.x - rob.x
-                rel_y = b.y - rob.y
-                local_x = rel_x * cos_h + rel_y * sin_h
-                local_y = -rel_x * sin_h + rel_y * cos_h
-
-                # Check Intake Zone
-                in_intake_x = (INTAKE_OFFSET_X - INTAKE_LENGTH / 2.0) <= local_x <= (INTAKE_OFFSET_X + INTAKE_LENGTH / 2.0)
-                in_intake_y = -INTAKE_WIDTH / 2.0 <= local_y <= INTAKE_WIDTH / 2.0
-
-                if in_intake_x and in_intake_y and rob.intake_deployed:
-                    if rob.hopper_balls < MAX_HOPPER_CAPACITY:
-                        # Pull ball inward with progressive roller speed
-                        b.intake_progress += (INTAKE_SURFACE_SPEED_MPS / INTAKE_LENGTH) * dt
-                        pull_speed = INTAKE_SURFACE_SPEED_MPS * 0.85
-                        b.vx = -cos_h * pull_speed
-                        b.vy = -sin_h * pull_speed
-
-                        if b.intake_progress >= 1.0:
-                            b.is_collected = True
-                            rob.hopper_balls += 1
-                        continue
-                    else:
-                        # Hopper is full: push ball out of the way
-                        push_mag = 1.8
-                        b.vx = cos_h * push_mag
-                        b.vy = sin_h * push_mag
-
-                # Check Bumper Collision Deflection
-                half_w = ROBOT_WIDTH_METERS / 2.0
-                half_l = ROBOT_LENGTH_METERS / 2.0
-                buffer = BALL_RADIUS_METERS
-
-                if (-half_l - buffer) <= local_x <= (half_l + buffer) and (-half_w - buffer) <= local_y <= (half_w + buffer):
-                    # Clamp point on robot bounding box
-                    closest_lx = max(-half_l, min(half_l, local_x))
-                    closest_ly = max(-half_w, min(half_w, local_y))
-
-                    dlx = local_x - closest_lx
-                    dly = local_y - closest_ly
-                    dist_to_box = math.hypot(dlx, dly)
-
-                    if dist_to_box < buffer:
-                        push_dist = buffer - max(0.001, dist_to_box)
-                        norm_lx = (dlx / dist_to_box) if dist_to_box > 0.0001 else 1.0
-                        norm_ly = (dly / dist_to_box) if dist_to_box > 0.0001 else 0.0
-
-                        # Transform normal back to world coordinates
-                        norm_wx = norm_lx * cos_h - norm_ly * sin_h
-                        norm_wy = norm_lx * sin_h + norm_ly * cos_h
-
-                        b.x += norm_wx * push_dist
-                        b.y += norm_wy * push_dist
-
-                        # Transfer robot momentum
-                        rob_speed = math.hypot(rob.vx, rob.vy)
-                        impact_speed = max(1.2, rob_speed * 1.25)
-                        b.vx = norm_wx * impact_speed
-                        b.vy = norm_wy * impact_speed
-
-        # 4. Projectile Trajectory Updates
-        active_projectiles = []
-        for p in self.projectiles:
-            p.update(dt)
-            if p.scored:
-                for rob in robots:
-                    if math.hypot(p.target_x - rob.target_hub_pos[0], p.target_y - rob.target_hub_pos[1]) < 0.1:
-                        rob.score_count += 1
-            if p.is_active:
-                active_projectiles.append(p)
-        self.projectiles = active_projectiles
-
-
-# ==============================================================================
-# 9. INTERACTIVE TKINTER SIMULATION APPLICATION
-# ==============================================================================
-
-class SimulationApp:
-    """Tkinter graphical desktop interface for multi-robot simulation and visualization."""
-
-    def __init__(self, root: tk.Tk, paths_dir: Path, autos_dir: Path) -> None:
-        self.root: tk.Tk = root
-        self.root.title("FRC 2026 2D Multi-Robot Simulation")
-        self.paths_dir: Path = paths_dir
-        self.autos_dir: Path = autos_dir
-
-        self.field: Field = Field()
-        self.robots: List[Robot] = []
-        self.engines: List[AutonomousEngine] = []
-
-        # Display parameters
-        self.pixels_per_meter: float = 64.0
-        self.canvas_width: int = int(FIELD_LENGTH_METERS * self.pixels_per_meter)
-        self.canvas_height: int = int(FIELD_WIDTH_METERS * self.pixels_per_meter)
-
-        self.is_paused: bool = False
-        self.simulation_speed: float = 1.0
-        self.last_tick_time: float = time.time()
-
-        self._initialize_robots()
-        self._build_user_interface()
-        self._schedule_tick()
-
-    def _initialize_robots(self) -> None:
-        """Create the four competition robots (2 Blue, 2 Red) and their auto engines."""
-        configs = [
-            ("Blue Left", "blue", 1.85, 6.25, 0.0),
-            ("Blue Right", "blue", 1.85, 2.15, 0.0),
-            ("Red Left", "red", 14.65, 2.15, math.pi),
-            ("Red Right", "red", 14.65, 6.25, math.pi),
-        ]
-        self.robots.clear()
-        self.engines.clear()
-
-        for name, alliance, ix, iy, ih in configs:
-            robot = Robot(name, alliance, ix, iy, ih)
-            engine = AutonomousEngine(robot, self.paths_dir)
-            self.robots.append(robot)
-            self.engines.append(engine)
-
-    def _build_user_interface(self) -> None:
-        """Build the GUI layout: canvas on the left, control sidebar on the right."""
-        main_frame = ttk.Frame(self.root)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=8, pady=8)
-
-        # Simulation Canvas
-        self.canvas = tk.Canvas(
-            main_frame,
-            width=self.canvas_width,
-            height=self.canvas_height,
-            bg="#18181b",
-            highlightthickness=1,
-            highlightbackground="#3f3f46",
-        )
-        self.canvas.pack(side=tk.LEFT, padx=5, pady=5)
-
-        # Control Panel
-        sidebar = ttk.Frame(main_frame, width=320)
-        sidebar.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-
-        # Master Controls
-        btn_frame = ttk.LabelFrame(sidebar, text="Simulation Controls")
-        btn_frame.pack(fill=tk.X, pady=4)
-
-        self.btn_run_all = ttk.Button(btn_frame, text="Run All Autos", command=self.run_all_autos)
-        self.btn_run_all.pack(fill=tk.X, padx=4, pady=2)
-
-        self.btn_pause = ttk.Button(btn_frame, text="Pause", command=self.toggle_pause)
-        self.btn_pause.pack(fill=tk.X, padx=4, pady=2)
-
-        self.btn_reset = ttk.Button(btn_frame, text="Reset Sim", command=self.reset_simulation)
-        self.btn_reset.pack(fill=tk.X, padx=4, pady=2)
-
-        # Autonomous Routine Selectors
-        autos_frame = ttk.LabelFrame(sidebar, text="Robot Routine Selection")
-        autos_frame.pack(fill=tk.X, pady=6)
-
-        available_autos = ["Stay Still"]
-        if self.autos_dir.exists():
-            for f in sorted(self.autos_dir.glob("*.auto")):
-                available_autos.append(f.stem)
-
-        self.auto_vars: List[tk.StringVar] = []
-        for idx, rob in enumerate(self.robots):
-            row = ttk.Frame(autos_frame)
-            row.pack(fill=tk.X, padx=4, pady=2)
-
-            lbl = ttk.Label(row, text=f"{rob.name}:", width=12)
-            lbl.pack(side=tk.LEFT)
-
-            var = tk.StringVar(value=available_autos[1] if len(available_autos) > 1 else "Stay Still")
-            self.auto_vars.append(var)
-
-            combo = ttk.Combobox(row, textvariable=var, values=available_autos, state="readonly", width=18)
-            combo.pack(side=tk.RIGHT, fill=tk.X, expand=True)
-
-        # Telemetry Display
-        telemetry_frame = ttk.LabelFrame(sidebar, text="Robot Telemetry")
-        telemetry_frame.pack(fill=tk.BOTH, expand=True, pady=6)
-
-        self.telemetry_labels: List[ttk.Label] = []
-        for rob in self.robots:
-            card = ttk.Frame(telemetry_frame, relief=tk.GROOVE, padding=4)
-            card.pack(fill=tk.X, padx=4, pady=3)
-
-            name_lbl = ttk.Label(
-                card,
-                text=rob.name,
-                font=("Segoe UI", 9, "bold"),
-                foreground="#38bdf8" if rob.alliance == "blue" else "#f87171",
-            )
-            name_lbl.pack(anchor=tk.W)
-
-            stats_lbl = ttk.Label(card, text="", font=("Consolas", 8))
-            stats_lbl.pack(anchor=tk.W)
-            self.telemetry_labels.append(stats_lbl)
-
-    def run_all_autos(self) -> None:
-        """Start auto routines for all robots based on combo box selections."""
-        for idx, (rob, eng) in enumerate(zip(self.robots, self.engines)):
-            selected_mode = self.auto_vars[idx].get()
-            if selected_mode == "Stay Still":
-                rob.auto_mode = "still"
-                eng.is_active = False
+        rem = []
+        for p in self.projs:
+            if p.update(dt):
+                self.scored += 1
             else:
-                rob.auto_mode = "auto"
-                auto_file = self.autos_dir / f"{selected_mode}.auto"
-                if auto_file.exists():
-                    eng.load_auto_file(auto_file)
-                    eng.start()
+                rem.append(p)
+        self.projs = rem
 
-    def toggle_pause(self) -> None:
-        """Toggle paused state."""
-        self.is_paused = not self.is_paused
-        self.btn_pause.config(text="Resume" if self.is_paused else "Pause")
+class R:
+    def __init__(self, x=0.0, y=0.0, th=0.0, rid="R0", nm="Robot", al="Red", col="#ff5555"):
+        self.x = x
+        self.y = y
+        self.th = th
+        self.id = rid
+        self.name = nm
+        self.al = al
+        self.col = col
+        self.w = RW
+        self.l = RL
+        self.vx = 0.0
+        self.vy = 0.0
+        self.w_rot = 0.0
+        self.hp = 0
+        self.intake = False
+        self.shooting = False
+        self.rpm = 2200.0
+        self.tgt_rpm = 2200.0
+        self.shots = 0
+        self.cd = 0.0
 
-    def reset_simulation(self) -> None:
-        """Reset field, robots, and engines to initial state."""
-        self.field.reset()
-        self._initialize_robots()
-        for idx, rob in enumerate(self.robots):
-            rob.auto_mode = "still"
-            self.auto_vars[idx].set("Stay Still")
+    def corners(self):
+        hw, hl = self.w / 2.0, self.l / 2.0
+        cos_t, sin_t = math.cos(self.th), math.sin(self.th)
+        res = []
+        for ox, oy in [(-hl, -hw), (hl, -hw), (hl, hw), (-hl, hw)]:
+            res.append((self.x + ox * cos_t - oy * sin_t, self.y + ox * sin_t + oy * cos_t))
+        return res
 
-    def _schedule_tick(self) -> None:
-        """Schedule next animation step (approx 60 Hz)."""
-        self._tick()
-        self.root.after(16, self._schedule_tick)
+    def intake_poly(self):
+        cos_t, sin_t = math.cos(self.th), math.sin(self.th)
+        hw, hl = IW / 2.0, IL / 2.0
+        res = []
+        for ox, oy in [(-hl, -hw), (hl, -hw), (hl, hw), (-hl, hw)]:
+            lx, ly = IX + ox, IY + oy
+            res.append((self.x + lx * cos_t - ly * sin_t, self.y + lx * sin_t + ly * cos_t))
+        return res
 
-    def _tick(self) -> None:
-        """Simulation physics step and visual rendering."""
-        current_time = time.time()
-        dt = min(0.05, current_time - self.last_tick_time) * self.simulation_speed
-        self.last_tick_time = current_time
+    def intake_front(self):
+        cos_t, sin_t = math.cos(self.th), math.sin(self.th)
+        hw, hl = IW / 2.0, IL / 2.0
+        fx = IX + hl
+        p1 = (self.x + fx * cos_t - (-hw) * sin_t, self.y + fx * sin_t + (-hw) * cos_t)
+        p2 = (self.x + fx * cos_t - hw * sin_t, self.y + fx * sin_t + hw * cos_t)
+        return p1, p2
 
-        if not self.is_paused:
-            # Step auto engines
-            for eng in self.engines:
-                eng.update(dt)
+    def shooter_pos(self):
+        cos_t, sin_t = math.cos(self.th), math.sin(self.th)
+        return (self.x + SX * cos_t - SY * sin_t, self.y + SX * sin_t + SY * cos_t)
 
-            # Step robot dynamics
-            for rob in self.robots:
-                rob.update(dt)
+    def shoot(self, fld, thub):
+        if self.hp <= 0:
+            return False
+        sp = self.shooter_pos()
+        tx, ty = thub
+        tx += random.uniform(-0.12, 0.12)
+        ty += random.uniform(-0.12, 0.12)
+        dist = math.hypot(tx - sp[0], ty - sp[1])
+        fld.projs.append(P(sp[0], sp[1], tx, ty, t_tot=max(0.35, dist / 11.5), h=1.4))
+        self.hp -= 1
+        self.shots += 1
+        return True
 
-            # Multi-robot bumper collision handling
-            resolve_robot_collisions(self.robots)
+    def update_intake(self, fld, dt):
+        cos_t, sin_t = math.cos(self.th), math.sin(self.th)
+        hw, hl = self.w / 2.0, self.l / 2.0
+        ihw = IW / 2.0
+        rem_b = []
+        for b in fld.balls:
+            if b.iid is not None and b.iid != self.id:
+                rem_b.append(b)
+                continue
+            dx = b.x - self.x
+            dy = b.y - self.y
+            rx = dx * cos_t + dy * sin_t
+            ry = -dx * sin_t + dy * cos_t
 
-            # Auto-fire when AimBot has lock
-            for rob in self.robots:
-                if rob.aimbot_locked and rob.hopper_balls > 0:
-                    rob.is_shooting = True
-                    proj = rob.shoot()
-                    if proj:
-                        self.field.projectiles.append(proj)
+            in_intake = (self.intake and
+                         (hl - 0.05 <= rx <= IX + IL / 2.0 + BR) and
+                         (abs(ry - IY) <= ihw + BR * 0.5))
+
+            if in_intake:
+                if self.hp < MAX_HP:
+                    b.iid = self.id
+                    prx = rx - R_SPD * dt
+                    b.dep += R_SPD * dt
+                    if b.dep >= 0.10 or prx <= (hl + 0.02):
+                        self.hp += 1
+                        b.iid = None
+                        continue
+                    b.x = self.x + prx * cos_t - ry * sin_t
+                    b.y = self.y + prx * sin_t + ry * cos_t
+                    rem_b.append(b)
+                    continue
                 else:
-                    rob.is_shooting = False
+                    if b.iid == self.id:
+                        b.iid = None
+                        b.dep = 0.0
 
-            # Step field physics (balls, collisions, intake)
-            self.field.update(dt, self.robots)
+            if b.iid == self.id and not in_intake:
+                b.iid = None
+                b.dep = 0.0
 
-        # Draw visuals & update dashboard
-        self._render()
-        self._update_telemetry()
+            if abs(rx) < hl + BR and abs(ry) < hw + BR:
+                ox = (hl + BR) - abs(rx)
+                oy = (hw + BR) - abs(ry)
+                if ox < oy:
+                    rx = math.copysign(hl + BR + 0.005, rx)
+                else:
+                    ry = math.copysign(hw + BR + 0.005, ry)
+                b.x = self.x + rx * cos_t - ry * sin_t
+                b.y = self.y + rx * sin_t + ry * cos_t
+                b.vx = self.vx - self.w_rot * dy * 0.5
+                b.vy = self.vy + self.w_rot * dx * 0.5
+            rem_b.append(b)
+        fld.balls = rem_b
 
-    def _to_canvas(self, x: float, y: float) -> Tuple[float, float]:
-        """Convert field coordinates (meters) to canvas pixel coordinates."""
-        cx = x * self.pixels_per_meter
-        cy = self.canvas_height - (y * self.pixels_per_meter)
-        return cx, cy
+def col_robs(robs):
+    min_d = 0.88
+    for i in range(len(robs)):
+        for j in range(i + 1, len(robs)):
+            r1, r2 = robs[i], robs[j]
+            dx = r2.x - r1.x
+            dy = r2.y - r1.y
+            d = math.hypot(dx, dy)
+            if d < min_d:
+                if d < 1e-4:
+                    dx, dy, d = 0.1, 0.0, 0.1
+                ol = min_d - d
+                nx, ny = dx / d, dy / d
+                r1.x -= nx * ol * 0.5
+                r1.y -= ny * ol * 0.5
+                r2.x += nx * ol * 0.5
+                r2.y += ny * ol * 0.5
+                rvx = r1.vx - r2.vx
+                rvy = r1.vy - r2.vy
+                dot = rvx * nx + rvy * ny
+                if dot > 0:
+                    imp = dot * 0.35
+                    r1.vx -= imp * nx
+                    r1.vy -= imp * ny
+                    r2.vx += imp * nx
+                    r2.vy += imp * ny
 
-    def _render(self) -> None:
-        """Render field zones, balls, projectiles, and robots onto the Tkinter canvas."""
-        self.canvas.delete("all")
+class Node:
+    def __init__(self, t, d=None):
+        self.t = t
+        self.d = d or {}
+        self.ch = []
 
-        # 1. Field Zones
-        # Neutral Zone
-        nz_x0, nz_y1 = self._to_canvas(NEUTRAL_ZONE_MIN_X, NEUTRAL_ZONE_MAX_Y)
-        nz_x1, nz_y0 = self._to_canvas(NEUTRAL_ZONE_MAX_X, NEUTRAL_ZONE_MIN_Y)
-        self.canvas.create_rectangle(nz_x0, nz_y1, nz_x1, nz_y0, fill="#27272a", outline="#3f3f46", dash=(4, 4))
-        self.canvas.create_text(
-            (nz_x0 + nz_x1) / 2.0,
-            nz_y1 + 12,
-            text="NEUTRAL ZONE (30ft x 12ft)",
-            fill="#71717a",
-            font=("Segoe UI", 8),
-        )
+class E:
+    def __init__(self, r, fld):
+        self.r = r
+        self.fld = fld
+        self.cache = {}
+        self.root = None
+        self.active = False
+        self.exec = None
+        self.cur_cmd = "Idle"
+        self.dt = 0.02
 
-        # Alliance Hubs
-        for hub_pos, color in [(BLUE_HUB_COORDINATES, "#3b82f6"), (RED_HUB_COORDINATES, "#ef4444")]:
-            hx, hy = self._to_canvas(hub_pos[0], hub_pos[1])
-            hr = 0.65 * self.pixels_per_meter
-            self.canvas.create_oval(hx - hr, hy - hr, hx + hr, hy + hr, outline=color, width=2)
-            self.canvas.create_text(hx, hy, text="HUB", fill=color, font=("Segoe UI", 8, "bold"))
+    def load_auto(self, aname, mx=False, my=False):
+        self.cache.clear()
+        self.active = False
+        self.cur_cmd = "Idle"
+        if aname == "Stay Still (Idle)" or not aname:
+            self.root = Node("wait", {"waitTime": 9999.0})
+            self.exec = self.build_exec(self.root)
+            return
+        afp = adir / aname
+        if not afp.exists():
+            self.root = Node("wait", {"waitTime": 9999.0})
+            self.exec = self.build_exec(self.root)
+            return
+        with open(afp) as f:
+            data = json.load(f)
 
-        # Depots
-        b_dp_x0, b_dp_y1 = self._to_canvas(BLUE_DEPOT_MIN_X, BLUE_DEPOT_MAX_Y)
-        b_dp_x1, b_dp_y0 = self._to_canvas(BLUE_DEPOT_MAX_X, BLUE_DEPOT_MIN_Y)
-        self.canvas.create_rectangle(b_dp_x0, b_dp_y1, b_dp_x1, b_dp_y0, outline="#1d4ed8", width=1)
+        def get_paths(node):
+            if node.get("type") == "path":
+                pn = node.get("data", {}).get("pathName")
+                if pn and pn not in self.cache:
+                    pfp = pdir / f"{pn}.path"
+                    if pfp.exists():
+                        self.cache[pn] = Traj(pn, pfp, mx=mx, my=my)
+            for c in node.get("data", {}).get("commands", []):
+                get_paths(c)
 
-        r_dp_x0, r_dp_y1 = self._to_canvas(RED_DEPOT_MIN_X, RED_DEPOT_MAX_Y)
-        r_dp_x1, r_dp_y0 = self._to_canvas(RED_DEPOT_MAX_X, RED_DEPOT_MIN_Y)
-        self.canvas.create_rectangle(r_dp_x0, r_dp_y1, r_dp_x1, r_dp_y0, outline="#b91c1c", width=1)
+        cmd_root = data.get("command", {})
+        get_paths(cmd_root)
 
-        # 2. Balls
-        ball_px_rad = max(2.5, BALL_RADIUS_METERS * self.pixels_per_meter)
-        for b in self.field.balls:
-            if not b.is_collected:
-                bx, by = self._to_canvas(b.x, b.y)
-                self.canvas.create_oval(
-                    bx - ball_px_rad,
-                    by - ball_px_rad,
-                    bx + ball_px_rad,
-                    by + ball_px_rad,
-                    fill="#facc15",
-                    outline="#ca8a04",
-                )
+        def parse_n(raw):
+            n = Node(raw.get("type", "noop"), raw.get("data", {}))
+            for c in raw.get("data", {}).get("commands", []):
+                n.ch.append(parse_n(c))
+            return n
 
-        # 3. Ballistic Projectiles
-        for p in self.field.projectiles:
-            px, py = self._to_canvas(p.x, p.y)
-            proj_rad = max(2.0, (BALL_RADIUS_METERS + p.z * 0.04) * self.pixels_per_meter)
-            self.canvas.create_oval(
-                px - proj_rad,
-                py - proj_rad,
-                px + proj_rad,
-                py + proj_rad,
-                fill="#f97316",
-                outline="#ea580c",
-            )
+        self.root = parse_n(cmd_root)
+        self.exec = self.build_exec(self.root)
 
-        # 4. Robots
-        for rob in self.robots:
-            poly = rob.get_bumper_polygon()
-            canvas_poly = []
-            for px, py in poly:
-                cx, cy = self._to_canvas(px, py)
-                canvas_poly.extend([cx, cy])
+    def start(self):
+        if self.root:
+            self.exec = self.build_exec(self.root)
+            self.active = True
+            self.cur_cmd = "Running Auto"
 
-            fill_color = "#1e3a8a" if rob.alliance == "blue" else "#7f1d1d"
-            outline_color = "#60a5fa" if rob.alliance == "blue" else "#f87171"
-            self.canvas.create_polygon(canvas_poly, fill=fill_color, outline=outline_color, width=2)
+    def stop(self):
+        self.active = False
+        self.r.vx = 0.0
+        self.r.vy = 0.0
+        self.r.w_rot = 0.0
+        self.r.intake = False
+        self.r.shooting = False
+        self.cur_cmd = "Idle"
 
-            # Robot center and heading indicator
-            rx, ry = self._to_canvas(rob.x, rob.y)
-            hx, hy = self._to_canvas(
-                rob.x + math.cos(rob.heading) * 0.45,
-                rob.y + math.sin(rob.heading) * 0.45,
-            )
-            self.canvas.create_line(rx, ry, hx, hy, fill="#ffffff", width=2, arrow=tk.LAST)
+    def update(self, dt):
+        self.dt = dt
+        if self.active and self.exec:
+            if self.exec["step"]():
+                self.active = False
+                self.r.vx = 0.0
+                self.r.vy = 0.0
+                self.r.w_rot = 0.0
+                self.r.intake = False
+                self.r.shooting = False
+                self.cur_cmd = "Completed"
 
-            # AimBot line to hub (dashed when locked)
-            if rob.aimbot_locked:
-                hub_cx, hub_cy = self._to_canvas(rob.target_hub_pos[0], rob.target_hub_pos[1])
-                self.canvas.create_line(rx, ry, hub_cx, hub_cy, fill="#4ade80", dash=(2, 4), width=1)
+    def build_exec(self, n):
+        t = n.t
+        d = n.d
+        if t == "sequential":
+            cx = [self.build_exec(c) for c in n.ch]
+            st = {"idx": 0}
+            def step_seq():
+                while st["idx"] < len(cx):
+                    if cx[st["idx"]]["step"]():
+                        st["idx"] += 1
+                    else:
+                        return False
+                return True
+            return {"type": "seq", "step": step_seq}
 
-            # Robot label
-            self.canvas.create_text(
-                rx,
-                ry,
-                text=f"{rob.name}\n[{rob.hopper_balls}]",
-                fill="#ffffff",
-                font=("Segoe UI", 7, "bold"),
-                justify=tk.CENTER,
-            )
+        elif t == "parallel":
+            cx = [self.build_exec(c) for c in n.ch]
+            def step_par():
+                pdone = False
+                for i, c in enumerate(cx):
+                    done = c["step"]()
+                    if i == 0 and done:
+                        pdone = True
+                return pdone
+            return {"type": "par", "step": step_par}
 
-    def _update_telemetry(self) -> None:
-        """Update live status labels in the sidebar."""
-        for idx, rob in enumerate(self.robots):
-            stats_text = (
-                f"Pose: ({rob.x:4.2f}, {rob.y:4.2f}, {math.degrees(rob.heading):4.0f} deg)\n"
-                f"Vel: {math.hypot(rob.vx, rob.vy):4.2f} m/s  Omega: {rob.omega:4.2f} rad/s\n"
-                f"Hopper: {rob.hopper_balls}/{MAX_HOPPER_CAPACITY}  Scored: {rob.score_count}\n"
-                f"AimBot: {'LOCKED' if rob.aimbot_locked else 'TRACKING'} | RPM: {rob.flywheel_rpm:4.0f}"
-            )
-            self.telemetry_labels[idx].config(text=stats_text)
+        elif t == "race":
+            cx = [self.build_exec(c) for c in n.ch]
+            def step_race():
+                for c in cx:
+                    if c["step"]():
+                        return True
+                return False
+            return {"type": "race", "step": step_race}
 
+        elif t == "wait":
+            wt = float(d.get("waitTime", 1.0))
+            st = {"t": 0.0}
+            def step_wait():
+                st["t"] += self.dt
+                return st["t"] >= wt
+            return {"type": "wait", "step": step_wait}
 
-# ==============================================================================
-# 10. ENTRYPOINT & ASSET DISCOVERY
-# ==============================================================================
+        elif t == "path":
+            pn = d.get("pathName")
+            tr = self.cache.get(pn)
+            dur = tr.tot_t if tr else 1.0
+            st = {"t": 0.0}
+            def step_pth():
+                st["t"] += self.dt
+                if tr:
+                    s = tr.sample(st["t"])
+                    tx, ty, trot = s["x"], s["y"], s["rot"]
+                    fvx, fvy, fw = s["vx"], s["vy"], s["w"]
+                    ex, ey = tx - self.r.x, ty - self.r.y
+                    cvx = fvx + 10.0 * ex
+                    cvy = fvy + 10.0 * ey
+                    spd = math.hypot(cvx, cvy)
+                    max_v = max(5.36, MV * 1.15)
+                    if spd > max_v:
+                        sc = max_v / spd
+                        cvx *= sc
+                        cvy *= sc
+                    dth = a_diff(trot, self.r.th)
+                    cw = max(-MAW, min(MAW, fw + 10.0 * dth))
+                    self.r.vx = cvx
+                    self.r.vy = cvy
+                    self.r.w_rot = cw
+                    self.r.x += self.r.vx * self.dt
+                    self.r.y += self.r.vy * self.dt
+                    self.r.th = n_ang(self.r.th + self.r.w_rot * self.dt)
+                self.cur_cmd = f"Path: {pn}"
+                if st["t"] >= dur:
+                    if tr and tr.v1 > 0.5:
+                        return True
+                    err = math.hypot(s["x"] - self.r.x, s["y"] - self.r.y) if tr else 0.0
+                    if err < 0.15 or st["t"] >= dur + 0.35:
+                        self.r.vx = 0.0
+                        self.r.vy = 0.0
+                        self.r.w_rot = 0.0
+                        return True
+                return False
+            return {"type": "path", "step": step_pth}
 
-def find_pathplanner_directories() -> Tuple[Path, Path]:
-    """Search for the pathplanner/paths and pathplanner/autos directories."""
-    candidates = [
-        Path.cwd() / "src/main/deploy/pathplanner",
-        Path(__file__).resolve().parent / "src/main/deploy/pathplanner",
-        Path(__file__).resolve().parent.parent / "src/main/deploy/pathplanner",
-        Path(__file__).resolve().parent.parent.parent / "src/main/deploy/pathplanner",
-    ]
+        elif t == "named":
+            nm = d.get("name")
+            return self.build_named(nm)
 
-    for base in candidates:
-        paths_dir = base / "paths"
-        autos_dir = base / "autos"
-        if paths_dir.exists() and autos_dir.exists():
-            return paths_dir, autos_dir
+        return {"type": "noop", "step": lambda: True}
 
-    # Fallback to local paths
-    return Path("src/main/deploy/pathplanner/paths"), Path("src/main/deploy/pathplanner/autos")
+    def build_named(self, nm):
+        if nm == "ShootAutoAim":
+            st = {"t": 0.0, "shots": 0, "cd": 0.0}
+            def step_shoot():
+                st["t"] += self.dt
+                st["cd"] -= self.dt
+                thub = self.fld.tgt_hub(self.r.al)
+                sp = self.r.shooter_pos()
+                dist = math.hypot(thub[0] - sp[0], thub[1] - sp[1])
+                req_rpm = get_rpm(dist, self.r.rpm)
+                self.r.tgt_rpm = req_rpm
+                if self.r.rpm < self.r.tgt_rpm:
+                    self.r.rpm = min(self.r.tgt_rpm, self.r.rpm + 4000.0 * self.dt)
+                else:
+                    self.r.rpm = max(self.r.tgt_rpm, self.r.rpm - 4000.0 * self.dt)
 
+                req_ang = n_ang(math.atan2(thub[1] - sp[1], thub[0] - sp[0]) + math.pi)
+                dth = a_diff(req_ang, self.r.th)
+                self.r.w_rot = max(-MAW, min(MAW, 8.0 * dth))
+                self.r.th = n_ang(self.r.th + self.r.w_rot * self.dt)
+                self.r.vx = 0.0
+                self.r.vy = 0.0
 
-def main() -> None:
-    """Application entrypoint."""
-    paths_dir, autos_dir = find_pathplanner_directories()
-    root = tk.Tk()
-    app = SimulationApp(root, paths_dir, autos_dir)
-    root.mainloop()
+                rpm_ok = abs(self.r.rpm - self.r.tgt_rpm) <= 75.0
+                th_ok = abs(dth) < math.radians(3.0)
+                locked = rpm_ok and th_ok
 
+                if locked:
+                    self.r.shooting = True
+                    self.cur_cmd = f"AimBot [LOCKED]: {int(self.r.rpm)} RPM"
+                    if st["cd"] <= 0.0 and self.r.hp > 0:
+                        if self.r.shoot(self.fld, thub):
+                            st["shots"] += 1
+                            st["cd"] = 0.10
+                else:
+                    self.r.shooting = False
+                    self.cur_cmd = f"AimBot [ALIGNING]: {int(self.r.rpm)} RPM"
+
+                if (self.r.hp == 0 and st["shots"] > 0) or st["t"] >= 3.0:
+                    self.r.shooting = False
+                    return True
+                return False
+            return {"type": "named", "step": step_shoot}
+
+        elif nm == "Intake":
+            def step_intake():
+                self.r.intake = True
+                self.cur_cmd = "Intake [ACTIVE]"
+                return True
+            return {"type": "named", "step": step_intake}
+
+        return {"type": "noop", "step": lambda: True}
+
+class Sim:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("FRC 2026 Simulation")
+        self.root.geometry("1400x820")
+        self.root.configure(bg="#1e1e24")
+
+        self.fld = F("Red")
+        self.robs = [
+            R(4.52, 7.36, 0.0, "B1", "Blue Top (L)", "Blue", "#8be9fd"),
+            R(4.52, 0.64, 0.0, "B2", "Blue Bottom (R)", "Blue", "#50fa7b"),
+            R(FL - 4.52, 7.36, math.pi, "R1", "Red Top (L)", "Red", "#ff5555"),
+            R(FL - 4.52, 0.64, math.pi, "R2", "Red Bottom (R)", "Red", "#ffb86c")
+        ]
+        self.engs = [E(r, self.fld) for r in self.robs]
+        self.cfgs = [
+            {"mx": False, "my": False, "def": "L-Double-Tap-Trench-Depot.auto"},
+            {"mx": False, "my": False, "def": "R-Double-Tap-Trench.auto"},
+            {"mx": True, "my": False, "def": "L-Double-Tap-Trench-Depot.auto"},
+            {"mx": True, "my": False, "def": "R-Double-Tap-Trench.auto"},
+        ]
+
+        self.spd = 1.0
+        self.zm = 60.0
+        self.ox = 35.0
+        self.oy = 35.0
+        self.b_items = {}
+        self.init_done = False
+
+        self.ui()
+        self.init_gfx()
+        self.pop_autos()
+        self.last_t = time.perf_counter()
+        self.loop()
+
+    def ui(self):
+        top = tk.Frame(self.root, bg="#282a36", padx=10, pady=8)
+        top.pack(side=tk.TOP, fill=tk.X)
+
+        self.pbtn = tk.Button(top, text="> Run All Autos", bg="#50fa7b", fg="#282a36", font=("Segoe UI", 10, "bold"),
+                              padx=12, pady=2, command=self.toggle)
+        self.pbtn.pack(side=tk.LEFT, padx=(5, 8))
+
+        self.rbtn = tk.Button(top, text="Reset Sim", bg="#ff5555", fg="#ffffff", font=("Segoe UI", 10, "bold"),
+                              padx=12, pady=2, command=self.reset)
+        self.rbtn.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(top, text="Speed:", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 10)).pack(side=tk.LEFT, padx=(15, 5))
+        self.s_cb = ttk.Combobox(top, state="readonly", values=["0.5x", "1.0x", "2.0x", "4.0x"], width=5)
+        self.s_cb.set("1.0x")
+        self.s_cb.pack(side=tk.LEFT, padx=(0, 15))
+        self.s_cb.bind("<<ComboboxSelected>>", lambda e: setattr(self, "spd", float(self.s_cb.get().replace("x", ""))))
+
+        tk.Label(top, text="Quick Preset:", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 10, "bold")).pack(side=tk.LEFT, padx=(10, 5))
+        self.pr_cb = ttk.Combobox(top, state="readonly",
+                                  values=["All 4 Robots Charge Center", "2 Red vs 2 Blue", "Solo Red Top", "All Stay Still"], width=24)
+        self.pr_cb.set("All 4 Robots Charge Center")
+        self.pr_cb.pack(side=tk.LEFT, padx=(0, 15))
+        self.pr_cb.bind("<<ComboboxSelected>>", self.on_preset)
+
+        self.stat_lbl = tk.Label(top, text="Ready", fg="#8be9fd", bg="#282a36", font=("Consolas", 10, "bold"))
+        self.stat_lbl.pack(side=tk.RIGHT, padx=10)
+
+        self.cnv = tk.Canvas(self.root, bg="#181920", highlightthickness=0)
+        self.cnv.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        side = tk.Frame(self.root, bg="#21222c", width=340, padx=12, pady=10)
+        side.pack(side=tk.RIGHT, fill=tk.Y)
+        side.pack_propagate(False)
+
+        tk.Label(side, text="4-ROBOT CONTROLLER", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 8))
+
+        self.rcbs = []
+        self.rhuds = []
+        for i, (r, c) in enumerate(zip(self.robs, self.cfgs)):
+            bx = tk.LabelFrame(side, text=f" {r.name} ", fg=r.col, bg="#282a36", font=("Segoe UI", 9, "bold"), padx=6, pady=4)
+            bx.pack(fill=tk.X, pady=3)
+            tr = tk.Frame(bx, bg="#282a36")
+            tr.pack(fill=tk.X)
+            tk.Label(tr, text="Auto:", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 8)).pack(side=tk.LEFT)
+            cb = ttk.Combobox(tr, state="readonly", width=22)
+            cb.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(4, 0))
+            cb.bind("<<ComboboxSelected>>", lambda e, idx=i: self.on_sel(idx))
+            self.rcbs.append(cb)
+            lbl = tk.Label(bx, text="Hopper: 00/50 | Speed: 0.00 m/s\nCmd: Idle", fg="#f8f8f2", bg="#282a36", font=("Consolas", 8), justify=tk.LEFT, anchor="w")
+            lbl.pack(fill=tk.X, pady=(2, 0))
+            self.rhuds.append(lbl)
+
+        mbx = tk.LabelFrame(side, text=" FIELD & SCORING ", fg="#ff79c6", bg="#282a36", font=("Segoe UI", 9, "bold"), padx=8, pady=6)
+        mbx.pack(fill=tk.X, pady=(12, 6))
+        self.tb_lbl = tk.Label(mbx, text="Field FUEL Remaining: 408", fg="#f1fa8c", bg="#282a36", font=("Segoe UI", 9, "bold"))
+        self.tb_lbl.pack(anchor="w")
+        self.sc_lbl = tk.Label(mbx, text="Scored Balls: 0", fg="#ffb86c", bg="#282a36", font=("Segoe UI", 9, "bold"))
+        self.sc_lbl.pack(anchor="w")
+
+    def pop_autos(self):
+        afs = [f.name for f in adir.glob("*.auto")]
+        opts = ["Stay Still (Idle)"] + sorted(afs)
+        for i, (cb, c) in enumerate(zip(self.rcbs, self.cfgs)):
+            cb["values"] = opts
+            d = c["def"] if c["def"] in afs else "Stay Still (Idle)"
+            cb.set(d)
+            self.engs[i].load_auto(d, mx=c["mx"], my=c["my"])
+
+    def on_sel(self, idx):
+        s = self.rcbs[idx].get()
+        c = self.cfgs[idx]
+        self.engs[idx].load_auto(s, mx=c["mx"], my=c["my"])
+
+    def on_preset(self, e):
+        p = self.pr_cb.get()
+        afs = [f.name for f in adir.glob("*.auto")]
+        if p == "All 4 Robots Charge Center":
+            self.rcbs[0].set("L-Double-Tap-Trench-Depot.auto" if "L-Double-Tap-Trench-Depot.auto" in afs else afs[0])
+            self.rcbs[1].set("R-Double-Tap-Trench.auto" if "R-Double-Tap-Trench.auto" in afs else afs[0])
+            self.rcbs[2].set("L-Double-Tap-Trench-Depot.auto" if "L-Double-Tap-Trench-Depot.auto" in afs else afs[0])
+            self.rcbs[3].set("R-Double-Tap-Trench.auto" if "R-Double-Tap-Trench.auto" in afs else afs[0])
+        elif p == "2 Red vs 2 Blue":
+            self.rcbs[0].set("L-Triple-Tap-Trench.auto" if "L-Triple-Tap-Trench.auto" in afs else afs[0])
+            self.rcbs[1].set("R-Triple-Tap-Trench.auto" if "R-Triple-Tap-Trench.auto" in afs else afs[0])
+            self.rcbs[2].set("L-Triple-Tap-Trench.auto" if "L-Triple-Tap-Trench.auto" in afs else afs[0])
+            self.rcbs[3].set("R-Triple-Tap-Trench.auto" if "R-Triple-Tap-Trench.auto" in afs else afs[0])
+        elif p == "Solo Red Top":
+            self.rcbs[0].set("L-Double-Tap-Trench-Depot.auto" if "L-Double-Tap-Trench-Depot.auto" in afs else afs[0])
+            self.rcbs[1].set("Stay Still (Idle)")
+            self.rcbs[2].set("Stay Still (Idle)")
+            self.rcbs[3].set("Stay Still (Idle)")
+        elif p == "All Stay Still":
+            for cb in self.rcbs:
+                cb.set("Stay Still (Idle)")
+        for i, cb in enumerate(self.rcbs):
+            self.on_sel(i)
+        self.reset()
+
+    def toggle(self):
+        if any(e.active for e in self.engs):
+            for e in self.engs:
+                e.stop()
+            self.pbtn.config(text="> Resume", bg="#50fa7b")
+        else:
+            for e in self.engs:
+                e.start()
+            self.pbtn.config(text="|| Pause", bg="#ffb86c")
+
+    def reset(self):
+        for e in self.engs:
+            e.stop()
+        self.fld.reset_balls()
+        self.init_gfx()
+        for i, cb in enumerate(self.rcbs):
+            self.on_sel(i)
+        self.pbtn.config(text="> Run All Autos", bg="#50fa7b")
+        self.stat_lbl.config(text="Simulator Reset")
+
+    def w2s(self, x, y):
+        return (self.ox + x * self.zm, self.oy + (FW - y) * self.zm)
+
+    def init_gfx(self):
+        self.cnv.delete("all")
+        self.b_items.clear()
+        tl = self.w2s(0, FW)
+        br = self.w2s(FL, 0)
+        self.cnv.create_rectangle(tl[0], tl[1], br[0], br[1], outline="#44475a", fill="#282a36", width=2, tags="static")
+        ct = self.w2s(FL / 2.0, FW)
+        cb = self.w2s(FL / 2.0, 0)
+        self.cnv.create_line(ct[0], ct[1], cb[0], cb[1], fill="#6272a4", dash=(4, 4), width=2, tags="static")
+
+        nz_tl = self.w2s(NZ_X0, NZ_Y1)
+        nz_br = self.w2s(NZ_X1, NZ_Y0)
+        self.cnv.create_rectangle(nz_tl[0], nz_tl[1], nz_br[0], nz_br[1], outline="#6272a4", fill="#21222c", dash=(2, 2), width=1, tags="static")
+
+        b_tl = self.w2s(BDP_X0, BDP_Y1)
+        b_br = self.w2s(BDP_X1, BDP_Y0)
+        self.cnv.create_rectangle(b_tl[0], b_tl[1], b_br[0], b_br[1], outline="#8be9fd", fill="#1f2d3d", width=2, tags="static")
+
+        r_tl = self.w2s(RDP_X0, RDP_Y1)
+        r_br = self.w2s(RDP_X1, RDP_Y0)
+        self.cnv.create_rectangle(r_tl[0], r_tl[1], r_br[0], r_br[1], outline="#ff5555", fill="#3d1f1f", width=2, tags="static")
+
+        hr = self.w2s(RHUB[0], RHUB[1])
+        hb = self.w2s(BHUB[0], BHUB[1])
+        rad = 0.6 * self.zm
+        self.cnv.create_oval(hr[0] - rad, hr[1] - rad, hr[0] + rad, hr[1] + rad, outline="#ff5555", fill="#442222", width=3, tags="static")
+        self.cnv.create_oval(hb[0] - rad, hb[1] - rad, hb[0] + rad, hb[1] + rad, outline="#8be9fd", fill="#223344", width=3, tags="static")
+
+        for b in self.fld.balls:
+            bx, by = self.w2s(b.x, b.y)
+            rad_b = b.r * self.zm
+            self.b_items[b.id] = self.cnv.create_oval(bx - rad_b, by - rad_b, bx + rad_b, by + rad_b, fill="#f1fa8c", outline="#ffb86c", width=1, tags="ball")
+        self.init_done = True
+
+    def loop(self):
+        now = time.perf_counter()
+        dt = min(0.08, (now - self.last_t) * self.spd)
+        self.last_t = now
+
+        for e in self.engs:
+            e.update(dt)
+        col_robs(self.robs)
+        for r in self.robs:
+            r.update_intake(self.fld, dt)
+        self.fld.step(dt)
+
+        self.draw()
+        self.hud()
+
+        calc = time.perf_counter() - now
+        self.root.after(max(2, int((0.02 - calc) * 1000)), self.loop)
+
+    def draw(self):
+        if not self.init_done:
+            self.init_gfx()
+        act_ids = set()
+        for b in self.fld.balls:
+            act_ids.add(b.id)
+            bx, by = self.w2s(b.x, b.y)
+            rad_b = b.r * self.zm
+            if b.id in self.b_items:
+                self.cnv.coords(self.b_items[b.id], bx - rad_b, by - rad_b, bx + rad_b, by + rad_b)
+            else:
+                self.b_items[b.id] = self.cnv.create_oval(bx - rad_b, by - rad_b, bx + rad_b, by + rad_b, fill="#f1fa8c", outline="#ffb86c", width=1, tags="ball")
+        for bid, itm in list(self.b_items.items()):
+            if bid not in act_ids:
+                self.cnv.coords(itm, -200, -200, -200, -200)
+
+        self.cnv.delete("dynamic")
+        for p in self.fld.projs:
+            px, py = self.w2s(p.cx, p.cy)
+            psz = 0.075 * self.zm * (1.0 + p.ah * 0.4)
+            self.cnv.create_oval(px - psz, py - psz, px + psz, py + psz, fill="#ff79c6", outline="#ffffff", width=2, tags="dynamic")
+
+        for r in self.robs:
+            pts = []
+            for pt in [self.w2s(x, y) for x, y in r.corners()]:
+                pts.extend([pt[0], pt[1]])
+            col = r.col if not r.shooting else "#f1fa8c"
+            self.cnv.create_polygon(pts, outline="#f8f8f2", fill=col, width=2, tags="dynamic")
+
+            c_scr = self.w2s(r.x, r.y)
+            self.cnv.create_text(c_scr[0], c_scr[1], text=r.name.split()[0], fill="#181920", font=("Segoe UI", 8, "bold"), tags="dynamic")
+
+            ipts = []
+            for pt in [self.w2s(x, y) for x, y in r.intake_poly()]:
+                ipts.extend([pt[0], pt[1]])
+            icol = "#50fa7b" if r.intake else "#2d7f4a"
+            self.cnv.create_polygon(ipts, outline="#50fa7b", fill=icol, width=2, tags="dynamic")
+
+            p1, p2 = r.intake_front()
+            sp1, sp2 = self.w2s(p1[0], p1[1]), self.w2s(p2[0], p2[1])
+            self.cnv.create_line(sp1[0], sp1[1], sp2[0], sp2[1], fill="#ffffff", width=3, tags="dynamic")
+
+            sp = r.shooter_pos()
+            ss = self.w2s(sp[0], sp[1])
+            sr = 0.12 * self.zm
+            sfill = "#ff79c6" if r.shooting else "#ffb86c"
+            self.cnv.create_oval(ss[0] - sr, ss[1] - sr, ss[0] + sr, ss[1] + sr, fill=sfill, outline="#ffffff", width=2, tags="dynamic")
+
+            if r.shooting:
+                thub = self.fld.tgt_hub(r.al)
+                ths = self.w2s(thub[0], thub[1])
+                self.cnv.create_line(ss[0], ss[1], ths[0], ths[1], fill="#ff79c6", dash=(3, 3), width=2, tags="dynamic")
+
+            hx = r.x + 0.55 * math.cos(r.th)
+            hy = r.y + 0.55 * math.sin(r.th)
+            hs = self.w2s(hx, hy)
+            self.cnv.create_line(c_scr[0], c_scr[1], hs[0], hs[1], fill="#50fa7b", arrow=tk.LAST, width=2, tags="dynamic")
+
+    def hud(self):
+        for i, (r, e, lbl) in enumerate(zip(self.robs, self.engs, self.rhuds)):
+            c = e.cur_cmd
+            if len(c) > 22:
+                c = c[:20] + ".."
+            sp = math.hypot(r.vx, r.vy)
+            lbl.config(text=f"Hopper: {r.hp:02d}/50 | Speed: {sp:.2f} m/s\nCmd: {c}")
+
+        self.tb_lbl.config(text=f"Field FUEL Remaining: {len(self.fld.balls)}")
+        self.sc_lbl.config(text=f"Scored Balls in Hubs: {self.fld.scored}")
+
+        act = [r.name for r, e in zip(self.robs, self.engs) if e.active]
+        self.stat_lbl.config(text=f"Running: {len(act)} Active" if act else "Idle / Ready", fg="#50fa7b" if act else "#8be9fd")
 
 if __name__ == "__main__":
-    main()
+    rt = tk.Tk()
+    app = Sim(rt)
+    rt.mainloop()
