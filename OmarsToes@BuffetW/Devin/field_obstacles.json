@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Blue Bottom Bump",
+    "type": "bump",
+    "x0": 4.0,
+    "y0": 1.47,
+    "x1": 5.19,
+    "y1": 3.45
+  },
+  {
+    "name": "Red Bottom Bump",
+    "type": "bump",
+    "x0": 11.25,
+    "y0": 1.4,
+    "x1": 12.43,
+    "y1": 3.46
+  },
+  {
+    "name": "Blue Hub Barrier",
+    "type": "barrier",
+    "x0": 3.96,
+    "y0": 3.47,
+    "x1": 5.22,
+    "y1": 4.7
+  },
+  {
+    "name": "Red Hub Barrier",
+    "type": "barrier",
+    "x0": 11.29,
+    "y0": 3.47,
+    "x1": 12.45,
+    "y1": 4.67
+  },
+  {
+    "name": "Blue Top Bump",
+    "type": "bump",
+    "x0": 3.95,
+    "y0": 4.72,
+    "x1": 5.18,
+    "y1": 6.72
+  },
+  {
+    "name": "Red Top Bump",
+    "type": "bump",
+    "x0": 11.27,
+    "y0": 4.65,
+    "x1": 12.42,
+    "y1": 6.68
+  }
+]

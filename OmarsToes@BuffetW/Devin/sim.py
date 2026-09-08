@@ -3,12 +3,20 @@ from tkinter import ttk
 import math, time, json, bisect, random
 from pathlib import Path
 
-rdir = Path(__file__).resolve().parent / "src" / "main" / "deploy" / "pathplanner"
+from PIL import Image, ImageTk
+
+rdir = Path(__file__).resolve().parent.parent.parent / "src" / "main" / "deploy" / "pathplanner"
+if not rdir.exists():
+    rdir = Path(__file__).resolve().parent / "src" / "main" / "deploy" / "pathplanner"
 if not rdir.exists():
     rdir = Path("src/main/deploy/pathplanner")
 sf = rdir / "settings.json"
 adir = rdir / "autos"
 pdir = rdir / "paths"
+
+OBS_FILE = Path(__file__).resolve().parent / "field_obstacles.json"
+BG_FILE = Path(__file__).resolve().parent / "field_background.png"
+CALIB_FILE = Path(__file__).resolve().parent / "field_config.json"
 
 with open(sf) as f:
     cfg = json.load(f)
@@ -41,25 +49,80 @@ R_SPD = math.pi * (2.0 * R_RAD) * (R_RPM / 60.0)
 SX = -0.38
 SY = 0.0
 
-FL = 16.532
-FW = 8.001
-BHUB = (3.465 + 23.5 * 0.0254, 4.0)
-RHUB = (13.067 - 23.5 * 0.0254, 4.0)
+DEFAULT_CALIB = {
+    "FL": 16.532,
+    "FW": 8.001,
+    "img_crop": [122, 19, 824, 365],
+    "BHUB": [4.616, 4.051],
+    "RHUB": [11.801, 4.052],
+    "BHUB_RAD": 0.574,
+    "RHUB_RAD": 0.60,
+    "NZ": [7.399, 1.917, 9.082, 6.233],
+    "BDP": [0.117, 5.55, 0.669, 6.367],
+    "RDP": [15.846, 1.434, 16.532, 2.501]
+}
+
+def load_calib():
+    if CALIB_FILE.exists():
+        try:
+            with open(CALIB_FILE) as f:
+                data = json.load(f)
+                res = dict(DEFAULT_CALIB)
+                res.update(data)
+                return res
+        except Exception:
+            pass
+    return dict(DEFAULT_CALIB)
+
+def save_calib(c_dict):
+    try:
+        with open(CALIB_FILE, "w") as f:
+            json.dump(c_dict, f, indent=2)
+    except Exception as ex:
+        print("Error saving calib:", ex)
+
+CALIB = load_calib()
+FL = float(CALIB["FL"])
+FW = float(CALIB["FW"])
+BHUB = tuple(CALIB["BHUB"])
+RHUB = tuple(CALIB["RHUB"])
+BHUB_RAD = float(CALIB.get("BHUB_RAD", 0.574))
+RHUB_RAD = float(CALIB.get("RHUB_RAD", 0.60))
 
 BD = 5.91 * 0.0254
 BR = BD / 2.0
 MAX_HP = 50
 
-NZ_CX, NZ_CY = FL / 2.0, FW / 2.0
-NZ_X0, NZ_X1 = NZ_CX - 1.10, NZ_CX + 1.10
-NZ_Y0, NZ_Y1 = NZ_CY - 2.90, NZ_CY + 2.90
+NZ_X0, NZ_Y0, NZ_X1, NZ_Y1 = CALIB["NZ"]
+BDP_X0, BDP_Y0, BDP_X1, BDP_Y1 = CALIB["BDP"]
+RDP_X0, RDP_Y0, RDP_X1, RDP_Y1 = CALIB["RDP"]
 
-DP_DX = 27.0 * 0.0254
-DP_WY = 42.0 * 0.0254
-BDP_X0, BDP_X1 = 0.0, DP_DX
-BDP_Y0, BDP_Y1 = 5.50, 5.50 + DP_WY
-RDP_X0, RDP_X1 = FL - DP_DX, FL
-RDP_Y0, RDP_Y1 = 1.434, 1.434 + DP_WY
+DEFAULT_OBSTACLES = [
+    {"name": "Blue Bottom Bump", "type": "bump", "x0": 4.0, "y0": 1.47, "x1": 5.19, "y1": 3.45},
+    {"name": "Red Bottom Bump", "type": "bump", "x0": 11.25, "y0": 1.4, "x1": 12.43, "y1": 3.46},
+    {"name": "Blue Hub Barrier", "type": "barrier", "x0": 3.96, "y0": 3.47, "x1": 5.22, "y1": 4.7},
+    {"name": "Red Hub Barrier", "type": "barrier", "x0": 11.29, "y0": 3.47, "x1": 12.45, "y1": 4.67},
+    {"name": "Blue Top Bump", "type": "bump", "x0": 3.95, "y0": 4.72, "x1": 5.18, "y1": 6.72},
+    {"name": "Red Top Bump", "type": "bump", "x0": 11.27, "y0": 4.65, "x1": 12.42, "y1": 6.68}
+]
+
+def load_obstacles():
+    if OBS_FILE.exists():
+        try:
+            with open(OBS_FILE) as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+        except Exception:
+            pass
+    return [dict(o) for o in DEFAULT_OBSTACLES]
+
+def save_obstacles(obs_list):
+    try:
+        with open(OBS_FILE, "w") as f:
+            json.dump(obs_list, f, indent=2)
+    except Exception as ex:
+        print("Error saving obstacles:", ex)
 
 Z3_T = 6.0
 Z2_T = 3.2
@@ -317,6 +380,7 @@ class F:
         self.balls = []
         self.projs = []
         self.scored = 0
+        self.obstacles = load_obstacles()
         self.reset_balls()
 
     def reset_balls(self):
@@ -345,6 +409,46 @@ class F:
 
     def tgt_hub(self, al):
         return RHUB if al == "Red" else BHUB
+
+    def col_obstacles(self, dt):
+        for b in self.balls:
+            for obs in self.obstacles:
+                x0, y0 = min(obs["x0"], obs["x1"]), min(obs["y0"], obs["y1"])
+                x1, y1 = max(obs["x0"], obs["x1"]), max(obs["y0"], obs["y1"])
+                otype = obs.get("type", "barrier")
+
+                if otype == "bump":
+                    if x0 <= b.x <= x1 and y0 <= b.y <= y1:
+                        # Ball crosses speed bump: resistance and minor deflect
+                        b.vx *= max(0.0, 1.0 - 10.0 * dt)
+                        b.vy *= max(0.0, 1.0 - 10.0 * dt)
+                else:
+                    # Solid barrier: closest point on AABB to circle
+                    cx = max(x0, min(x1, b.x))
+                    cy = max(y0, min(y1, b.y))
+                    dx = b.x - cx
+                    dy = b.y - cy
+                    d2 = dx * dx + dy * dy
+                    if d2 < BR * BR:
+                        d = math.sqrt(d2)
+                        if d > 1e-4:
+                            nx, ny = dx / d, dy / d
+                            pen = BR - d
+                        else:
+                            # Inside box center: push toward closest edge
+                            dl, dr = b.x - x0, x1 - b.x
+                            db, dt_e = b.y - y0, y1 - b.y
+                            m = min(dl, dr, db, dt_e)
+                            if m == dl: nx, ny, pen = -1.0, 0.0, dl + BR
+                            elif m == dr: nx, ny, pen = 1.0, 0.0, dr + BR
+                            elif m == db: nx, ny, pen = 0.0, -1.0, db + BR
+                            else: nx, ny, pen = 0.0, 1.0, dt_e + BR
+                        b.x += nx * pen
+                        b.y += ny * pen
+                        vn = b.vx * nx + b.vy * ny
+                        if vn < 0:
+                            b.vx -= (1.6) * vn * nx
+                            b.vy -= (1.6) * vn * ny
 
     def col_balls(self):
         csize = 0.20
@@ -387,6 +491,7 @@ class F:
 
     def step(self, dt):
         self.col_balls()
+        self.col_obstacles(dt)
         fric = max(0.0, 1.0 - 5.0 * dt)
         for b in self.balls:
             b.x += b.vx * dt
@@ -398,6 +503,7 @@ class F:
                 b.vy = 0.0
             b.x = max(BR, min(FL - BR, b.x))
             b.y = max(BR, min(FW - BR, b.y))
+        self.col_obstacles(dt)
 
         rem = []
         for p in self.projs:
@@ -418,6 +524,9 @@ class R:
         self.col = col
         self.w = RW
         self.l = RL
+        self.start_x = x
+        self.start_y = y
+        self.start_th = th
         self.vx = 0.0
         self.vy = 0.0
         self.w_rot = 0.0
@@ -552,6 +661,39 @@ def col_robs(robs):
                     r2.vx += imp * nx
                     r2.vy += imp * ny
 
+    # Robot vs Barrier Obstacles
+    rad_r = 0.44  # effective chassis radius
+    for r in robs:
+        for obs in getattr(r, "_obstacles", []):
+            if obs.get("type", "barrier") != "barrier":
+                continue
+            x0, y0 = min(obs["x0"], obs["x1"]), min(obs["y0"], obs["y1"])
+            x1, y1 = max(obs["x0"], obs["x1"]), max(obs["y0"], obs["y1"])
+            cx = max(x0, min(x1, r.x))
+            cy = max(y0, min(y1, r.y))
+            dx = r.x - cx
+            dy = r.y - cy
+            d2 = dx * dx + dy * dy
+            if d2 < rad_r * rad_r:
+                d = math.sqrt(d2)
+                if d > 1e-4:
+                    nx, ny = dx / d, dy / d
+                    pen = rad_r - d
+                else:
+                    dl, dr = r.x - x0, x1 - r.x
+                    db, dt_e = r.y - y0, y1 - r.y
+                    m = min(dl, dr, db, dt_e)
+                    if m == dl: nx, ny, pen = -1.0, 0.0, dl + rad_r
+                    elif m == dr: nx, ny, pen = 1.0, 0.0, dr + rad_r
+                    elif m == db: nx, ny, pen = 0.0, -1.0, db + rad_r
+                    else: nx, ny, pen = 0.0, 1.0, dt_e + rad_r
+                r.x += nx * pen
+                r.y += ny * pen
+                vn = r.vx * nx + r.vy * ny
+                if vn < 0:
+                    r.vx -= vn * nx
+                    r.vy -= vn * ny
+
 class Node:
     def __init__(self, t, d=None):
         self.t = t
@@ -606,6 +748,43 @@ class E:
 
         self.root = parse_n(cmd_root)
         self.exec = self.build_exec(self.root)
+
+        # Extract first path in execution sequence to get starting pose
+        first_pname = None
+        def find_first_path(n):
+            nonlocal first_pname
+            if first_pname is not None:
+                return
+            if n.t == "path":
+                first_pname = n.d.get("pathName")
+                return
+            for child in n.ch:
+                find_first_path(child)
+                if first_pname is not None:
+                    return
+
+        find_first_path(self.root)
+        if first_pname and first_pname in self.cache:
+            tr = self.cache[first_pname]
+            if tr.pts:
+                p0 = tr.pts[0]
+                self.r.start_x = p0["x"]
+                self.r.start_y = p0["y"]
+                self.r.start_th = p0["rot"]
+        self.reset_robot_pose()
+
+    def reset_robot_pose(self):
+        self.r.vx = 0.0
+        self.r.vy = 0.0
+        self.r.w_rot = 0.0
+        self.r.intake = False
+        self.r.shooting = False
+        self.r.hp = 0
+        if hasattr(self.r, "start_x") and self.r.start_x is not None:
+            self.r.x = self.r.start_x
+            self.r.y = self.r.start_y
+            self.r.th = self.r.start_th
+        self.cur_cmd = "Idle"
 
     def start(self):
         if self.root:
@@ -806,11 +985,46 @@ class Sim:
         self.b_items = {}
         self.init_done = False
 
+        # Collision Builder State
+        self.builder_mode = False
+        self.builder_tool = "select"
+        self.drag_start = None
+        self.drag_target = None
+        self.drag_handle = None
+        self.drag_init_geom = None
+        self.preview_rect_id = None
+        self.bg_img_raw = None
+        self.bg_img_tk = None
+        self.load_bg_img()
+
+        # Wire obstacles to robots for collision
+        for r in self.robs:
+            r._obstacles = self.fld.obstacles
+
         self.ui()
         self.init_gfx()
         self.pop_autos()
         self.last_t = time.perf_counter()
         self.loop()
+
+    def load_bg_img(self):
+        if BG_FILE.exists():
+            try:
+                raw = Image.open(BG_FILE)
+                # Crop to magenta border interior if present
+                # magenta border: x=[122, 824], y=[19, 365]
+                self.bg_img_raw = raw.crop((122, 19, 824, 365))
+            except Exception as ex:
+                print("Failed to load background image:", ex)
+                self.bg_img_raw = None
+
+    def update_bg_photo(self):
+        if self.bg_img_raw is not None:
+            cw = int(FL * self.zm)
+            ch = int(FW * self.zm)
+            if cw > 10 and ch > 10:
+                resized = self.bg_img_raw.resize((cw, ch), Image.Resampling.BILINEAR)
+                self.bg_img_tk = ImageTk.PhotoImage(resized)
 
     def ui(self):
         top = tk.Frame(self.root, bg="#282a36", padx=10, pady=8)
@@ -837,17 +1051,71 @@ class Sim:
         self.pr_cb.pack(side=tk.LEFT, padx=(0, 15))
         self.pr_cb.bind("<<ComboboxSelected>>", self.on_preset)
 
+        self.bld_btn = tk.Button(top, text="🛠️ Edit Obstacles", bg="#bd93f9", fg="#282a36", font=("Segoe UI", 10, "bold"),
+                                 padx=10, pady=2, command=self.toggle_builder)
+        self.bld_btn.pack(side=tk.LEFT, padx=(10, 5))
+
         self.stat_lbl = tk.Label(top, text="Ready", fg="#8be9fd", bg="#282a36", font=("Consolas", 10, "bold"))
         self.stat_lbl.pack(side=tk.RIGHT, padx=10)
 
         self.cnv = tk.Canvas(self.root, bg="#181920", highlightthickness=0)
         self.cnv.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
+        # Bind canvas events for collision builder
+        self.cnv.bind("<ButtonPress-1>", self.on_canvas_press)
+        self.cnv.bind("<B1-Motion>", self.on_canvas_drag)
+        self.cnv.bind("<ButtonRelease-1>", self.on_canvas_release)
+        self.cnv.bind("<Button-3>", self.on_canvas_right_click)
+
         side = tk.Frame(self.root, bg="#21222c", width=340, padx=12, pady=10)
         side.pack(side=tk.RIGHT, fill=tk.Y)
         side.pack_propagate(False)
 
-        tk.Label(side, text="4-ROBOT CONTROLLER", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 8))
+        # Collision Builder Control Panel (Shown when editing)
+        self.bld_panel = tk.LabelFrame(side, text=" 🛠️ COLLISION BUILDER ", fg="#bd93f9", bg="#282a36", font=("Segoe UI", 10, "bold"), padx=8, pady=6)
+        
+        bld_row1 = tk.Frame(self.bld_panel, bg="#282a36")
+        bld_row1.pack(fill=tk.X, pady=2)
+        tk.Label(bld_row1, text="Tool:", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
+        self.tool_cb = ttk.Combobox(bld_row1, state="readonly", values=[
+            "Move/Resize Existing Box",
+            "Solid Barrier",
+            "Speed Bump",
+            "Blue Hub (Center & Size)",
+            "Red Hub (Center & Size)",
+            "Neutral Zone (NZ)",
+            "Blue Depot (BDP)",
+            "Red Depot (RDP)"
+        ], width=20)
+        self.tool_cb.set("Move/Resize Existing Box")
+        self.tool_cb.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(4, 0))
+        self.tool_cb.bind("<<ComboboxSelected>>", self.on_tool_change)
+
+        tk.Label(self.bld_panel, text="* Move/Resize: Drag boxes to move, or drag corner handles\n* Hub: Drag center dot to move, drag ring to resize\n* Right-Click box to delete", fg="#f1fa8c", bg="#282a36", font=("Segoe UI", 8), justify=tk.LEFT).pack(anchor="w", pady=(2, 3))
+
+        bld_scale_row = tk.Frame(self.bld_panel, bg="#282a36")
+        bld_scale_row.pack(fill=tk.X, pady=2)
+        tk.Label(bld_scale_row, text="Field Size (m):", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 8)).pack(side=tk.LEFT)
+        self.fl_entry = tk.Entry(bld_scale_row, width=6, bg="#181920", fg="#50fa7b", font=("Consolas", 8))
+        self.fl_entry.insert(0, f"{FL:.2f}")
+        self.fl_entry.pack(side=tk.LEFT, padx=2)
+        tk.Label(bld_scale_row, text="x", fg="#f8f8f2", bg="#282a36").pack(side=tk.LEFT)
+        self.fw_entry = tk.Entry(bld_scale_row, width=5, bg="#181920", fg="#50fa7b", font=("Consolas", 8))
+        self.fw_entry.insert(0, f"{FW:.2f}")
+        self.fw_entry.pack(side=tk.LEFT, padx=2)
+        tk.Button(bld_scale_row, text="Apply", bg="#bd93f9", fg="#282a36", font=("Segoe UI", 8, "bold"), command=self.apply_field_size).pack(side=tk.LEFT, padx=2)
+
+        bld_row2 = tk.Frame(self.bld_panel, bg="#282a36")
+        bld_row2.pack(fill=tk.X, pady=3)
+        tk.Button(bld_row2, text="📋 Copy Numbers", bg="#f1fa8c", fg="#282a36", font=("Segoe UI", 8, "bold"), command=self.export_numbers).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        tk.Button(bld_row2, text="Save JSON", bg="#50fa7b", fg="#282a36", font=("Segoe UI", 8, "bold"), command=self.save_builder).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+
+        bld_row3 = tk.Frame(self.bld_panel, bg="#282a36")
+        bld_row3.pack(fill=tk.X, pady=2)
+        tk.Button(bld_row3, text="Reset Default", bg="#ffb86c", fg="#282a36", font=("Segoe UI", 8, "bold"), command=self.reset_default_obstacles).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+        tk.Button(bld_row3, text="Clear All", bg="#ff5555", fg="#ffffff", font=("Segoe UI", 8, "bold"), command=self.clear_obstacles).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
+
+        tk.Label(side, text="4-ROBOT CONTROLLER", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(8, 8))
 
         self.rcbs = []
         self.rhuds = []
@@ -868,9 +1136,415 @@ class Sim:
         mbx = tk.LabelFrame(side, text=" FIELD & SCORING ", fg="#ff79c6", bg="#282a36", font=("Segoe UI", 9, "bold"), padx=8, pady=6)
         mbx.pack(fill=tk.X, pady=(12, 6))
         self.tb_lbl = tk.Label(mbx, text="Field FUEL Remaining: 408", fg="#f1fa8c", bg="#282a36", font=("Segoe UI", 9, "bold"))
+        mbx.pack(fill=tk.X, pady=(12, 6))
         self.tb_lbl.pack(anchor="w")
         self.sc_lbl = tk.Label(mbx, text="Scored Balls: 0", fg="#ffb86c", bg="#282a36", font=("Segoe UI", 9, "bold"))
         self.sc_lbl.pack(anchor="w")
+
+    def on_tool_change(self, e=None):
+        val = self.tool_cb.get()
+        if "Move/Resize" in val: self.builder_tool = "select"
+        elif "Barrier" in val: self.builder_tool = "barrier"
+        elif "Bump" in val: self.builder_tool = "bump"
+        elif "NZ" in val: self.builder_tool = "nz"
+        elif "BDP" in val: self.builder_tool = "bdp"
+        elif "RDP" in val: self.builder_tool = "rdp"
+        elif "Blue Hub" in val: self.builder_tool = "bhub"
+        elif "Red Hub" in val: self.builder_tool = "rhub"
+
+    def apply_field_size(self):
+        global FL, FW
+        try:
+            n_fl = float(self.fl_entry.get())
+            n_fw = float(self.fw_entry.get())
+            if n_fl > 2.0 and n_fw > 2.0:
+                FL = n_fl
+                FW = n_fw
+                CALIB["FL"] = round(FL, 3)
+                CALIB["FW"] = round(FW, 3)
+                save_calib(CALIB)
+                self.init_gfx()
+                self.stat_lbl.config(text=f"Updated Field Size to {FL:.2f}m x {FW:.2f}m", fg="#50fa7b")
+        except Exception as ex:
+            self.stat_lbl.config(text=f"Invalid Field Size: {ex}", fg="#ff5555")
+
+    def export_numbers(self):
+        calib_data = {
+            "FL": round(FL, 3),
+            "FW": round(FW, 3),
+            "BHUB": [round(BHUB[0], 3), round(BHUB[1], 3)],
+            "RHUB": [round(RHUB[0], 3), round(RHUB[1], 3)],
+            "BHUB_RAD": round(BHUB_RAD, 3),
+            "RHUB_RAD": round(RHUB_RAD, 3),
+            "NZ": [round(x, 3) for x in CALIB["NZ"]],
+            "BDP": [round(x, 3) for x in CALIB["BDP"]],
+            "RDP": [round(x, 3) for x in CALIB["RDP"]],
+            "obstacles": self.fld.obstacles
+        }
+        json_str = json.dumps(calib_data, indent=2)
+
+        # Copy to system clipboard
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(json_str)
+        except Exception:
+            pass
+
+        # Pop up dialog so user can select/copy easily
+        dlg = tk.Toplevel(self.root)
+        dlg.title("📋 Field Numbers & Obstacles (Copied to Clipboard!)")
+        dlg.geometry("640x520")
+        dlg.configure(bg="#21222c")
+
+        tk.Label(dlg, text="Field Numbers & Coordinates (Auto-copied to clipboard!):", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 10, "bold")).pack(anchor="w", padx=10, pady=(10, 5))
+        txt = tk.Text(dlg, bg="#181920", fg="#f8f8f2", font=("Consolas", 9), insertbackground="#ffffff", relief=tk.FLAT)
+        txt.insert("1.0", json_str)
+        txt.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        btn_bar = tk.Frame(dlg, bg="#21222c")
+        btn_bar.pack(fill=tk.X, padx=10, pady=8)
+        tk.Button(btn_bar, text="Copy Again", bg="#bd93f9", fg="#282a36", font=("Segoe UI", 9, "bold"), command=lambda: (self.root.clipboard_clear(), self.root.clipboard_append(txt.get("1.0", tk.END)))).pack(side=tk.LEFT, padx=5)
+        tk.Button(btn_bar, text="Close", bg="#6272a4", fg="#ffffff", font=("Segoe UI", 9, "bold"), command=dlg.destroy).pack(side=tk.RIGHT, padx=5)
+
+        self.stat_lbl.config(text="Numbers copied to clipboard!", fg="#50fa7b")
+
+    def toggle_builder(self):
+        self.builder_mode = not self.builder_mode
+        if self.builder_mode:
+            self.bld_btn.config(text="✔ Done Editing", bg="#50fa7b")
+            self.bld_panel.pack(fill=tk.X, pady=(0, 10), before=self.rcbs[0].master.master)
+            self.stat_lbl.config(text="Collision Builder Active: Click & Drag to Draw", fg="#bd93f9")
+            # Pause sim while editing
+            for e in self.engs:
+                e.stop()
+            self.pbtn.config(text="> Resume", bg="#50fa7b")
+        else:
+            self.bld_btn.config(text="🛠️ Edit Obstacles", bg="#bd93f9")
+            self.bld_panel.pack_forget()
+            self.stat_lbl.config(text="Editing Done - Obstacles Active", fg="#50fa7b")
+        self.init_gfx()
+
+    def save_builder(self):
+        save_obstacles(self.fld.obstacles)
+        save_calib(CALIB)
+        self.stat_lbl.config(text="Saved Obstacles & Calibration to JSON!", fg="#50fa7b")
+
+    def reset_default_obstacles(self):
+        global FL, FW, BHUB, RHUB, BHUB_RAD, RHUB_RAD, NZ_X0, NZ_Y0, NZ_X1, NZ_Y1, BDP_X0, BDP_Y0, BDP_X1, BDP_Y1, RDP_X0, RDP_Y0, RDP_X1, RDP_Y1
+        self.fld.obstacles = [dict(o) for o in DEFAULT_OBSTACLES]
+        save_obstacles(self.fld.obstacles)
+        for k, v in DEFAULT_CALIB.items():
+            CALIB[k] = v
+        save_calib(CALIB)
+        FL = float(CALIB["FL"])
+        FW = float(CALIB["FW"])
+        BHUB = tuple(CALIB["BHUB"])
+        RHUB = tuple(CALIB["RHUB"])
+        BHUB_RAD = float(CALIB.get("BHUB_RAD", 0.60))
+        RHUB_RAD = float(CALIB.get("RHUB_RAD", 0.60))
+        NZ_X0, NZ_Y0, NZ_X1, NZ_Y1 = CALIB["NZ"]
+        BDP_X0, BDP_Y0, BDP_X1, BDP_Y1 = CALIB["BDP"]
+        RDP_X0, RDP_Y0, RDP_X1, RDP_Y1 = CALIB["RDP"]
+        self.fl_entry.delete(0, tk.END)
+        self.fl_entry.insert(0, f"{FL:.2f}")
+        self.fw_entry.delete(0, tk.END)
+        self.fw_entry.insert(0, f"{FW:.2f}")
+        for r in self.robs:
+            r._obstacles = self.fld.obstacles
+        self.fld.reset_balls()
+        self.init_gfx()
+        self.stat_lbl.config(text="Reset to Default Boxes & Layout", fg="#ffb86c")
+
+    def clear_obstacles(self):
+        self.fld.obstacles = []
+        save_obstacles(self.fld.obstacles)
+        for r in self.robs:
+            r._obstacles = self.fld.obstacles
+        self.init_gfx()
+        self.stat_lbl.config(text="All Obstacles Cleared", fg="#ff5555")
+
+    def s2w(self, sx, sy):
+        wx = (sx - self.ox) / self.zm
+        wy = FW - (sy - self.oy) / self.zm
+        return wx, wy
+
+    def get_hit_target(self, wx, wy):
+        tol = 0.25  # hit radius in meters
+        # 1. Check Hub handles (Center vs Radius Ring)
+        for hub_key, hub_coord, hub_rad, hub_name in [("bhub", BHUB, BHUB_RAD, "Blue Hub"), ("rhub", RHUB, RHUB_RAD, "Red Hub")]:
+            dist = math.hypot(wx - hub_coord[0], wy - hub_coord[1])
+            if dist < 0.25:
+                return {"target": hub_key, "handle": "move", "name": f"{hub_name} Center"}
+            elif abs(dist - hub_rad) < 0.25:
+                return {"target": hub_key, "handle": "radius", "name": f"{hub_name} Ring"}
+
+        # 2. Check special zones: NZ, BDP, RDP handles
+        zones = [
+            ("nz", CALIB["NZ"], "Neutral Zone"),
+            ("bdp", CALIB["BDP"], "Blue Depot"),
+            ("rdp", CALIB["RDP"], "Red Depot")
+        ]
+        for z_key, coords, z_name in zones:
+            x0, y0, x1, y1 = coords
+            # Corner handles
+            corners = {
+                "nw": (x0, y1),
+                "ne": (x1, y1),
+                "se": (x1, y0),
+                "sw": (x0, y0)
+            }
+            for c_name, (cx, cy) in corners.items():
+                if math.hypot(wx - cx, wy - cy) < tol:
+                    return {"target": z_key, "handle": c_name, "name": f"{z_name} {c_name.upper()} handle"}
+            # Inside zone body
+            if min(x0, x1) <= wx <= max(x0, x1) and min(y0, y1) <= wy <= max(y0, y1):
+                return {"target": z_key, "handle": "move", "name": z_name}
+
+        # 3. Check obstacles (Barriers and Bumps)
+        for idx, obs in enumerate(self.fld.obstacles):
+            x0, x1 = min(obs["x0"], obs["x1"]), max(obs["x0"], obs["x1"])
+            y0, y1 = min(obs["y0"], obs["y1"]), max(obs["y0"], obs["y1"])
+            corners = {
+                "nw": (x0, y1),
+                "ne": (x1, y1),
+                "se": (x1, y0),
+                "sw": (x0, y0)
+            }
+            for c_name, (cx, cy) in corners.items():
+                if math.hypot(wx - cx, wy - cy) < tol:
+                    return {"target": idx, "handle": c_name, "name": f"{obs.get('name', 'Box')} {c_name.upper()}"}
+            if x0 <= wx <= x1 and y0 <= wy <= y1:
+                return {"target": idx, "handle": "move", "name": obs.get("name", "Box")}
+
+        return None
+
+    def on_canvas_press(self, event):
+        global BHUB, RHUB
+        if not self.builder_mode:
+            return
+        wx, wy = self.s2w(event.x, event.y)
+        self.drag_start = (wx, wy)
+        self.drag_start_pix = (event.x, event.y)
+        if self.preview_rect_id:
+            self.cnv.delete(self.preview_rect_id)
+            self.preview_rect_id = None
+
+        # When in select mode OR clicking an existing element:
+        hit = self.get_hit_target(wx, wy)
+        if self.builder_tool == "select" or (hit and self.builder_tool in ("select", "bhub", "rhub")):
+            if hit:
+                self.drag_target = hit["target"]
+                self.drag_handle = hit["handle"]
+                if self.drag_target == "bhub":
+                    self.drag_init_geom = (BHUB[0], BHUB[1], BHUB_RAD)
+                elif self.drag_target == "rhub":
+                    self.drag_init_geom = (RHUB[0], RHUB[1], RHUB_RAD)
+                elif self.drag_target in ("nz", "bdp", "rdp"):
+                    self.drag_init_geom = list(CALIB[self.drag_target.upper()])
+                else:
+                    obs = self.fld.obstacles[self.drag_target]
+                    self.drag_init_geom = (obs["x0"], obs["y0"], obs["x1"], obs["y1"])
+                self.stat_lbl.config(text=f"Dragging: {hit['name']}", fg="#50fa7b")
+                return
+
+        # Direct Hub placement if tool specifically chosen:
+        if self.builder_tool in ("bhub", "rhub"):
+            if self.builder_tool == "bhub":
+                BHUB = (round(wx, 3), round(wy, 3))
+                CALIB["BHUB"] = list(BHUB)
+                save_calib(CALIB)
+                self.stat_lbl.config(text=f"Set Blue Hub Center to ({BHUB[0]:.2f}, {BHUB[1]:.2f})", fg="#8be9fd")
+            else:
+                RHUB = (round(wx, 3), round(wy, 3))
+                CALIB["RHUB"] = list(RHUB)
+                save_calib(CALIB)
+                self.stat_lbl.config(text=f"Set Red Hub Center to ({RHUB[0]:.2f}, {RHUB[1]:.2f})", fg="#ff5555")
+            self.init_gfx()
+            self.drag_start = None
+            return
+
+        self.drag_target = None
+        self.drag_handle = None
+
+    def on_canvas_drag(self, event):
+        if not self.builder_mode or not self.drag_start:
+            return
+        wx, wy = self.s2w(event.x, event.y)
+        dwx = wx - self.drag_start[0]
+        dwy = wy - self.drag_start[1]
+
+        # Case A: Interacting with existing target (Move or Resize)
+        if self.drag_target is not None:
+            global BHUB, RHUB, BHUB_RAD, RHUB_RAD, NZ_X0, NZ_Y0, NZ_X1, NZ_Y1, BDP_X0, BDP_Y0, BDP_X1, BDP_Y1, RDP_X0, RDP_Y0, RDP_X1, RDP_Y1
+            # 1. Blue / Red Hub
+            if self.drag_target in ("bhub", "rhub"):
+                orig_x, orig_y, orig_r = self.drag_init_geom
+                if self.drag_handle == "move":
+                    nx = round(max(0.0, min(FL, orig_x + dwx)), 3)
+                    ny = round(max(0.0, min(FW, orig_y + dwy)), 3)
+                    if self.drag_target == "bhub":
+                        BHUB = (nx, ny)
+                        CALIB["BHUB"] = [nx, ny]
+                    else:
+                        RHUB = (nx, ny)
+                        CALIB["RHUB"] = [nx, ny]
+                elif self.drag_handle == "radius":
+                    cur_r = round(max(0.20, math.hypot(wx - orig_x, wy - orig_y)), 3)
+                    if self.drag_target == "bhub":
+                        BHUB_RAD = cur_r
+                        CALIB["BHUB_RAD"] = cur_r
+                    else:
+                        RHUB_RAD = cur_r
+                        CALIB["RHUB_RAD"] = cur_r
+                save_calib(CALIB)
+                self.init_gfx()
+                return
+
+            # 2. Zone or Obstacle Box
+            ox0, oy0, ox1, oy1 = self.drag_init_geom
+            x0, y0, x1, y1 = min(ox0, ox1), min(oy0, oy1), max(ox0, ox1), max(oy0, oy1)
+
+            if self.drag_handle == "move":
+                x0 = max(0.0, min(FL, x0 + dwx))
+                x1 = max(0.0, min(FL, x1 + dwx))
+                y0 = max(0.0, min(FW, y0 + dwy))
+                y1 = max(0.0, min(FW, y1 + dwy))
+            elif self.drag_handle == "nw":
+                x0 = max(0.0, min(x1 - 0.1, x0 + dwx))
+                y1 = max(y0 + 0.1, min(FW, y1 + dwy))
+            elif self.drag_handle == "ne":
+                x1 = max(x0 + 0.1, min(FL, x1 + dwx))
+                y1 = max(y0 + 0.1, min(FW, y1 + dwy))
+            elif self.drag_handle == "se":
+                x1 = max(x0 + 0.1, min(FL, x1 + dwx))
+                y0 = max(0.0, min(y1 - 0.1, y0 + dwy))
+            elif self.drag_handle == "sw":
+                x0 = max(0.0, min(x1 - 0.1, x0 + dwx))
+                y0 = max(0.0, min(y1 - 0.1, y0 + dwy))
+
+            new_box = [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]
+            if self.drag_target == "nz":
+                CALIB["NZ"] = new_box
+                NZ_X0, NZ_Y0, NZ_X1, NZ_Y1 = new_box
+                save_calib(CALIB)
+            elif self.drag_target == "bdp":
+                CALIB["BDP"] = new_box
+                BDP_X0, BDP_Y0, BDP_X1, BDP_Y1 = new_box
+                save_calib(CALIB)
+            elif self.drag_target == "rdp":
+                CALIB["RDP"] = new_box
+                RDP_X0, RDP_Y0, RDP_X1, RDP_Y1 = new_box
+                save_calib(CALIB)
+            else:
+                obs = self.fld.obstacles[self.drag_target]
+                obs["x0"], obs["y0"], obs["x1"], obs["y1"] = round(x0, 2), round(y0, 2), round(x1, 2), round(y1, 2)
+                save_obstacles(self.fld.obstacles)
+                for r in self.robs:
+                    r._obstacles = self.fld.obstacles
+            self.init_gfx()
+            return
+
+        # Case B: Creating new box
+        sx0, sy0 = self.drag_start_pix
+        sx1, sy1 = event.x, event.y
+        col = "#bd93f9" if self.builder_tool == "barrier" else ("#ffb86c" if self.builder_tool == "bump" else "#50fa7b")
+        if not self.preview_rect_id:
+            self.preview_rect_id = self.cnv.create_rectangle(sx0, sy0, sx1, sy1, outline=col, dash=(3, 3), width=2, tags="builder_preview")
+        else:
+            self.cnv.coords(self.preview_rect_id, sx0, sy0, sx1, sy1)
+
+    def on_canvas_release(self, event):
+        if not self.builder_mode or not self.drag_start:
+            return
+        if self.preview_rect_id:
+            self.cnv.delete(self.preview_rect_id)
+            self.preview_rect_id = None
+
+        # Finished moving/resizing existing target
+        if self.drag_target is not None:
+            if self.drag_target in ("nz", "bdp", "rdp"):
+                self.fld.reset_balls()
+            self.drag_target = None
+            self.drag_handle = None
+            self.drag_start = None
+            self.stat_lbl.config(text="Box Updated & Saved", fg="#50fa7b")
+            self.init_gfx()
+            return
+
+        # Draw brand new box
+        sx0, sy0 = self.drag_start_pix
+        sx1, sy1 = event.x, event.y
+        self.drag_start = None
+
+        if abs(sx1 - sx0) < 6 or abs(sy1 - sy0) < 6:
+            return
+
+        w0x, w0y = self.s2w(min(sx0, sx1), max(sy0, sy1))
+        w1x, w1y = self.s2w(max(sx0, sx1), min(sy0, sy1))
+        x0, x1 = max(0.0, min(FL, min(w0x, w1x))), max(0.0, min(FL, max(w0x, w1x)))
+        y0, y1 = max(0.0, min(FW, min(w0y, w1y))), max(0.0, min(FW, max(w0y, w1y)))
+
+        global NZ_X0, NZ_Y0, NZ_X1, NZ_Y1, BDP_X0, BDP_Y0, BDP_X1, BDP_Y1, RDP_X0, RDP_Y0, RDP_X1, RDP_Y1
+        if self.builder_tool == "nz":
+            CALIB["NZ"] = [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]
+            NZ_X0, NZ_Y0, NZ_X1, NZ_Y1 = CALIB["NZ"]
+            save_calib(CALIB)
+            self.fld.reset_balls()
+            self.init_gfx()
+            self.stat_lbl.config(text=f"Updated Neutral Zone: [{x0:.2f}, {y0:.2f}] to [{x1:.2f}, {y1:.2f}]", fg="#50fa7b")
+            return
+        elif self.builder_tool == "bdp":
+            CALIB["BDP"] = [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]
+            BDP_X0, BDP_Y0, BDP_X1, BDP_Y1 = CALIB["BDP"]
+            save_calib(CALIB)
+            self.fld.reset_balls()
+            self.init_gfx()
+            self.stat_lbl.config(text=f"Updated Blue Depot: [{x0:.2f}, {y0:.2f}] to [{x1:.2f}, {y1:.2f}]", fg="#8be9fd")
+            return
+        elif self.builder_tool == "rdp":
+            CALIB["RDP"] = [round(x0, 3), round(y0, 3), round(x1, 3), round(y1, 3)]
+            RDP_X0, RDP_Y0, RDP_X1, RDP_Y1 = CALIB["RDP"]
+            save_calib(CALIB)
+            self.fld.reset_balls()
+            self.init_gfx()
+            self.stat_lbl.config(text=f"Updated Red Depot: [{x0:.2f}, {y0:.2f}] to [{x1:.2f}, {y1:.2f}]", fg="#ff5555")
+            return
+
+        name = f"{'Barrier' if self.builder_tool == 'barrier' else 'Bump'} {len(self.fld.obstacles)+1}"
+        new_obs = {
+            "name": name,
+            "type": "bump" if self.builder_tool == "bump" else "barrier",
+            "x0": round(x0, 2),
+            "y0": round(y0, 2),
+            "x1": round(x1, 2),
+            "y1": round(y1, 2)
+        }
+        self.fld.obstacles.append(new_obs)
+        save_obstacles(self.fld.obstacles)
+        for r in self.robs:
+            r._obstacles = self.fld.obstacles
+        self.init_gfx()
+        self.stat_lbl.config(text=f"Added {name} [{x0:.2f}, {y0:.2f}] to [{x1:.2f}, {y1:.2f}]", fg="#50fa7b")
+
+    def on_canvas_right_click(self, event):
+        if not self.builder_mode:
+            return
+        wx, wy = self.s2w(event.x, event.y)
+        # Check if clicked inside any obstacle to delete it
+        rem_idx = None
+        for idx, obs in enumerate(self.fld.obstacles):
+            x0, x1 = min(obs["x0"], obs["x1"]), max(obs["x0"], obs["x1"])
+            y0, y1 = min(obs["y0"], obs["y1"]), max(obs["y0"], obs["y1"])
+            if x0 <= wx <= x1 and y0 <= wy <= y1:
+                rem_idx = idx
+                break
+        if rem_idx is not None:
+            deleted = self.fld.obstacles.pop(rem_idx)
+            save_obstacles(self.fld.obstacles)
+            for r in self.robs:
+                r._obstacles = self.fld.obstacles
+            self.init_gfx()
+            self.stat_lbl.config(text=f"Deleted {deleted.get('name', 'Obstacle')}", fg="#ff5555")
 
     def pop_autos(self):
         afs = [f.name for f in adir.glob("*.auto")]
@@ -924,6 +1598,7 @@ class Sim:
     def reset(self):
         for e in self.engs:
             e.stop()
+            e.reset_robot_pose()
         self.fld.reset_balls()
         self.init_gfx()
         for i, cb in enumerate(self.rcbs):
@@ -939,28 +1614,79 @@ class Sim:
         self.b_items.clear()
         tl = self.w2s(0, FW)
         br = self.w2s(FL, 0)
-        self.cnv.create_rectangle(tl[0], tl[1], br[0], br[1], outline="#44475a", fill="#282a36", width=2, tags="static")
+
+        # Background Field Image
+        self.update_bg_photo()
+        if self.bg_img_tk:
+            self.cnv.create_image(tl[0], tl[1], anchor=tk.NW, image=self.bg_img_tk, tags="static")
+        else:
+            self.cnv.create_rectangle(tl[0], tl[1], br[0], br[1], outline="#44475a", fill="#282a36", width=2, tags="static")
+
         ct = self.w2s(FL / 2.0, FW)
         cb = self.w2s(FL / 2.0, 0)
         self.cnv.create_line(ct[0], ct[1], cb[0], cb[1], fill="#6272a4", dash=(4, 4), width=2, tags="static")
 
         nz_tl = self.w2s(NZ_X0, NZ_Y1)
         nz_br = self.w2s(NZ_X1, NZ_Y0)
-        self.cnv.create_rectangle(nz_tl[0], nz_tl[1], nz_br[0], nz_br[1], outline="#6272a4", fill="#21222c", dash=(2, 2), width=1, tags="static")
+        self.cnv.create_rectangle(nz_tl[0], nz_tl[1], nz_br[0], nz_br[1], outline="#6272a4", fill="", dash=(2, 2), width=1, tags="static")
 
         b_tl = self.w2s(BDP_X0, BDP_Y1)
         b_br = self.w2s(BDP_X1, BDP_Y0)
-        self.cnv.create_rectangle(b_tl[0], b_tl[1], b_br[0], b_br[1], outline="#8be9fd", fill="#1f2d3d", width=2, tags="static")
+        self.cnv.create_rectangle(b_tl[0], b_tl[1], b_br[0], b_br[1], outline="#8be9fd", fill="", width=2, tags="static")
 
         r_tl = self.w2s(RDP_X0, RDP_Y1)
         r_br = self.w2s(RDP_X1, RDP_Y0)
-        self.cnv.create_rectangle(r_tl[0], r_tl[1], r_br[0], r_br[1], outline="#ff5555", fill="#3d1f1f", width=2, tags="static")
+        self.cnv.create_rectangle(r_tl[0], r_tl[1], r_br[0], r_br[1], outline="#ff5555", fill="", width=2, tags="static")
 
         hr = self.w2s(RHUB[0], RHUB[1])
         hb = self.w2s(BHUB[0], BHUB[1])
-        rad = 0.6 * self.zm
-        self.cnv.create_oval(hr[0] - rad, hr[1] - rad, hr[0] + rad, hr[1] + rad, outline="#ff5555", fill="#442222", width=3, tags="static")
-        self.cnv.create_oval(hb[0] - rad, hb[1] - rad, hb[0] + rad, hb[1] + rad, outline="#8be9fd", fill="#223344", width=3, tags="static")
+        rad_r = RHUB_RAD * self.zm
+        rad_b = BHUB_RAD * self.zm
+        self.cnv.create_oval(hr[0] - rad_r, hr[1] - rad_r, hr[0] + rad_r, hr[1] + rad_r, outline="#ff5555", fill="", width=3, tags="static")
+        self.cnv.create_oval(hb[0] - rad_b, hb[1] - rad_b, hb[0] + rad_b, hb[1] + rad_b, outline="#8be9fd", fill="", width=3, tags="static")
+        if self.builder_mode:
+            # Hub center crosshairs and radius labels
+            self.cnv.create_oval(hr[0] - 4, hr[1] - 4, hr[0] + 4, hr[1] + 4, fill="#ff5555", outline="#ffffff", tags="obstacle")
+            self.cnv.create_oval(hb[0] - 4, hb[1] - 4, hb[0] + 4, hb[1] + 4, fill="#8be9fd", outline="#ffffff", tags="obstacle")
+            self.cnv.create_text(hr[0], hr[1] - rad_r - 12, text=f"Red Hub (r={RHUB_RAD:.2f}m)", fill="#ff5555", font=("Segoe UI", 8, "bold"), tags="obstacle")
+            self.cnv.create_text(hb[0], hb[1] - rad_b - 12, text=f"Blue Hub (r={BHUB_RAD:.2f}m)", fill="#8be9fd", font=("Segoe UI", 8, "bold"), tags="obstacle")
+
+        # Render Obstacles (Hub Barriers and Speed Bumps)
+        for idx, obs in enumerate(self.fld.obstacles):
+            x0, y0 = min(obs["x0"], obs["x1"]), min(obs["y0"], obs["y1"])
+            x1, y1 = max(obs["x0"], obs["x1"]), max(obs["y0"], obs["y1"])
+            otl = self.w2s(x0, y1)
+            obr = self.w2s(x1, y0)
+            otype = obs.get("type", "barrier")
+            if otype == "barrier":
+                # Solid red/blue barrier boundary
+                col = "#bd93f9" if self.builder_mode else "#ff5555"
+                self.cnv.create_rectangle(otl[0], otl[1], obr[0], obr[1], outline=col, width=3, dash=(4, 2) if self.builder_mode else (), tags="obstacle")
+                if self.builder_mode:
+                    self.cnv.create_text((otl[0]+obr[0])/2, (otl[1]+obr[1])/2, text=obs.get("name", "Barrier"), fill=col, font=("Segoe UI", 9, "bold"), tags="obstacle")
+            else:
+                # Speed Bump zone
+                bcol = "#ffb86c"
+                self.cnv.create_rectangle(otl[0], otl[1], obr[0], obr[1], outline=bcol, width=2, dash=(6, 3), tags="obstacle")
+                # Hatch lines across bump
+                mid_y = (otl[1] + obr[1]) / 2
+                self.cnv.create_line(otl[0], mid_y, obr[0], mid_y, fill=bcol, dash=(3, 3), width=1, tags="obstacle")
+                if self.builder_mode:
+                    self.cnv.create_text((otl[0]+obr[0])/2, (otl[1]+obr[1])/2, text=obs.get("name", "Bump"), fill=bcol, font=("Segoe UI", 8, "bold"), tags="obstacle")
+
+            if self.builder_mode:
+                # Draw draggable corner handles
+                for cx, cy in [(x0, y1), (x1, y1), (x1, y0), (x0, y0)]:
+                    hc = self.w2s(cx, cy)
+                    self.cnv.create_rectangle(hc[0] - 4, hc[1] - 4, hc[0] + 4, hc[1] + 4, fill="#50fa7b", outline="#181920", tags="obstacle")
+
+        if self.builder_mode:
+            # Draggable handles for NZ, BDP, RDP
+            for z_coords, hcol in [(CALIB["NZ"], "#6272a4"), (CALIB["BDP"], "#8be9fd"), (CALIB["RDP"], "#ff5555")]:
+                zx0, zy0, zx1, zy1 = z_coords
+                for cx, cy in [(zx0, zy1), (zx1, zy1), (zx1, zy0), (zx0, zy0)]:
+                    hc = self.w2s(cx, cy)
+                    self.cnv.create_rectangle(hc[0] - 4, hc[1] - 4, hc[0] + 4, hc[1] + 4, fill=hcol, outline="#ffffff", tags="obstacle")
 
         for b in self.fld.balls:
             bx, by = self.w2s(b.x, b.y)
