@@ -133,8 +133,8 @@ public class CMD_Shuttle extends RunCommand {
 
                 Translation2d targetTranslation = targetPose.getTranslation();
                 Rotation2d targetRotation =
-                    new Rotation2d(targetTranslation.getX() - shooterPosition.getX(),
-                        targetTranslation.getY() - shooterPosition.getY());
+                    new Rotation2d(shooterPosition.getX() - targetTranslation.getX(),
+                        shooterPosition.getY() - targetTranslation.getY());
 
                 double omegaSpeed = robotAngleController.calculate(
                     currentPose.getRotation().getRadians(), targetRotation.getRadians());
