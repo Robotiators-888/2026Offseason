@@ -91,7 +91,11 @@ RHUB_RAD = float(CALIB.get("RHUB_RAD", 0.60))
 
 BD = 5.91 * 0.0254
 BR = BD / 2.0
-MAX_HP = 50
+MAX_HP = 72
+BALL_FRICTION = 1.0  # Friction deceleration rate on carpet (higher = stops sooner, lower = rolls further; previously 5.0)
+BALL_MIN_SPEED = 0.2  # Speed below which ball stops rolling completely (m/s)
+BALL_BOUNCE = 0.4  # Restitution coefficient for bouncing off walls/barriers (0.0 = dead stop, 1.0 = full elasticity)
+BALL_BALL_RESTITUTION = 0.4  # Elasticity when balls hit each other (0.0 = inelastic clump, 1.0 = perfect billiard bounce)
 
 NZ_X0, NZ_Y0, NZ_X1, NZ_Y1 = CALIB["NZ"]
 BDP_X0, BDP_Y0, BDP_X1, BDP_Y1 = CALIB["BDP"]
@@ -406,6 +410,7 @@ class F:
             for r in range(6):
                 self.balls.append(B(RDP_X0 + 0.04 + c * rd_dx * 0.85, RDP_Y0 + 0.04 + r * rd_dy * 0.85, bid))
                 bid += 1
+        self.next_bid = bid
 
     def tgt_hub(self, al):
         return RHUB if al == "Red" else BHUB
@@ -443,12 +448,21 @@ class F:
                             elif m == dr: nx, ny, pen = 1.0, 0.0, dr + BR
                             elif m == db: nx, ny, pen = 0.0, -1.0, db + BR
                             else: nx, ny, pen = 0.0, 1.0, dt_e + BR
+
+                        # Resolve penetration
                         b.x += nx * pen
                         b.y += ny * pen
+
+                        # Elastic collision with barrier surface
                         vn = b.vx * nx + b.vy * ny
                         if vn < 0:
-                            b.vx -= (1.6) * vn * nx
-                            b.vy -= (1.6) * vn * ny
+                            # Invert normal component with coefficient of restitution
+                            b.vx -= (1.0 + BALL_BOUNCE) * vn * nx
+                            b.vy -= (1.0 + BALL_BOUNCE) * vn * ny
+                        elif vn == 0 and pen > 0:
+                            # Gentle impulse if resting or sliding into wall at low speed
+                            b.vx += nx * 0.15
+                            b.vy += ny * 0.15
 
     def col_balls(self):
         csize = 0.20
@@ -484,31 +498,90 @@ class F:
                             dvy = b1.vy - b2.vy
                             dot = dvx * nx + dvy * ny
                             if dot > 0:
-                                b1.vx -= dot * nx * 0.7
-                                b1.vy -= dot * ny * 0.7
-                                b2.vx += dot * nx * 0.7
-                                b2.vy += dot * ny * 0.7
+                                impulse = dot * (1.0 + BALL_BALL_RESTITUTION) * 0.5
+                                b1.vx -= impulse * nx
+                                b1.vy -= impulse * ny
+                                b2.vx += impulse * nx
+                                b2.vy += impulse * ny
+
+    def exit_hub_ball(self, tx, ty):
+        # Determine which hub was scored into based on tx coordinate
+        # Blue hub at BHUB (~4.62m), Red hub at RHUB (~11.80m)
+        dist_b = math.hypot(tx - BHUB[0], ty - BHUB[1])
+        dist_r = math.hypot(tx - RHUB[0], ty - RHUB[1])
+        is_blue = dist_b <= dist_r
+
+        hub_center = BHUB if is_blue else RHUB
+        hub_rad = BHUB_RAD if is_blue else RHUB_RAD
+        # Blue exits face toward center / Neutral Zone (+X direction)
+        # Red exits face toward center / Neutral Zone (-X direction)
+        dir_x = 1.0 if is_blue else -1.0
+
+        # Hub has 4 exits evenly distributed across the exit base facing neutral zone
+        # Chute offsets across the hub opening Y axis
+        chute_offsets = [-0.36, -0.12, 0.12, 0.36]
+        chute_idx = random.randint(0, 3)
+        offset_y = chute_offsets[chute_idx] + random.uniform(-0.04, 0.04)
+
+        # Spawn right at the outer edge of the hub base barrier facing neutral zone
+        spawn_x = hub_center[0] + dir_x * (hub_rad + 0.12)
+        spawn_y = hub_center[1] + offset_y
+
+        # Chutes fan outwards slightly into the neutral zone as shown in Figure 5-8
+        # Outer chutes have more spread than inner chutes
+        fan_angles = [-0.38, -0.13, 0.13, 0.38] # radians spread in Y
+        spread_angle = fan_angles[chute_idx] + random.uniform(-0.08, 0.08)
+
+        # Exit velocity into neutral zone (~1.8 - 3.2 m/s)
+        exit_speed = random.uniform(1.8, 3.2)
+        vx = dir_x * exit_speed * math.cos(spread_angle)
+        vy = exit_speed * math.sin(spread_angle)
+
+        new_b = B(spawn_x, spawn_y, self.next_bid)
+        new_b.vx = vx
+        new_b.vy = vy
+        self.next_bid += 1
+        self.balls.append(new_b)
 
     def step(self, dt):
         self.col_balls()
         self.col_obstacles(dt)
-        fric = max(0.0, 1.0 - 5.0 * dt)
+        fric = max(0.0, 1.0 - BALL_FRICTION * dt)
         for b in self.balls:
             b.x += b.vx * dt
             b.y += b.vy * dt
             b.vx *= fric
             b.vy *= fric
-            if math.hypot(b.vx, b.vy) < 0.05:
+
+            # Perimeter field wall bounces
+            if b.x <= BR:
+                b.x = BR
+                if b.vx < 0:
+                    b.vx = -b.vx * BALL_BOUNCE
+            elif b.x >= FL - BR:
+                b.x = FL - BR
+                if b.vx > 0:
+                    b.vx = -b.vx * BALL_BOUNCE
+
+            if b.y <= BR:
+                b.y = BR
+                if b.vy < 0:
+                    b.vy = -b.vy * BALL_BOUNCE
+            elif b.y >= FW - BR:
+                b.y = FW - BR
+                if b.vy > 0:
+                    b.vy = -b.vy * BALL_BOUNCE
+
+            if math.hypot(b.vx, b.vy) < BALL_MIN_SPEED:
                 b.vx = 0.0
                 b.vy = 0.0
-            b.x = max(BR, min(FL - BR, b.x))
-            b.y = max(BR, min(FW - BR, b.y))
         self.col_obstacles(dt)
 
         rem = []
         for p in self.projs:
             if p.update(dt):
                 self.scored += 1
+                self.exit_hub_ball(p.tx, p.ty)
             else:
                 rem.append(p)
         self.projs = rem
@@ -710,6 +783,9 @@ class E:
         self.exec = None
         self.cur_cmd = "Idle"
         self.dt = 0.02
+        self.elapsed_t = 0.0
+        self.completed_t = None
+        self.theo_duration = 0.0
 
     def load_auto(self, aname, mx=False, my=False):
         self.cache.clear()
@@ -771,6 +847,29 @@ class E:
                 self.r.start_x = p0["x"]
                 self.r.start_y = p0["y"]
                 self.r.start_th = p0["rot"]
+
+        # Calculate theoretical duration of auto from paths and wait commands
+        def calc_node_duration(n):
+            if n.t == "path":
+                p_name = n.d.get("pathName")
+                tr_item = self.cache.get(p_name)
+                return tr_item.tot_t if tr_item else 0.0
+            elif n.t == "wait":
+                return float(n.d.get("waitTime", 1.0))
+            elif n.t == "named":
+                return 0.0
+            elif n.t == "sequential":
+                return sum(calc_node_duration(c) for c in n.ch)
+            elif n.t == "parallel":
+                # Primary command (index 0) dictates duration in ParallelCommandGroup
+                return calc_node_duration(n.ch[0]) if n.ch else 0.0
+            elif n.t == "race":
+                # Race ends on the fastest command
+                durs = [calc_node_duration(c) for c in n.ch if calc_node_duration(c) > 0.0]
+                return min(durs) if durs else 0.0
+            return 0.0
+
+        self.theo_duration = round(calc_node_duration(self.root), 2)
         self.reset_robot_pose()
 
     def reset_robot_pose(self):
@@ -780,6 +879,8 @@ class E:
         self.r.intake = False
         self.r.shooting = False
         self.r.hp = 0
+        self.elapsed_t = 0.0
+        self.completed_t = None
         if hasattr(self.r, "start_x") and self.r.start_x is not None:
             self.r.x = self.r.start_x
             self.r.y = self.r.start_y
@@ -803,15 +904,18 @@ class E:
 
     def update(self, dt):
         self.dt = dt
-        if self.active and self.exec:
-            if self.exec["step"]():
-                self.active = False
-                self.r.vx = 0.0
-                self.r.vy = 0.0
-                self.r.w_rot = 0.0
-                self.r.intake = False
-                self.r.shooting = False
-                self.cur_cmd = "Completed"
+        if self.active:
+            self.elapsed_t += dt
+            if self.exec:
+                if self.exec["step"]():
+                    self.active = False
+                    self.completed_t = self.elapsed_t
+                    self.r.vx = 0.0
+                    self.r.vy = 0.0
+                    self.r.w_rot = 0.0
+                    self.r.intake = False
+                    self.r.shooting = False
+                    self.cur_cmd = f"Completed ({self.completed_t:.2f}s)"
 
     def build_exec(self, n):
         t = n.t
@@ -936,7 +1040,7 @@ class E:
                     if st["cd"] <= 0.0 and self.r.hp > 0:
                         if self.r.shoot(self.fld, thub):
                             st["shots"] += 1
-                            st["cd"] = 0.10
+                            st["cd"] = 0.05
                 else:
                     self.r.shooting = False
                     self.cur_cmd = f"AimBot [ALIGNING]: {int(self.r.rpm)} RPM"
@@ -984,6 +1088,7 @@ class Sim:
         self.oy = 35.0
         self.b_items = {}
         self.init_done = False
+        self.match_time = 0.0
 
         # Collision Builder State
         self.builder_mode = False
@@ -1011,9 +1116,9 @@ class Sim:
         if BG_FILE.exists():
             try:
                 raw = Image.open(BG_FILE)
-                # Crop to magenta border interior if present
-                # magenta border: x=[122, 824], y=[19, 365]
-                self.bg_img_raw = raw.crop((122, 19, 824, 365))
+                # Crop to field boundary on rotated image (943x380)
+                crop_box = CALIB.get("img_crop", [119, 15, 821, 361])
+                self.bg_img_raw = raw.crop(tuple(crop_box))
             except Exception as ex:
                 print("Failed to load background image:", ex)
                 self.bg_img_raw = None
@@ -1036,7 +1141,12 @@ class Sim:
 
         self.rbtn = tk.Button(top, text="Reset Sim", bg="#ff5555", fg="#ffffff", font=("Segoe UI", 10, "bold"),
                               padx=12, pady=2, command=self.reset)
-        self.rbtn.pack(side=tk.LEFT, padx=5)
+        self.rbtn.pack(side=tk.LEFT, padx=(5, 3))
+
+        self.rel_btn = tk.Button(top, text="🔄", bg="#44475a", fg="#50fa7b", font=("Segoe UI", 10, "bold"),
+                                 padx=6, pady=2, relief=tk.FLAT, activebackground="#6272a4", activeforeground="#50fa7b",
+                                 cursor="hand2", command=self.reload_paths)
+        self.rel_btn.pack(side=tk.LEFT, padx=(0, 5))
 
         tk.Label(top, text="Speed:", fg="#f8f8f2", bg="#282a36", font=("Segoe UI", 10)).pack(side=tk.LEFT, padx=(15, 5))
         self.s_cb = ttk.Combobox(top, state="readonly", values=["0.5x", "1.0x", "2.0x", "4.0x"], width=5)
@@ -1054,6 +1164,13 @@ class Sim:
         self.bld_btn = tk.Button(top, text="🛠️ Edit Obstacles", bg="#bd93f9", fg="#282a36", font=("Segoe UI", 10, "bold"),
                                  padx=10, pady=2, command=self.toggle_builder)
         self.bld_btn.pack(side=tk.LEFT, padx=(10, 5))
+
+        # Auto Match Timer Display
+        timer_frame = tk.Frame(top, bg="#181920", padx=8, pady=2, highlightbackground="#6272a4", highlightthickness=1)
+        timer_frame.pack(side=tk.LEFT, padx=15)
+        tk.Label(timer_frame, text="AUTO TIMER:", fg="#bd93f9", bg="#181920", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 4))
+        self.timer_lbl = tk.Label(timer_frame, text="0.00s / 20.00s", fg="#50fa7b", bg="#181920", font=("Consolas", 11, "bold"))
+        self.timer_lbl.pack(side=tk.LEFT)
 
         self.stat_lbl = tk.Label(top, text="Ready", fg="#8be9fd", bg="#282a36", font=("Consolas", 10, "bold"))
         self.stat_lbl.pack(side=tk.RIGHT, padx=10)
@@ -1115,7 +1232,12 @@ class Sim:
         tk.Button(bld_row3, text="Reset Default", bg="#ffb86c", fg="#282a36", font=("Segoe UI", 8, "bold"), command=self.reset_default_obstacles).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
         tk.Button(bld_row3, text="Clear All", bg="#ff5555", fg="#ffffff", font=("Segoe UI", 8, "bold"), command=self.clear_obstacles).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(2, 0))
 
-        tk.Label(side, text="4-ROBOT CONTROLLER", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(8, 8))
+        hdr_frame = tk.Frame(side, bg="#21222c")
+        hdr_frame.pack(fill=tk.X, pady=(8, 8))
+        tk.Label(hdr_frame, text="4-ROBOT CONTROLLER", fg="#50fa7b", bg="#21222c", font=("Segoe UI", 11, "bold")).pack(side=tk.LEFT)
+        tk.Button(hdr_frame, text="🔄 Reload Paths", bg="#282a36", fg="#8be9fd", font=("Segoe UI", 8, "bold"),
+                  padx=6, pady=1, relief=tk.FLAT, activebackground="#44475a", activeforeground="#50fa7b",
+                  cursor="hand2", command=self.reload_paths).pack(side=tk.RIGHT)
 
         self.rcbs = []
         self.rhuds = []
@@ -1129,7 +1251,7 @@ class Sim:
             cb.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(4, 0))
             cb.bind("<<ComboboxSelected>>", lambda e, idx=i: self.on_sel(idx))
             self.rcbs.append(cb)
-            lbl = tk.Label(bx, text="Hopper: 00/50 | Speed: 0.00 m/s\nCmd: Idle", fg="#f8f8f2", bg="#282a36", font=("Consolas", 8), justify=tk.LEFT, anchor="w")
+            lbl = tk.Label(bx, text="Hopper: 00/72 | Speed: 0.00 m/s\nCmd: Idle", fg="#f8f8f2", bg="#282a36", font=("Consolas", 8), justify=tk.LEFT, anchor="w")
             lbl.pack(fill=tk.X, pady=(2, 0))
             self.rhuds.append(lbl)
 
@@ -1555,6 +1677,21 @@ class Sim:
             cb.set(d)
             self.engs[i].load_auto(d, mx=c["mx"], my=c["my"])
 
+    def reload_paths(self):
+        afs = [f.name for f in adir.glob("*.auto")]
+        opts = ["Stay Still (Idle)"] + sorted(afs)
+        for i, (cb, c) in enumerate(zip(self.rcbs, self.cfgs)):
+            cur = cb.get()
+            cb["values"] = opts
+            if cur in opts:
+                cb.set(cur)
+            else:
+                cb.set(c["def"] if c["def"] in afs else "Stay Still (Idle)")
+            # Clear cached trajectories and reload
+            self.engs[i].load_auto(cb.get(), mx=c["mx"], my=c["my"])
+        self.reset()
+        self.stat_lbl.config(text=f"🔄 Reloaded {len(afs)} autos & all paths!", fg="#50fa7b")
+
     def on_sel(self, idx):
         s = self.rcbs[idx].get()
         c = self.cfgs[idx]
@@ -1599,12 +1736,14 @@ class Sim:
         for e in self.engs:
             e.stop()
             e.reset_robot_pose()
+        self.match_time = 0.0
         self.fld.reset_balls()
         self.init_gfx()
         for i, cb in enumerate(self.rcbs):
             self.on_sel(i)
         self.pbtn.config(text="> Run All Autos", bg="#50fa7b")
         self.stat_lbl.config(text="Simulator Reset")
+        self.timer_lbl.config(text="0.00s / 20.00s", fg="#50fa7b")
 
     def w2s(self, x, y):
         return (self.ox + x * self.zm, self.oy + (FW - y) * self.zm)
@@ -1644,6 +1783,18 @@ class Sim:
         rad_b = BHUB_RAD * self.zm
         self.cnv.create_oval(hr[0] - rad_r, hr[1] - rad_r, hr[0] + rad_r, hr[1] + rad_r, outline="#ff5555", fill="", width=3, tags="static")
         self.cnv.create_oval(hb[0] - rad_b, hb[1] - rad_b, hb[0] + rad_b, hb[1] + rad_b, outline="#8be9fd", fill="", width=3, tags="static")
+
+        # Draw 4 Hub Exit Chutes fanning toward the Neutral Zone (Figure 5-8)
+        # Blue Hub exits face +X into NZ; Red Hub exits face -X into NZ
+        for hub_pt, dir_x, hub_r, chute_col in [(BHUB, 1.0, BHUB_RAD, "#f1fa8c"), (RHUB, -1.0, RHUB_RAD, "#f1fa8c")]:
+            chute_offsets = [-0.36, -0.12, 0.12, 0.36]
+            fan_angles = [-0.38, -0.13, 0.13, 0.38]
+            reach = 1.35  # Length of exit chute guide overlay
+            for dy0, ang in zip(chute_offsets, fan_angles):
+                p_start = self.w2s(hub_pt[0] + dir_x * (hub_r + 0.05), hub_pt[1] + dy0)
+                p_end = self.w2s(hub_pt[0] + dir_x * (hub_r + 0.05 + reach * math.cos(ang)), hub_pt[1] + dy0 + reach * math.sin(ang))
+                self.cnv.create_line(p_start[0], p_start[1], p_end[0], p_end[1], fill=chute_col, width=2, dash=(4, 3), tags="static")
+
         if self.builder_mode:
             # Hub center crosshairs and radius labels
             self.cnv.create_oval(hr[0] - 4, hr[1] - 4, hr[0] + 4, hr[1] + 4, fill="#ff5555", outline="#ffffff", tags="obstacle")
@@ -1698,6 +1849,10 @@ class Sim:
         now = time.perf_counter()
         dt = min(0.08, (now - self.last_t) * self.spd)
         self.last_t = now
+
+        any_active = any(e.active for e in self.engs)
+        if any_active:
+            self.match_time += dt
 
         for e in self.engs:
             e.update(dt)
@@ -1771,12 +1926,34 @@ class Sim:
             self.cnv.create_line(c_scr[0], c_scr[1], hs[0], hs[1], fill="#50fa7b", arrow=tk.LAST, width=2, tags="dynamic")
 
     def hud(self):
+        # Update Auto Match Timer display (20.0s autonomous duration)
+        mt = self.match_time
+        if mt <= 20.0:
+            time_col = "#50fa7b" if mt < 16.0 else "#ffb86c"
+            self.timer_lbl.config(text=f"{mt:05.2f}s / 20.00s", fg=time_col)
+        else:
+            over = mt - 20.0
+            self.timer_lbl.config(text=f"20.00s (+{over:.2f}s OVER)", fg="#ff5555")
+
         for i, (r, e, lbl) in enumerate(zip(self.robs, self.engs, self.rhuds)):
             c = e.cur_cmd
             if len(c) > 22:
                 c = c[:20] + ".."
             sp = math.hypot(r.vx, r.vy)
-            lbl.config(text=f"Hopper: {r.hp:02d}/50 | Speed: {sp:.2f} m/s\nCmd: {c}")
+
+            # Format timing status for each robot
+            theo_str = f"{e.theo_duration:.1f}s" if e.theo_duration > 0 else "--"
+            if e.completed_t is not None:
+                cur_t_str = f"{e.completed_t:.2f}s [DONE]"
+            elif e.active:
+                cur_t_str = f"{e.elapsed_t:.2f}s [RUN]"
+            else:
+                cur_t_str = "0.00s"
+
+            # Check if auto fits in 20.0s
+            fit_icon = "✔" if e.theo_duration <= 20.0 and e.theo_duration > 0 else ("✘ OVER" if e.theo_duration > 20.0 else "")
+
+            lbl.config(text=f"Time: {cur_t_str} | Theo: {theo_str} {fit_icon}\nHopper: {r.hp:02d}/72 | Spd: {sp:.2f} m/s\nCmd: {c}")
 
         self.tb_lbl.config(text=f"Field FUEL Remaining: {len(self.fld.balls)}")
         self.sc_lbl.config(text=f"Scored Balls in Hubs: {self.fld.scored}")
