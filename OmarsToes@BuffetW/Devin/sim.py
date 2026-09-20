@@ -878,7 +878,7 @@ class E:
         self.r.w_rot = 0.0
         self.r.intake = False
         self.r.shooting = False
-        self.r.hp = 0
+        self.r.hp = 0 #Starting Fuel
         self.elapsed_t = 0.0
         self.completed_t = None
         if hasattr(self.r, "start_x") and self.r.start_x is not None:
