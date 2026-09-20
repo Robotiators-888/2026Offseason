@@ -89,7 +89,7 @@ public class SUB_Linear extends SubsystemBase {
          * @param controller Positional PIDController for motion calculations.
          */
         public void forward() {
-                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
+                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT));
         }
 
@@ -99,7 +99,7 @@ public class SUB_Linear extends SubsystemBase {
          * @param controller Positional PIDController for motion calculations.
          */
         public void setPosition(double position) {
-                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
+                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), position));
         }
 
@@ -109,7 +109,7 @@ public class SUB_Linear extends SubsystemBase {
          * @param controller Positional PIDController for motion calculations.
          */
         public void backward() {
-                linear.set(Constants.Linear.kLINEAR_FAST_PID_CONTROLLER.calculate(
+                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT));
         }
 

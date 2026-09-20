@@ -49,26 +49,26 @@ public final class Constants {
                 /** Outer diameter of the shooter flywheel wheels in inches. */
                 public static final double ShooterDiameter = 3;
 
-                /** Static friction feedforward gain kS for shooter flywheel (volts). */
-                public static final double kSHOOTER_FLYWHEEL_kS = 1.0;
+                /** Static friction feedforward gain kS for shooter flywheel (amps). */
+                public static final double kSHOOTER_FLYWHEEL_kS = 0; // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps needed to turn the flywheel when we can test
 
-                /** Velocity feedforward gain kV for shooter flywheel (volts per RPM). */
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;
+                /** Velocity feedforward gain kV for shooter flywheel (amps per RPS). */
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;  // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps to keep a consistnet speed when we can test
 
-                /** Acceleration feedforward gain kA for shooter flywheel (volts per RPM/s). */
-                public static final double kSHOOTER_FLYWHEEL_kA = 0.05;
+                /** Acceleration feedforward gain kA for shooter flywheel (amps per RPS/s). */
+                public static final double kSHOOTER_FLYWHEEL_kA = 0; // Not considered by code
 
                 /** Proportional gain kP for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kP = 3.0;
+                public static final double kSHOOTER_FLYWHEEL_kP = 4.0; // Ths controls two motors, so the lets say the RPM drops 2 RPS when we shoot a ball, it will apply a total 16 Amps to correct. If we need to increaese it, I wouldn't go above 8.0 for P
 
                 /** Integral gain kI for shooter flywheel closed-loop control. */
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
 
                 /** Derivative gain kD for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kD = 0.01;
+                public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
-                /** Compression ratio applied to game piece during launch (ratio &lt;= 1.0). */
-                public static final double kSHOOTER_COMPRESSION_RATIO = .8;
+                /** Compression ratio applied to game piece during launch */
+                public static final double kSHOOTER_COMPRESSION_RATIO = .8; // TODO: NEED TO CHANGE THIS ASAP. THIS DETERMINES SHOOTER ACCURACY AND IS THE ONLY VARIABLE THAT NEEDS TO BE TUNED
 
                 /** Standard acceleration due to gravity in m/s^2. */
                 public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
@@ -118,12 +118,12 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
                 public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
 
-                public static final double kS = 1.0;
+                public static final double kS = 0.0;
                 public static final double kV = 0.0;
-                public static final double kA = 0.05;
-                public static final double kP = 3.0;
+                public static final double kA = 0.0;
+                public static final double kP = 15.0; // For every drop in 60 RPM we pull 15 amps to garuntee it never falls low and always can keep pulling balls.
                 public static final double kI = 0.0;
-                public static final double kD = 0.01;
+                public static final double kD = 0.0; // TODO: If the roller jitters, maybe add a D value of like 0.2 or 0.4
         }
 
         /**
@@ -149,8 +149,8 @@ public final class Constants {
                 public static final double kLINEAR_FAULT_AMPS = 30;
 
                 /** High-speed positional PID controller for linear intake movement. */
-                public static final PIDController kLINEAR_FAST_PID_CONTROLLER =
-                    new PIDController(4, 0, 0);
+                public static final PIDController kLINEAR_PID_CONTROLLER =
+                    new PIDController(1.0, 0, 0); // 1.0 means that if the motor is off 1 rotation from its target, we will put the full 12 V to get it back. TODO: Maybe make this less for a less agressive PID since it is only lik 4.5. If there is oscillation, just lower the P
 
                 public static final double kLinearAgitatePeriodics =
                     100; // Number of periodic cycles for linear intake movement
@@ -167,22 +167,15 @@ public final class Constants {
                 private Index() {}
 
                 /** CAN ID for spindexer motor controller. */
-                public static final int KINDEX_MOTOR_CANID = 41;
+                public static final int kINDEX_MOTOR_CANID = 41;
 
                 /** CAN ID for high-speed metering feed motor controller. */
-                public static final int kMETERING_WHEEL_CANID = 42;
+                public static final int kINDEX_FOLLOWER_WHEEL_CANID = 42;
 
                 /** Operating voltage for spindexer motor in volts. */
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;
 
-                /** Operating voltage for high-speed metering motor in volts. */
-                public static final double kINDEX_METERING_MOTOR_VOLTS = 8.0;
-
-                /** Calculated metering wheel RPM based on scaled 12V NEO free speed. */
-                public static final double kINDEX_METERING_MOTOR_RPM =
-                    5676 * (kINDEX_METERING_MOTOR_VOLTS / 12.0);
-
-                public static final int kSmartCurrentLimit = 15; // Amperes
+                public static final int kSmartCurrentLimit = 15; // Amps
         }
 
         /** Field geometry and physical dimension constants in meters. */
@@ -212,41 +205,41 @@ public final class Constants {
                 /** Maximum camera detection range in meters. */
                 public static final double kMaxDistance = 12.0;
 
-                /** 3D rotation of back-left camera relative to robot frame (radians). */
-                public static final Rotation3d cameraRotation =
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                        Units.degreesToRadians(172 - 90));
+                /** 3D rotation of back-left camera relative to robot frame (radians). */ // TODO: GET THESE VALUES FROM THE CAD. WE DON'T HAVE TIME TO MEASUR THIS ON THE FIELD
+                // public static final Rotation3d cameraRotation =
+                //     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
+                //         Units.degreesToRadians(172 - 90));
 
-                /** Physical 3D offset transform of back-left camera from robot center. */
-                public static final Transform3d kRobotToCamera1 =
-                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
-                        Units.inchesToMeters(7.8), cameraRotation);
+                // /** Physical 3D offset transform of back-left camera from robot center. */
+                // public static final Transform3d kRobotToCamera1 =
+                //     new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
+                //         Units.inchesToMeters(7.8), cameraRotation);
 
                 /** Device name of camera 2 on local network. */
                 public static final String kCam2Name = "BackRightCam";
 
-                /** 3D rotation of back-right camera relative to robot frame (radians). */
-                public static final Rotation3d cameraRotation2 =
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                        Units.degreesToRadians(-172 + 90));
+                // /** 3D rotation of back-right camera relative to robot frame (radians). */
+                // public static final Rotation3d cameraRotation2 =
+                //     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
+                //         Units.degreesToRadians(-172 + 90));
 
-                /** Physical 3D offset transform of back-right camera from robot center. */
-                public static final Transform3d kRobotToCamera2 =
-                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
-                        Units.inchesToMeters(7.8), cameraRotation2);
+                // /** Physical 3D offset transform of back-right camera from robot center. */
+                // public static final Transform3d kRobotToCamera2 =
+                //     new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
+                //         Units.inchesToMeters(7.8), cameraRotation2);
 
                 /** Device name of camera 3 on local network. */
                 public static final String kCam3Name = "HighCam";
 
-                /** 3D rotation of high camera relative to robot frame (radians). */
-                public static final Rotation3d cameraRotation3 =
-                    new Rotation3d(Units.degreesToRadians(3), Units.degreesToRadians(-1.5),
-                        Units.degreesToRadians(-4));
+                // /** 3D rotation of high camera relative to robot frame (radians). */
+                // public static final Rotation3d cameraRotation3 =
+                //     new Rotation3d(Units.degreesToRadians(3), Units.degreesToRadians(-1.5),
+                //         Units.degreesToRadians(-4));
 
-                /** Physical 3D offset transform of high camera from robot center. */
-                public static final Transform3d kRobotToCamera3 =
-                    new Transform3d(Units.inchesToMeters(-4), Units.inchesToMeters(0),
-                        Units.inchesToMeters(20.5), cameraRotation3);
+                // /** Physical 3D offset transform of high camera from robot center. */
+                // public static final Transform3d kRobotToCamera3 =
+                //     new Transform3d(Units.inchesToMeters(-4), Units.inchesToMeters(0),
+                //         Units.inchesToMeters(20.5), cameraRotation3);
         }
 
         /** PWM port assignments and preset Blinkin LED pattern code constants. */
@@ -291,13 +284,13 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 5; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.5;
+                public static final double kS = 0.0;
                 public static final double kV = 0.0;
-                public static final double kA = 0.05;
-                public static final double kP = 5.0;
+                public static final double kA = 0.0;
+                public static final double kP = 100.0; // For every 30 degrees off we output 25 amps to instanly jump to the position
                 public static final double kI = 0.0;
-                public static final double kD = 0.1;
-                public static final double kG = 0; //
+                public static final double kD = 4.0; // to dampen the rapid speeds this will move at and prevent overshooting
+                public static final double kG = 0; // If you want this, make sure to chnage the code to make it cosine gravity
 
                 public static final double kHoodTolerance =
                     0.05; // Tolerance for hood position in rotations
@@ -318,12 +311,12 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 25; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 1.0;
+                public static final double kS = 0.0;
                 public static final double kV = 0.0;
-                public static final double kA = 0.05;
-                public static final double kP = 3.0;
+                public static final double kA = 0.0;
+                public static final double kP = 8.0; // 8 Amps per 60 RPM off
                 public static final double kI = 0.0;
-                public static final double kD = 0.01;
+                public static final double kD = 0.2; // Get rid of oscillation
 
                 public static final double kMETERING_MOTOR_RPM =
                     1000; // Target RPM for metering motor

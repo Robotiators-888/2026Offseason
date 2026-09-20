@@ -154,7 +154,7 @@ public class CMD_Shuttle extends RunCommand {
                                           * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)
                     / (720 * 3.281);
                 hood.setPosition(Units.radiansToDegrees(
-                    SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, false)));
+                    SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, true)));
 
                 boolean isShooterReady = shooter.atDesiredRPM();
 

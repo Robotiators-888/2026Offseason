@@ -42,7 +42,7 @@ public class SUB_Hood extends SubsystemBase {
         /**
          * Private constructor initializing the TalonFX motor controller with current limits.
          */
-        private SUB_Hood() {
+        private SUB_Hood() { //TODO: FIGURE OUT THE GEAR RATIO OF THIS, SUPER IMPORTANT FOR THE REMAINING CODE TO WORK!
                 final TalonFXConfiguration config =
                     new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
                             .withStatorCurrentLimitEnable(true)

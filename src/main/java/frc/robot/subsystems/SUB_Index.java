@@ -47,21 +47,23 @@ public class SUB_Index extends SubsystemBase {
         private SUB_Index() {
                 // Defines motors for indexing and metering
                 LeftIndexer =
-                    new SparkMax(Constants.Index.KINDEX_MOTOR_CANID, MotorType.kBrushless);
+                    new SparkMax(Constants.Index.kINDEX_MOTOR_CANID, MotorType.kBrushless);
                 RightIndexer =
-                    new SparkMax(Constants.Index.kMETERING_WHEEL_CANID, MotorType.kBrushless);
+                    new SparkMax(Constants.Index.kINDEX_FOLLOWER_WHEEL_CANID, MotorType.kBrushless);
 
-                // Configure main indexer motor
-                SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
-                LeftIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
-                LeftIndexConfig.follow(RightIndexer, true);
-                LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
+                // Configure main indexer motor TODO: Is this inverted, is the follower inverted?
                 SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
                 RightIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
                 RightIndexConfig.inverted(true);
                 RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
+
+                SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
+                LeftIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
+                LeftIndexConfig.follow(RightIndexer, true);
+                LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
+                    SparkMax.PersistMode.kPersistParameters);
+                
         }
 
         /**
