@@ -177,7 +177,7 @@ public class RobotContainer {
                                     .withRotationalRate(rotInput * MaxAngularRate);
                         }
                 }));
-                roller.setDefaultCommand(new RunCommand(() -> { roller.setRPM(0); }, roller));
+                roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
                 linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
                 shooter.setDefaultCommand(
                     new RunCommand(() -> { shooter.setRPM(SUB_Shooter.RPMIdle); }, shooter));

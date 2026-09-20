@@ -202,12 +202,14 @@ public class CMD_AimBotAuto extends RunCommand {
                     / (720 * 3.281);
                 hood.setPosition(Units.radiansToDegrees(
                     SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
-                metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
+                
 
                 if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {
-                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                    metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
+                    index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
                 } else {
-                        index.setVolts(0);
+                    index.setVolts(0);
+                    metering.stop();
                 }
 
                 // Wheel locking logic

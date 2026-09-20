@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -32,6 +33,7 @@ public class SUB_Roller extends SubsystemBase {
         /** Voltage output control request object with Field Oriented Control (FOC) enabled. */
         private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
 
+        private final CoastOut coast = new CoastOut();
         /**
          * Duty cycle percent output control request object with Field Oriented Control (FOC)
          * enabled.
@@ -113,6 +115,10 @@ public class SUB_Roller extends SubsystemBase {
         @Deprecated
         public void set(final double speed) {
                 LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
+        }
+
+        public void stop() {
+                LeftRollerMotor.setControl(coast);
         }
 
         /**

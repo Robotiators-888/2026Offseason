@@ -206,40 +206,40 @@ public final class Constants {
                 public static final double kMaxDistance = 12.0;
 
                 /** 3D rotation of back-left camera relative to robot frame (radians). */ // TODO: GET THESE VALUES FROM THE CAD. WE DON'T HAVE TIME TO MEASUR THIS ON THE FIELD
-                // public static final Rotation3d cameraRotation =
-                //     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                //         Units.degreesToRadians(172 - 90));
+                public static final Rotation3d cameraRotation =
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
+                        Units.degreesToRadians(172 - 90));
 
-                // /** Physical 3D offset transform of back-left camera from robot center. */
-                // public static final Transform3d kRobotToCamera1 =
-                //     new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
-                //         Units.inchesToMeters(7.8), cameraRotation);
+                /** Physical 3D offset transform of back-left camera from robot center. */
+                public static final Transform3d kRobotToCamera1 =
+                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
+                        Units.inchesToMeters(7.8), cameraRotation);
 
                 /** Device name of camera 2 on local network. */
                 public static final String kCam2Name = "BackRightCam";
 
                 // /** 3D rotation of back-right camera relative to robot frame (radians). */
-                // public static final Rotation3d cameraRotation2 =
-                //     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                //         Units.degreesToRadians(-172 + 90));
+                public static final Rotation3d cameraRotation2 =
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
+                        Units.degreesToRadians(-172 + 90));
 
-                // /** Physical 3D offset transform of back-right camera from robot center. */
-                // public static final Transform3d kRobotToCamera2 =
-                //     new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
-                //         Units.inchesToMeters(7.8), cameraRotation2);
+                /** Physical 3D offset transform of back-right camera from robot center. */
+                public static final Transform3d kRobotToCamera2 =
+                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
+                        Units.inchesToMeters(7.8), cameraRotation2);
 
                 /** Device name of camera 3 on local network. */
                 public static final String kCam3Name = "HighCam";
 
-                // /** 3D rotation of high camera relative to robot frame (radians). */
-                // public static final Rotation3d cameraRotation3 =
-                //     new Rotation3d(Units.degreesToRadians(3), Units.degreesToRadians(-1.5),
-                //         Units.degreesToRadians(-4));
+                /** 3D rotation of high camera relative to robot frame (radians). */
+                public static final Rotation3d cameraRotation3 =
+                    new Rotation3d(Units.degreesToRadians(3), Units.degreesToRadians(-1.5),
+                        Units.degreesToRadians(-4));
 
-                // /** Physical 3D offset transform of high camera from robot center. */
-                // public static final Transform3d kRobotToCamera3 =
-                //     new Transform3d(Units.inchesToMeters(-4), Units.inchesToMeters(0),
-                //         Units.inchesToMeters(20.5), cameraRotation3);
+                /** Physical 3D offset transform of high camera from robot center. */
+                public static final Transform3d kRobotToCamera3 =
+                    new Transform3d(Units.inchesToMeters(-4), Units.inchesToMeters(0),
+                        Units.inchesToMeters(20.5), cameraRotation3);
         }
 
         /** PWM port assignments and preset Blinkin LED pattern code constants. */
@@ -287,7 +287,7 @@ public final class Constants {
                 public static final double kS = 0.0;
                 public static final double kV = 0.0;
                 public static final double kA = 0.0;
-                public static final double kP = 100.0; // For every 30 degrees off we output 25 amps to instanly jump to the position
+                public static final double kP = 100.0; // For every 18 degrees off we output 5 amps to instanly jump to the position
                 public static final double kI = 0.0;
                 public static final double kD = 4.0; // to dampen the rapid speeds this will move at and prevent overshooting
                 public static final double kG = 0; // If you want this, make sure to chnage the code to make it cosine gravity

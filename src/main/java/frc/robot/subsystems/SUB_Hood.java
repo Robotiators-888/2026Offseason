@@ -68,8 +68,8 @@ public class SUB_Hood extends SubsystemBase {
          * @param angle Target position in motor rotations.
          */
         public void setPosition(final double angle) {
-                desiredAngle = angle;
-                hood.setControl(positionRequest.withPosition(Degrees.of(angle)));
+                desiredAngle = 90-angle;
+                hood.setControl(positionRequest.withPosition(Degrees.of(90-angle)));
         }
 
         /**
@@ -96,7 +96,7 @@ public class SUB_Hood extends SubsystemBase {
          * Resets the hood towards position 0 safely.
          */
         public void resetSafe() {
-                setPosition(0);
+            setPosition(90);
         }
 
         /**

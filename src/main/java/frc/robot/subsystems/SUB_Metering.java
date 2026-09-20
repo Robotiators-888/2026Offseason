@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -30,6 +31,8 @@ public class SUB_Metering extends SubsystemBase {
 
         private final VelocityTorqueCurrentFOC velocityRequest =
             new VelocityTorqueCurrentFOC(0).withSlot(0);
+
+        private final CoastOut coastRequest = new CoastOut();
 
         private static SUB_Metering INSTANCE = null;
 
@@ -80,6 +83,11 @@ public class SUB_Metering extends SubsystemBase {
         @Deprecated
         public void set(final double speed) {
                 metering.set(speed);
+        }
+
+
+        public void stop() {
+            metering.setControl(coastRequest);
         }
 
         public void setRPM(final double rpm) {
