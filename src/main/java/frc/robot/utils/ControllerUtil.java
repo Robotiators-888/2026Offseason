@@ -160,8 +160,8 @@ public class ControllerUtil {
                             }
                     }))
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
-                // Right Bumper: Run intake roller
-                Driver1.rightBumper().whileTrue(Commands.run(
+                // Left Trigger: Run intake roller
+                Driver1.leftTrigger().whileTrue(Commands.run(
                     () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller, linear));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
@@ -169,14 +169,19 @@ public class ControllerUtil {
                 // Left Stick Button: Toggle field-relative driving mode
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
+                // B Button: Shuttle
+                Driver1.b().whileTrue(
+                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
+                // X Button: Shuttle
+                Driver1.x().whileTrue(
+                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
         }
         private void configureDriver2Bindings() {
                 // Driver 2 Bindings
 
-                // Left Trigger: Manual Shooter RPM control while held
-                Driver2.leftTrigger().whileTrue(new RunCommand(() -> {
+                // Left Trigger: Manual Shooter RPM and Hood control while held
+                Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
                         shooter.setRPM(targetRPM);
-                        metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
                         double exitVelocity =
                             (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
                                 * Constants.Shooter.ShooterDiameter * targetRPM)
@@ -199,17 +204,17 @@ public class ControllerUtil {
                                 .orElse(drivetrain.getPose().getTranslation()));
                         hood.setPosition(Units.radiansToDegrees(
                             SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
-                }, shooter, hood, metering));
+                }, shooter, hood));
                 // Right Trigger: Manual Indexer control while held
-                Driver2.rightTrigger().whileTrue(new RunCommand(
-                    () -> { index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS); }, index));
+                Driver2.rightBumper().whileTrue(new RunCommand(
+                    () -> {
+                        index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                        metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
+                    }, index, metering));
                 // Y Button: Increase target RPM by 25
                 Driver2.y().onTrue(new InstantCommand(() -> targetRPM += 25));
                 // A Button: Decrease target RPM by 25
                 Driver2.a().onTrue(new InstantCommand(() -> targetRPM -= 25));
-                // B Button: Shuttle
-                Driver2.b().whileTrue(
-                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
                 // X Button: Set RPM to distance-based value
                 Driver2.x().onTrue(new InstantCommand(() -> {
                         targetRPM =
