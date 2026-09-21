@@ -49,6 +49,9 @@ public final class Constants {
                 /** Outer diameter of the shooter flywheel wheels in inches. */
                 public static final double ShooterDiameter = 3;
 
+                /** Gear ratio from motor to shooter flywheel (1:1). */
+                public static final double kGearRatio = 1.0;
+
                 /** Static friction feedforward gain kS for shooter flywheel (amps). */
                 public static final double kSHOOTER_FLYWHEEL_kS = 0; // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps needed to turn the flywheel when we can test
 
@@ -113,6 +116,12 @@ public final class Constants {
 
                 /** Target RPM for intake roller motors. */
                 public static final double kROLLER_MOTOR_RPM = 1000;
+
+                /** Outer diameter of the intake roller in inches. */
+                public static final double kRollerDiameter = 3.0;
+
+                /** Gear reduction ratio for intake roller (15:8). */
+                public static final double kGearRatio = 15.0 / 8.0;
 
                 public static final double kSupplyCurrentLimit = 30; // Amperes
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
@@ -279,6 +288,15 @@ public final class Constants {
                 /** Scoring target height in inches. */
                 public static final double ScoreHeight = 55;
 
+                /** Gear reduction ratio for hood (12:124). */
+                public static final double kGearRatio = 124.0 / 12.0;
+
+                /** Minimum hood angle in degrees. */
+                public static final double kMinAngle = 0.0;
+
+                /** Maximum hood angle in degrees. */
+                public static final double kMaxAngle = 52.0;
+
                 public static final double kStatorCurrentLimit = 25; // Amperes
                 public static final double kSupplyCurrentLimit = 7; // Amperes
                 public static final double kSupplyCurrentLowerLimit = 5; // Amperes
@@ -305,6 +323,9 @@ public final class Constants {
 
                 /** CAN ID for follower metering motor controller. */
                 public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;
+
+                /** Gear reduction ratio for metering wheel (2:1). */
+                public static final double kGearRatio = 2.0;
 
                 public static final double kStatorCurrentLimit = 120; // Amperes
                 public static final double kSupplyCurrentLimit = 60; // Amperes

@@ -86,6 +86,7 @@ public class SUB_Roller extends SubsystemBase {
                     .withKP(Constants.Roller.kP)
                     .withKI(Constants.Roller.kI)
                     .withKD(Constants.Roller.kD);
+                talonConfig.Feedback.SensorToMechanismRatio = Constants.Roller.kGearRatio;
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
 

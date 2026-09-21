@@ -42,7 +42,7 @@ public class SUB_Hood extends SubsystemBase {
         /**
          * Private constructor initializing the TalonFX motor controller with current limits.
          */
-        private SUB_Hood() { //TODO: FIGURE OUT THE GEAR RATIO OF THIS, SUPER IMPORTANT FOR THE REMAINING CODE TO WORK!
+        private SUB_Hood() {
                 final TalonFXConfiguration config =
                     new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
                             .withStatorCurrentLimitEnable(true)
@@ -58,6 +58,7 @@ public class SUB_Hood extends SubsystemBase {
                     .withKI(Constants.Hood.kI)
                     .withKD(Constants.Hood.kD)
                     .withKG(Constants.Hood.kG);
+                config.Feedback.SensorToMechanismRatio = Constants.Hood.kGearRatio;
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
         }
@@ -68,8 +69,8 @@ public class SUB_Hood extends SubsystemBase {
          * @param angle Target position in motor rotations.
          */
         public void setPosition(final double angle) {
-                desiredAngle = 90-angle;
-                hood.setControl(positionRequest.withPosition(Degrees.of(90-angle)));
+                desiredAngle = Math.max(Constants.Hood.kMinAngle, Math.min(Constants.Hood.kMaxAngle, 90 - angle));
+                hood.setControl(positionRequest.withPosition(Degrees.of(desiredAngle)));
         }
 
         /**

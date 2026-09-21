@@ -69,6 +69,7 @@ public class SUB_Metering extends SubsystemBase {
                     .withKP(Constants.Metering.kP)
                     .withKI(Constants.Metering.kI)
                     .withKD(Constants.Metering.kD);
+                config.Feedback.SensorToMechanismRatio = Constants.Metering.kGearRatio;
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
                 meteringFollower.setControl(
