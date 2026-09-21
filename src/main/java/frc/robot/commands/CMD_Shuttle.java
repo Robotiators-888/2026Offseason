@@ -149,7 +149,7 @@ public class CMD_Shuttle extends RunCommand {
                 double distance = shooterPosition.getDistance(targetTranslation);
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
-                metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
+                
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
                                           * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)
                     / (720 * 3.281);
@@ -160,6 +160,7 @@ public class CMD_Shuttle extends RunCommand {
 
                 if (isThetaErrorCorrect && isShooterReady && hood.atDesiredAngle()) {
                         index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS);
+                        metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
                 } else if (!isThetaErrorCorrect) {
                         index.setVolts(0);
                 }

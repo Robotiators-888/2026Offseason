@@ -129,7 +129,7 @@ public class SUB_Roller extends SubsystemBase {
          */
         public double rollerRPM() {
                 return (LeftRollerMotor.getVelocity().getValue().in(RPM)
-                           + RightRollerMotor.getVelocity().getValue().in(RPM))
+                        + Math.abs(RightRollerMotor.getVelocity().getValue().in(RPM)))
                     / 2;
         }
 

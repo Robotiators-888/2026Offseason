@@ -108,7 +108,7 @@ public class CMD_AimBotAuto extends RunCommand {
                                   - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
                     / Constants.Linear.kLinearAgitatePeriodics;
 
-                addRequirements(drivetrain, metering, index, hood, shooter);
+                addRequirements(drivetrain, metering, index, hood, shooter,linear);
         }
 
         /**

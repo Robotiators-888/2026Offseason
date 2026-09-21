@@ -94,6 +94,8 @@ public final class Constants {
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
+                public static final double kZone2To3HysteresisMeters = 6.15;
+                public static final double kZone3To2HysteresisMeters = 5.85;
                 public static final double kZone1To2HysteresisMeters = 3.35;
                 public static final double kZone2To1HysteresisMeters = 3.05;
         }
@@ -311,7 +313,7 @@ public final class Constants {
                 public static final double kG = 0; // If you want this, make sure to chnage the code to make it cosine gravity
 
                 public static final double kHoodTolerance =
-                    0.05; // Tolerance for hood position in rotations
+                    0.0028; // Tolerance for hood position in rotations
         }
 
         /** Metering system motor CAN IDs. */

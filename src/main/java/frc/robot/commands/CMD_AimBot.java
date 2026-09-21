@@ -108,7 +108,7 @@ public class CMD_AimBot extends RunCommand {
                 linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT
                                   - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
                     / periodics;
-                addRequirements(drivetrain, metering, index, hood, shooter);
+                addRequirements(drivetrain, metering, index, hood, shooter,linear);
         }
 
         /**
@@ -215,16 +215,16 @@ public class CMD_AimBot extends RunCommand {
                 // Wheel locking logic
                 if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
                         isLocked = true;
-                        if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
-                                linearPosition -= linearDelta;
-                        }
                 } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
                         isLocked = false;
                 }
 
                 // Lock wheels or drive
                 if (isThetaErrorCorrect && isLocked) {
-                        drivetrain.setControl(brakeRequest);
+                    if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
+                        linearPosition -= linearDelta;
+                    }
+                    drivetrain.setControl(brakeRequest);
                 } else {
                         drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
                             + Math.copySign(

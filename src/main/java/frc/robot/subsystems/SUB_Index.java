@@ -82,7 +82,7 @@ public class SUB_Index extends SubsystemBase {
          */
         public double indexRPM() {
                 return (RightIndexer.getEncoder().getVelocity()
-                           + LeftIndexer.getEncoder().getVelocity())
+                           + Math.abs(LeftIndexer.getEncoder().getVelocity()))
                     / 2;
         }
 

@@ -279,19 +279,24 @@ public class SUB_Shooter extends SubsystemBase {
         }
 
         public double getZonedRPM(double distanceMeters) {
-                if (distanceMeters > Constants.Shooter.kZone3ThresholdMeters) {
-                        currentZoneRPM = RPMZone3;
-                } else if (currentZoneRPM == RPMIdle || currentZoneRPM == RPMZone3) {
-                        currentZoneRPM =
-                            (distanceMeters > Constants.Shooter.kZone2InitialThresholdMeters)
-                            ? RPMZone2
-                            : RPMZone1;
+                if (currentZoneRPM == RPMIdle) {
+                        currentZoneRPM = (distanceMeters > Constants.Shooter.kZone3ThresholdMeters)
+                            ? RPMZone3
+                            : (distanceMeters > Constants.Shooter.kZone2InitialThresholdMeters)
+                                ? RPMZone2
+                                : RPMZone1;
+                } else if (currentZoneRPM == RPMZone3
+                    && distanceMeters < Constants.Shooter.kZone3To2HysteresisMeters) {
+                        currentZoneRPM = RPMZone2;
+                } else if (currentZoneRPM == RPMZone2) {
+                        if (distanceMeters > Constants.Shooter.kZone2To3HysteresisMeters) {
+                                currentZoneRPM = RPMZone3;
+                        } else if (distanceMeters < Constants.Shooter.kZone2To1HysteresisMeters) {
+                                currentZoneRPM = RPMZone1;
+                        }
                 } else if (currentZoneRPM == RPMZone1
                     && distanceMeters > Constants.Shooter.kZone1To2HysteresisMeters) {
                         currentZoneRPM = RPMZone2;
-                } else if (currentZoneRPM == RPMZone2
-                    && distanceMeters < Constants.Shooter.kZone2To1HysteresisMeters) {
-                        currentZoneRPM = RPMZone1;
                 }
                 return currentZoneRPM;
         }
