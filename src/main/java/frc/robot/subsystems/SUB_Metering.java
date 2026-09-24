@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -72,6 +73,9 @@ public class SUB_Metering extends SubsystemBase {
                 config.Feedback.SensorToMechanismRatio = Constants.Metering.kGearRatio;
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
+
+                metering.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); // Only for the leader to update the follower faster
+                
                 meteringFollower.setControl(
                     new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
         }

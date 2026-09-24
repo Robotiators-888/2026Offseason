@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -89,7 +90,7 @@ public class SUB_Roller extends SubsystemBase {
                 talonConfig.Feedback.SensorToMechanismRatio = Constants.Roller.kGearRatio;
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
-
+                LeftRollerMotor.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); //Only for the leader to update the follower faster
                 RightRollerMotor.setControl(
                     new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }

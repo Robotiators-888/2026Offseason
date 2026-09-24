@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -124,6 +125,8 @@ public class SUB_Shooter extends SubsystemBase {
 
                 shooterLeader.getConfigurator().apply(shooterConfig);
                 shooterFollower.getConfigurator().apply(shooterConfig);
+
+                shooterLeader.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); // Only for the leader to update the follower faster
 
                 // Synchronize bottom flywheel to top flywheel
                 shooterFollower.setControl(

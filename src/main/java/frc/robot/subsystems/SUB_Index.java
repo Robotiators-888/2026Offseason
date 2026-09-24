@@ -51,10 +51,11 @@ public class SUB_Index extends SubsystemBase {
                 RightIndexer =
                     new SparkMax(Constants.Index.kINDEX_FOLLOWER_WHEEL_CANID, MotorType.kBrushless);
 
-                // Configure main indexer motor TODO: Is this inverted, is the follower inverted?
+                // Configure main indexer motor 
                 SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
                 RightIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
                 RightIndexConfig.inverted(true);
+                RightIndexConfig.signals.appliedOutputPeriodMs(10);
                 RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
 
