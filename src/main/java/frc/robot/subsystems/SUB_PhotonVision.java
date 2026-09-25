@@ -260,7 +260,11 @@ public class SUB_PhotonVision extends SubsystemBase {
         @Override
         public void simulationPeriodic() {
                 if (visionSim != null && simPoseSupplier != null) {
-                        visionSim.update(simPoseSupplier.get());
+                        edu.wpi.first.math.geometry.Pose2d simPose = simPoseSupplier.get();
+                        if (simPose != null && !Double.isNaN(simPose.getX()) && !Double.isNaN(simPose.getY())
+                            && !Double.isNaN(simPose.getRotation().getRadians())) {
+                                visionSim.update(simPose);
+                        }
                 }
         }
 

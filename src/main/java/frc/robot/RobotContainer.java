@@ -370,78 +370,128 @@ public class RobotContainer {
          */
         private void processCameraPose(
             Optional<EstimatedRobotPose> poseOptional, StructPublisher<Pose3d> publisher) {
-                if (poseOptional.isPresent()) {
-                        EstimatedRobotPose estimatedPose = poseOptional.get();
-                        Pose3d photonPose = estimatedPose.estimatedPose;
+                if (poseOptional == null || poseOptional.isEmpty()) {
+                        return;
+                }
 
-                        // Outlier rejection checks: field bounds and realistic height (|Z| <= 0.5m)
-                        boolean outOfBounds = photonPose.getX() < 0 || photonPose.getX() > Field.fieldLength
-                            || photonPose.getY() < 0 || photonPose.getY() > Field.fieldWidth
-                            || Math.abs(photonPose.getZ()) > 0.5;
+                EstimatedRobotPose estimatedPose = poseOptional.get();
+                if (estimatedPose == null || estimatedPose.estimatedPose == null) {
+                        return;
+                }
 
-                        if (outOfBounds || estimatedPose.targetsUsed.isEmpty()) {
-                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
-                                return;
+                Pose3d photonPose = estimatedPose.estimatedPose;
+                double px = photonPose.getX();
+                double py = photonPose.getY();
+                double pz = photonPose.getZ();
+                double pRot = photonPose.toPose2d().getRotation().getRadians();
+                double roll = photonPose.getRotation().getX();
+                double pitch = photonPose.getRotation().getY();
+                double timestamp = estimatedPose.timestampSeconds;
+
+                // Explicit NaN and Infinite rejection
+                if (Double.isNaN(px) || Double.isNaN(py) || Double.isNaN(pz) || Double.isNaN(pRot)
+                    || Double.isNaN(roll) || Double.isNaN(pitch)
+                    || Double.isInfinite(px) || Double.isInfinite(py) || Double.isInfinite(pz) || Double.isInfinite(pRot)
+                    || Double.isNaN(timestamp) || Double.isInfinite(timestamp)) {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                        return;
+                }
+
+                // Reject timestamps too far in the future or older than 1.5 seconds
+                double timeDelta = Timer.getFPGATimestamp() - timestamp;
+                if (timeDelta < -0.05 || timeDelta > 1.5) {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                        return;
+                }
+
+                // Outlier rejection checks: field bounds and realistic height (|Z| <= 0.5m)
+                boolean outOfBounds = px < 0.0 || px > Field.fieldLength
+                    || py < 0.0 || py > Field.fieldWidth
+                    || Math.abs(pz) > 0.5;
+
+                if (outOfBounds || estimatedPose.targetsUsed == null || estimatedPose.targetsUsed.isEmpty()) {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                        return;
+                }
+
+                double totalDist = 0.0;
+                int validTargetCount = 0;
+                double maxAmbiguity = 0.0;
+                for (var target : estimatedPose.targetsUsed) {
+                        if (target == null) {
+                                continue;
                         }
-
-                        double totalDist = 0.0;
-                        int validTargetCount = 0;
-                        double maxAmbiguity = 0.0;
-                        for (var target : estimatedPose.targetsUsed) {
-                                double ambiguity = target.getPoseAmbiguity();
-                                if (ambiguity > 0.3) {
-                                        continue;
-                                }
-                                if (ambiguity > maxAmbiguity) {
-                                        maxAmbiguity = ambiguity;
-                                }
-                                double dist = target.getBestCameraToTarget().getTranslation().getNorm();
-                                totalDist += dist;
-                                validTargetCount++;
+                        double ambiguity = target.getPoseAmbiguity();
+                        if (Double.isNaN(ambiguity) || ambiguity > 0.3) {
+                                continue;
                         }
-
-                        if (validTargetCount == 0) {
-                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
-                                return;
+                        if (ambiguity > maxAmbiguity) {
+                                maxAmbiguity = ambiguity;
                         }
-
-                        // Single-tag protection: reject if ambiguity > 0.15 or distance > 3.5m to avoid flips
-                        if (validTargetCount == 1 && (maxAmbiguity > 0.15 || (totalDist / validTargetCount) > 3.5)) {
-                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
-                                return;
+                        var camToTarget = target.getBestCameraToTarget();
+                        if (camToTarget == null) {
+                                continue;
                         }
+                        double dist = camToTarget.getTranslation().getNorm();
+                        if (Double.isNaN(dist) || dist <= 0.0) {
+                                continue;
+                        }
+                        totalDist += dist;
+                        validTargetCount++;
+                }
 
-                        double avgDist = totalDist / validTargetCount;
-                        if (avgDist < 4.5) {
-                                double stdDevFactor = Math.pow(avgDist, 2.0) / validTargetCount;
-                                double xyStddev;
-                                double rotStddev;
+                if (validTargetCount == 0) {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                        return;
+                }
 
-                                if (validTargetCount >= 2) {
-                                        // Multi-tag: high confidence in both position and rotation
-                                        xyStddev = 0.08 * stdDevFactor;
-                                        rotStddev = 0.15 * stdDevFactor;
-                                } else {
-                                        // Single tag: lower trust, do not touch gyro heading
-                                        xyStddev = 0.5 * stdDevFactor;
-                                        rotStddev = 999999.0;
-                                }
+                // Single-tag protection: reject if ambiguity > 0.15 or distance > 3.5m to avoid flips
+                double avgDist = totalDist / validTargetCount;
+                if (Double.isNaN(avgDist) || (validTargetCount == 1 && (maxAmbiguity > 0.15 || avgDist > 3.5))) {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                        return;
+                }
 
-                                if (DriverStation.isDisabled() && validTargetCount < 2) {
-                                        xyStddev *= 4.0;
-                                }
+                if (avgDist < 4.5) {
+                        double stdDevFactor = Math.pow(avgDist, 2.0) / validTargetCount;
+                        double xyStddev;
+                        double rotStddev;
 
-                                SmartDashboard.putNumber(
-                                    "Vision/PhotonVision Future TimeStamp?",
-                                    Timer.getFPGATimestamp() - estimatedPose.timestampSeconds);
-                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                    estimatedPose.timestampSeconds,
-                                    VecBuilder.fill(xyStddev, xyStddev, rotStddev));
-                                publisher.set(photonPose);
-                                Logger.recordOutput("Vision/AcceptedPoses", photonPose);
+                        if (validTargetCount >= 2) {
+                                // Multi-tag: high confidence in both position and rotation
+                                xyStddev = 0.08 * stdDevFactor;
+                                rotStddev = 0.15 * stdDevFactor;
                         } else {
-                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                                // Single tag: lower trust, do not touch gyro heading
+                                // A value of 15.0 rad (~860 deg) gives effectively 0 heading gain
+                                // while preventing ill-conditioned matrix inversion in CTRE EKF
+                                xyStddev = 0.5 * stdDevFactor;
+                                rotStddev = 15.0;
                         }
+
+                        if (DriverStation.isDisabled() && validTargetCount < 2) {
+                                xyStddev *= 4.0;
+                        }
+
+                        // Floor standard deviations to prevent non-positive / singular covariance
+                        xyStddev = Math.max(0.05, xyStddev);
+                        rotStddev = Math.max(0.05, rotStddev);
+
+                        if (Double.isNaN(xyStddev) || Double.isNaN(rotStddev)
+                            || Double.isInfinite(xyStddev) || Double.isInfinite(rotStddev)) {
+                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                                return;
+                        }
+
+                        SmartDashboard.putNumber(
+                            "Vision/PhotonVision Future TimeStamp?", timeDelta);
+                        drivetrain.addVisionMeasurement(photonPose.toPose2d(),
+                            timestamp,
+                            VecBuilder.fill(xyStddev, xyStddev, rotStddev));
+                        publisher.set(photonPose);
+                        Logger.recordOutput("Vision/AcceptedPoses", photonPose);
+                } else {
+                        Logger.recordOutput("Vision/RejectedPoses", photonPose);
                 }
         }
 }

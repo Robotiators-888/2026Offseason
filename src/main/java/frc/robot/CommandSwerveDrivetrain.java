@@ -248,8 +248,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 AutoBuilder.configure(
                     this::getPose,
                     this::resetPose, this::getCurrentRobotChassisSpeeds,
-                    (speeds, feedforwards)
-                        -> this.setControl(autoRequest.withSpeeds(speeds)),
+                    (speeds, feedforwards) -> {
+                            if (speeds != null && !Double.isNaN(speeds.vxMetersPerSecond)
+                                && !Double.isNaN(speeds.vyMetersPerSecond)
+                                && !Double.isNaN(speeds.omegaRadiansPerSecond)) {
+                                    this.setControl(autoRequest.withSpeeds(speeds));
+                            }
+                    },
                     new PPHolonomicDriveController(
                         new PIDConstants(10, 0, 0), new PIDConstants(10, 0, 0)),
                     config, () -> {
@@ -411,9 +416,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                                             org.ironmaple.simulation.motorsims
                                                                 .SimulatedBattery
                                                                 .getBatteryVoltage());
-                                                    return realModule.getDriveMotor()
-                                                        .getSimState()
-                                                        .getMotorVoltageMeasure();
+                                                    edu.wpi.first.units.measure.Voltage driveVolts =
+                                                        realModule.getDriveMotor()
+                                                            .getSimState()
+                                                            .getMotorVoltageMeasure();
+                                                    double v = driveVolts.in(Volts);
+                                                    if (Double.isNaN(v) || Double.isInfinite(v)) {
+                                                            v = 0.0;
+                                                    }
+                                                    return Volts.of(v);
                                             }
                                     });
 
@@ -453,9 +464,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                                             org.ironmaple.simulation.motorsims
                                                                 .SimulatedBattery
                                                                 .getBatteryVoltage());
-                                                    return realModule.getSteerMotor()
-                                                        .getSimState()
-                                                        .getMotorVoltageMeasure();
+                                                    edu.wpi.first.units.measure.Voltage steerVolts =
+                                                        realModule.getSteerMotor()
+                                                            .getSimState()
+                                                            .getMotorVoltageMeasure();
+                                                    double v = steerVolts.in(Volts);
+                                                    if (Double.isNaN(v) || Double.isInfinite(v)) {
+                                                            v = 0.0;
+                                                    }
+                                                    return Volts.of(v);
                                             }
                                     });
                         }
@@ -474,21 +491,32 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         if (mapleSimDrive != null) {
                                 org.ironmaple.simulation.SimulatedArena.getInstance()
                                     .simulationPeriodic();
-                                updateSimState(deltaTime,
-                                    org.ironmaple.simulation.motorsims.SimulatedBattery
-                                        .getBatteryVoltage()
-                                        .in(Volts));
-                                getPigeon2().getSimState().setRawYaw(
-                                    mapleSimDrive.getSimulatedDriveTrainPose()
-                                        .getRotation()
-                                        .getMeasure());
-                                getPigeon2().getSimState().setAngularVelocityZ(RadiansPerSecond.of(
-                                    mapleSimDrive
-                                        .getDriveTrainSimulatedChassisSpeedsRobotRelative()
-                                        .omegaRadiansPerSecond));
-                                getPigeon2().getSimState().setSupplyVoltage(
-                                    org.ironmaple.simulation.motorsims.SimulatedBattery
-                                        .getBatteryVoltage());
+
+                                Pose2d simPose = mapleSimDrive.getSimulatedDriveTrainPose();
+                                if (simPose == null || Double.isNaN(simPose.getX()) || Double.isNaN(simPose.getY())
+                                    || Double.isNaN(simPose.getRotation().getRadians())) {
+                                        simPose = new Pose2d(3.0, 3.0, new Rotation2d());
+                                        mapleSimDrive.setSimulationWorldPose(simPose);
+                                }
+
+                                var speeds = mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative();
+                                double omegaRadPerSec = (speeds != null && !Double.isNaN(speeds.omegaRadiansPerSecond))
+                                    ? speeds.omegaRadiansPerSecond
+                                    : 0.0;
+
+                                var batteryVoltageMeasure = org.ironmaple.simulation.motorsims.SimulatedBattery
+                                                                .getBatteryVoltage();
+                                double batteryVolts = batteryVoltageMeasure.in(Volts);
+                                if (Double.isNaN(batteryVolts) || Double.isInfinite(batteryVolts) || batteryVolts <= 0.0) {
+                                        batteryVolts = 12.0;
+                                        batteryVoltageMeasure = Volts.of(12.0);
+                                }
+
+                                getPigeon2().getSimState().setRawYaw(simPose.getRotation().getMeasure());
+                                getPigeon2().getSimState().setAngularVelocityZ(RadiansPerSecond.of(omegaRadPerSec));
+                                getPigeon2().getSimState().setSupplyVoltage(batteryVoltageMeasure);
+
+                                updateSimState(deltaTime, batteryVolts);
                         } else {
                                 updateSimState(deltaTime, RobotController.getBatteryVoltage());
                         }
@@ -504,6 +532,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          */
         @Override
         public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
+                if (visionRobotPoseMeters == null
+                    || Double.isNaN(visionRobotPoseMeters.getX())
+                    || Double.isNaN(visionRobotPoseMeters.getY())
+                    || Double.isNaN(visionRobotPoseMeters.getRotation().getRadians())
+                    || Double.isInfinite(visionRobotPoseMeters.getX())
+                    || Double.isInfinite(visionRobotPoseMeters.getY())
+                    || Double.isInfinite(visionRobotPoseMeters.getRotation().getRadians())
+                    || Double.isNaN(timestampSeconds)
+                    || Double.isInfinite(timestampSeconds)) {
+                        return;
+                }
                 super.addVisionMeasurement(
                     visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
         }
@@ -519,6 +558,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         @Override
         public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
             Matrix<N3, N1> visionMeasurementStdDevs) {
+                if (visionRobotPoseMeters == null
+                    || Double.isNaN(visionRobotPoseMeters.getX())
+                    || Double.isNaN(visionRobotPoseMeters.getY())
+                    || Double.isNaN(visionRobotPoseMeters.getRotation().getRadians())
+                    || Double.isInfinite(visionRobotPoseMeters.getX())
+                    || Double.isInfinite(visionRobotPoseMeters.getY())
+                    || Double.isInfinite(visionRobotPoseMeters.getRotation().getRadians())
+                    || Double.isNaN(timestampSeconds)
+                    || Double.isInfinite(timestampSeconds)
+                    || visionMeasurementStdDevs == null) {
+                        return;
+                }
+                for (int i = 0; i < 3; i++) {
+                        double stdDev = visionMeasurementStdDevs.get(i, 0);
+                        if (Double.isNaN(stdDev) || Double.isInfinite(stdDev) || stdDev <= 0.0) {
+                                return;
+                        }
+                }
                 super.addVisionMeasurement(visionRobotPoseMeters,
                     Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
         }
@@ -553,9 +610,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          */
         public Pose2d getPose() {
                 if (Utils.isSimulation() && mapleSimDrive != null) {
-                        return mapleSimDrive.getSimulatedDriveTrainPose();
+                        Pose2d simPose = mapleSimDrive.getSimulatedDriveTrainPose();
+                        if (simPose != null && !Double.isNaN(simPose.getX()) && !Double.isNaN(simPose.getY())
+                            && !Double.isNaN(simPose.getRotation().getRadians())) {
+                                return simPose;
+                        }
                 }
-                return this.getState().Pose;
+                var statePose = this.getState().Pose;
+                if (statePose != null && !Double.isNaN(statePose.getX()) && !Double.isNaN(statePose.getY())
+                    && !Double.isNaN(statePose.getRotation().getRadians())) {
+                        return statePose;
+                }
+                return new Pose2d(3.0, 3.0, new Rotation2d());
         }
 
         /**
