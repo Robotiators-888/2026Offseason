@@ -298,6 +298,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return m_sysIdRoutineToApply.dynamic(direction);
         }
         private org.ironmaple.simulation.drivesims.SwerveDriveSimulation mapleSimDrive = null;
+        private final org.dyn4j.geometry.Convex m_simBumperShape =
+            org.dyn4j.geometry.Geometry.createRectangle(
+                Inches.of(Constants.ROBOT_LENGTH_INCHES).in(Meters),
+                Inches.of(Constants.ROBOT_WIDTH_INCHES).in(Meters));
 
         /**
          * Gets the active IronMaple SwerveDriveSimulation instance when running in simulation mode.
@@ -310,10 +314,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         @Override
         public void resetPose(Pose2d pose) {
-                if (mapleSimDrive != null) {
-                        mapleSimDrive.setSimulationWorldPose(pose);
+                Pose2d finalPose = pose;
+                if (Utils.isSimulation() && mapleSimDrive != null && m_simBumperShape != null) {
+                        finalPose = org.ironmaple.simulation.MapleSimObstacleResolver.resolvePoseClipping(
+                            pose, m_simBumperShape, org.ironmaple.simulation.SimulatedArena.getInstance());
+                        mapleSimDrive.setSimulationWorldPose(finalPose);
+                        if (finalPose.getX() != pose.getX() || finalPose.getY() != pose.getY()) {
+                                Logger.recordOutput("Drive/UnclippedPose", finalPose);
+                        }
                 }
-                super.resetPose(pose);
+                super.resetPose(finalPose);
         }
 
         /**
@@ -374,19 +384,34 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                                 KilogramSquareMeters.of(0.01),
                                                 1.2));
 
+                        // Use 2026 Rebuilt Arena without giant ramp obstacle block and install non-sticky contact listener
+                        org.ironmaple.simulation.SimulatedArena.overrideInstance(
+                            new org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt(false));
+                        org.ironmaple.simulation.MapleSimObstacleResolver.installNonStickyContactListener(
+                            org.ironmaple.simulation.SimulatedArena.getInstance());
+
                         Pose2d initialPose = (Math.abs(this.getState().Pose.getX()) < 0.05 && Math.abs(this.getState().Pose.getY()) < 0.05)
                             ? new Pose2d(3.0, 3.0, new Rotation2d())
                             : this.getState().Pose;
+                        initialPose = org.ironmaple.simulation.MapleSimObstacleResolver.resolvePoseClipping(
+                            initialPose, m_simBumperShape, org.ironmaple.simulation.SimulatedArena.getInstance());
                         this.mapleSimDrive =
                             new org.ironmaple.simulation.drivesims.SwerveDriveSimulation(
                                 simulationConfig, initialPose);
-                        if (initialPose.getX() != this.getState().Pose.getX() || initialPose.getY() != this.getState().Pose.getY()) {
-                                super.resetPose(initialPose);
-                        }
+                        super.resetPose(initialPose);
+
                         org.ironmaple.simulation.SimulatedArena.overrideSimulationTimings(
                             Seconds.of(kSimLoopPeriod), 1);
                         org.ironmaple.simulation.SimulatedArena.getInstance()
                             .addDriveTrainSimulation(mapleSimDrive);
+
+                        // Keep CTRE internal odometry state synchronized with MapleSim physics (matches Team 449)
+                        this.registerTelemetry(state -> {
+                                if (mapleSimDrive != null) {
+                                        state.Pose = mapleSimDrive.getSimulatedDriveTrainPose();
+                                        state.Speeds = mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative();
+                                }
+                        });
 
                         for (int i = 0; i < 4; i++) {
                                 final var realModule = this.getModule(i);
