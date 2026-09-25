@@ -244,10 +244,9 @@ public class TunerConstants {
                                .withDriveMotorInverted(false)
                                .withSteerMotorInverted(false)
                                .withEncoderInverted(false)
-                               .withSteerMotorGains(original.SteerMotorGains.withKP(70.0).withKD(4.5))
                                .withDriveFrictionVoltage(Volts.of(0.1))
                                .withSteerFrictionVoltage(Volts.of(0.15))
-                               .withSteerInertia(KilogramSquareMeters.of(0.05));
+                               .withSteerInertia(KilogramSquareMeters.of(0.01));
         }
 
         /**

@@ -482,42 +482,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
                 m_lastSimTime = Utils.getCurrentTimeSeconds();
 
-                /* Run simulation with MapleSim physics steps and dynamic battery sag */
+                /* Run simulation with MapleSim physics steps (matches Team 449 DriveIOSim architecture) */
                 m_simNotifier = new Notifier(() -> {
-                        final double currentTime = Utils.getCurrentTimeSeconds();
-                        double deltaTime = currentTime - m_lastSimTime;
-                        m_lastSimTime = currentTime;
-
                         if (mapleSimDrive != null) {
                                 org.ironmaple.simulation.SimulatedArena.getInstance()
                                     .simulationPeriodic();
 
                                 Pose2d simPose = mapleSimDrive.getSimulatedDriveTrainPose();
-                                if (simPose == null || Double.isNaN(simPose.getX()) || Double.isNaN(simPose.getY())
-                                    || Double.isNaN(simPose.getRotation().getRadians())) {
-                                        simPose = new Pose2d(3.0, 3.0, new Rotation2d());
-                                        mapleSimDrive.setSimulationWorldPose(simPose);
-                                }
-
                                 var speeds = mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative();
-                                double omegaRadPerSec = (speeds != null && !Double.isNaN(speeds.omegaRadiansPerSecond))
-                                    ? speeds.omegaRadiansPerSecond
-                                    : 0.0;
-
-                                var batteryVoltageMeasure = org.ironmaple.simulation.motorsims.SimulatedBattery
-                                                                .getBatteryVoltage();
-                                double batteryVolts = batteryVoltageMeasure.in(Volts);
-                                if (Double.isNaN(batteryVolts) || Double.isInfinite(batteryVolts) || batteryVolts <= 0.0) {
-                                        batteryVolts = 12.0;
-                                        batteryVoltageMeasure = Volts.of(12.0);
-                                }
 
                                 getPigeon2().getSimState().setRawYaw(simPose.getRotation().getMeasure());
-                                getPigeon2().getSimState().setAngularVelocityZ(RadiansPerSecond.of(omegaRadPerSec));
-                                getPigeon2().getSimState().setSupplyVoltage(batteryVoltageMeasure);
-
-                                updateSimState(deltaTime, batteryVolts);
+                                getPigeon2().getSimState().setAngularVelocityZ(
+                                    RadiansPerSecond.of(speeds.omegaRadiansPerSecond));
+                                getPigeon2().getSimState().setSupplyVoltage(
+                                    org.ironmaple.simulation.motorsims.SimulatedBattery.getBatteryVoltage());
                         } else {
+                                final double currentTime = Utils.getCurrentTimeSeconds();
+                                double deltaTime = currentTime - m_lastSimTime;
+                                m_lastSimTime = currentTime;
                                 updateSimState(deltaTime, RobotController.getBatteryVoltage());
                         }
                 });
