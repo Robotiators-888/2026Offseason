@@ -77,10 +77,10 @@ public class SUB_PhotonVision extends SubsystemBase {
                 poseEstimator3 = new PhotonPoseEstimator(at_field,
                     PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, PhotonVision.kRobotToCamera3);
 
-                // Set fallback strategy for single-tag scenarios
-                poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-                poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
-                poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
+                // Set fallback strategy for multi-tag in sim and single-tag scenarios
+                poseEstimator1.setMultiTagFallbackStrategy(PoseStrategy.AVERAGE_BEST_TARGETS);
+                poseEstimator2.setMultiTagFallbackStrategy(PoseStrategy.AVERAGE_BEST_TARGETS);
+                poseEstimator3.setMultiTagFallbackStrategy(PoseStrategy.AVERAGE_BEST_TARGETS);
         }
 
         /**

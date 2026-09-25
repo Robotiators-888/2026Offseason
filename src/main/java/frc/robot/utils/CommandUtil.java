@@ -1,9 +1,11 @@
 package frc.robot.utils;
 
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBotAuto;
@@ -52,33 +54,123 @@ public class CommandUtil {
         }
 
         /**
+         * Deploys the intake linear mechanism and runs intake rollers.
+         *
+         * @return Command representing deploy and intake action.
+         */
+        public Command deployAndIntake() {
+                return Commands.sequence(
+                    Commands.runOnce(() -> linear.forward(), linear),
+                    Commands.run(() -> roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM), roller)
+                ).withName("CommandUtil.deployAndIntake");
+        }
+
+        /**
+         * Stops the intake rollers.
+         *
+         * @return Command to stop intake rollers.
+         */
+        public Command stopIntake() {
+                return Commands.runOnce(() -> roller.stop(), roller)
+                    .withName("CommandUtil.stopIntake");
+        }
+
+        /**
+         * Waits until shooter flywheel and hood are at tolerance, then feeds game piece into shooter.
+         *
+         * @return Command that waits for tolerances and feeds indexer and metering wheels.
+         */
+        public Command checkAndFeed() {
+                return Commands.sequence(
+                    Commands.waitUntil(() -> shooter.atDesiredRPM() && hood.atDesiredAngle())
+                        .withTimeout(2.0),
+                    Commands.parallel(
+                        Commands.run(() -> metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM), metering),
+                        Commands.run(() -> index.setVolts(Constants.Index.kINDEX_MOTOR_VOLTS), index)
+                    )
+                ).withName("CommandUtil.checkAndFeed");
+        }
+
+        /**
+         * Stops shooter flywheel, metering, and indexer motors.
+         *
+         * @return Command stopping feed mechanisms.
+         */
+        public Command stopShooterIndexer() {
+                return Commands.parallel(
+                    Commands.runOnce(() -> shooter.stop(), shooter),
+                    Commands.runOnce(() -> metering.stop(), metering),
+                    Commands.runOnce(() -> index.stop(), index)
+                ).withName("CommandUtil.stopShooterIndexer");
+        }
+
+        /**
+         * Reverses all intake and indexer motors to clear jams.
+         *
+         * @return Command running unjam sequence.
+         */
+        public Command reverseAll() {
+                return Commands.parallel(
+                    Commands.run(() -> roller.setVolts(-6.0), roller),
+                    Commands.run(() -> index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS), index),
+                    Commands.run(() -> metering.setRPM(-500), metering)
+                ).withName("CommandUtil.reverseAll");
+        }
+
+        /**
+         * Stops all mechanism motors safely.
+         *
+         * @return Command stopping all mechanisms.
+         */
+        public Command stopAll() {
+                return Commands.parallel(
+                    Commands.runOnce(() -> shooter.stop(), shooter),
+                    Commands.runOnce(() -> roller.stop(), roller),
+                    Commands.runOnce(() -> index.stop(), index),
+                    Commands.runOnce(() -> metering.stop(), metering)
+                ).withName("CommandUtil.stopAll");
+        }
+
+        /**
+         * Retracts linear intake and pulses rollers briefly to clear pieces.
+         *
+         * @return Command for tucking intake.
+         */
+        public Command tuckAndClear() {
+                return Commands.sequence(
+                    Commands.runOnce(() -> roller.setVolts(2.0), roller),
+                    new WaitCommand(0.5),
+                    Commands.runOnce(() -> linear.backward(), linear),
+                    Commands.runOnce(() -> roller.stop(), roller)
+                ).withName("CommandUtil.tuckAndClear");
+        }
+
+        /**
          * Registers all named commands with PathPlanner {@link NamedCommands} for autonomous
          * routines.
          */
         public void registerAllNamedCommands() {
                 NamedCommands.registerCommand("ReachedTarget",
-                    new InstantCommand(
-
-                        () -> drivetrain.setReachedTarget(true)));
+                    new InstantCommand(() -> drivetrain.setReachedTarget(true)));
 
                 NamedCommands.registerCommand("ResetReachedTarget",
                     new InstantCommand(() -> drivetrain.setReachedTarget(false)));
 
                 // Intake
-                NamedCommands.registerCommand("Intake",
-                    new RunCommand(
-                        () -> roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM), roller));
+                NamedCommands.registerCommand("Intake", deployAndIntake());
+                NamedCommands.registerCommand("StopIntake", stopIntake());
+                NamedCommands.registerCommand("TuckAndClear", tuckAndClear());
 
-                // NamedCommands.registerCommand("StopIntake",
-                //     new InstantCommand(() -> roller.setRPM(0), roller));
+                // Feeding and unjamming
+                NamedCommands.registerCommand("CheckAndFeed", checkAndFeed());
+                NamedCommands.registerCommand("ReverseAll", reverseAll());
+                NamedCommands.registerCommand("StopAll", stopAll());
 
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ShootAutoAim",
                     new CMD_AimBotAuto(
                         drivetrain, photonVision, index, hood, metering, shooter, linear));
 
-                NamedCommands.registerCommand("StopShooting",
-                    Commands.parallel(new InstantCommand(() -> { index.set(0); }, index),
-                        new InstantCommand(() -> shooter.stop(), shooter)));
+                NamedCommands.registerCommand("StopShooting", stopShooterIndexer());
         }
 }

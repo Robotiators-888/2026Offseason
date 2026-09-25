@@ -368,7 +368,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
                         this.mapleSimDrive =
                             new org.ironmaple.simulation.drivesims.SwerveDriveSimulation(
-                                simulationConfig, new Pose2d(3.0, 3.0, new Rotation2d()));
+                                simulationConfig, this.getState().Pose);
                         org.ironmaple.simulation.SimulatedArena.overrideSimulationTimings(
                             Seconds.of(kSimLoopPeriod), 1);
                         org.ironmaple.simulation.SimulatedArena.getInstance()
@@ -432,6 +432,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                                             org.ironmaple.simulation.motorsims
                                                                 .SimulatedBattery
                                                                 .getBatteryVoltage());
+                                                    realModule.getEncoder()
+                                                        .getSimState()
+                                                        .setRawPosition(mechanismAngle.in(Rotations));
+                                                    realModule.getEncoder()
+                                                        .getSimState()
+                                                        .setVelocity(mechanismVelocity.in(RotationsPerSecond));
+                                                    realModule.getEncoder()
+                                                        .getSimState()
+                                                        .setSupplyVoltage(
+                                                            org.ironmaple.simulation.motorsims
+                                                                .SimulatedBattery
+                                                                .getBatteryVoltage());
                                                     return realModule.getSteerMotor()
                                                         .getSimState()
                                                         .getMotorVoltageMeasure();
@@ -461,10 +473,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                     mapleSimDrive
                                         .getDriveTrainSimulatedChassisSpeedsRobotRelative()
                                         .omegaRadiansPerSecond));
-                                updateSimState(deltaTime,
+                                getPigeon2().getSimState().setSupplyVoltage(
                                     org.ironmaple.simulation.motorsims.SimulatedBattery
-                                        .getBatteryVoltage()
-                                        .in(Volts));
+                                        .getBatteryVoltage());
                         } else {
                                 updateSimState(deltaTime, RobotController.getBatteryVoltage());
                         }

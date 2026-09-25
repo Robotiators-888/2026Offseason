@@ -38,7 +38,6 @@ import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
 import frc.robot.commands.WheelRadiusCharacterizationCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.RobotActions;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
@@ -119,10 +118,6 @@ public class RobotContainer {
 
         public final ControllerUtil controllerUtil = new ControllerUtil(drivetrain, linear, roller,
             index, photonVision, shooter, hood, metering, Driver1, Driver2);
-
-        /** Coordinated multi-subsystem actions handler (Team 449 pattern). */
-        public final RobotActions actions = new RobotActions(
-            shooter, hood, metering, index, roller, linear);
 
         /** Dashboard chooser for autonomous routines. */
         private final SendableChooser<Command> autoChooser;
@@ -210,7 +205,10 @@ public class RobotContainer {
                 powerDistribution.setSwitchableChannel(true);
 
                 if (Constants.CURRENT_MODE == Constants.Mode.SIM) {
-                        photonVision.enableSimulation(() -> drivetrain.getPose());
+                        photonVision.enableSimulation(() ->
+                            drivetrain.getMapleSimDrive() != null
+                                ? drivetrain.getMapleSimDrive().getSimulatedDriveTrainPose()
+                                : drivetrain.getPose());
                 }
         }
 
@@ -388,9 +386,14 @@ public class RobotContainer {
 
                         double totalDist = 0.0;
                         int validTargetCount = 0;
+                        double maxAmbiguity = 0.0;
                         for (var target : estimatedPose.targetsUsed) {
-                                if (target.getPoseAmbiguity() > 0.25) {
+                                double ambiguity = target.getPoseAmbiguity();
+                                if (ambiguity > 0.3) {
                                         continue;
+                                }
+                                if (ambiguity > maxAmbiguity) {
+                                        maxAmbiguity = ambiguity;
                                 }
                                 double dist = target.getBestCameraToTarget().getTranslation().getNorm();
                                 totalDist += dist;
@@ -402,11 +405,31 @@ public class RobotContainer {
                                 return;
                         }
 
+                        // Single-tag protection: reject if ambiguity > 0.15 or distance > 3.5m to avoid flips
+                        if (validTargetCount == 1 && (maxAmbiguity > 0.15 || (totalDist / validTargetCount) > 3.5)) {
+                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                                return;
+                        }
+
                         double avgDist = totalDist / validTargetCount;
                         if (avgDist < 4.5) {
                                 double stdDevFactor = Math.pow(avgDist, 2.0) / validTargetCount;
-                                double xyStddev = 0.1 * stdDevFactor;
-                                double rotStddev = 0.4 * stdDevFactor;
+                                double xyStddev;
+                                double rotStddev;
+
+                                if (validTargetCount >= 2) {
+                                        // Multi-tag: high confidence in both position and rotation
+                                        xyStddev = 0.08 * stdDevFactor;
+                                        rotStddev = 0.15 * stdDevFactor;
+                                } else {
+                                        // Single tag: lower trust, do not touch gyro heading
+                                        xyStddev = 0.5 * stdDevFactor;
+                                        rotStddev = 999999.0;
+                                }
+
+                                if (DriverStation.isDisabled() && validTargetCount < 2) {
+                                        xyStddev *= 4.0;
+                                }
 
                                 SmartDashboard.putNumber(
                                     "Vision/PhotonVision Future TimeStamp?",
