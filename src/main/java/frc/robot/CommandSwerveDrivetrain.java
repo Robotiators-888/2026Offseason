@@ -227,6 +227,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * @return Current robot {@link ChassisSpeeds} in meters/second and radians/second.
          */
         public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+                if (Utils.isSimulation() && mapleSimDrive != null) {
+                        return mapleSimDrive.getDriveTrainSimulatedChassisSpeedsRobotRelative();
+                }
                 return this.getKinematics().toChassisSpeeds(getState().ModuleStates);
         }
 
@@ -242,8 +245,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         return;
                 }
 
-                AutoBuilder.configure(()
-                                          -> this.getState().Pose,
+                AutoBuilder.configure(
+                    this::getPose,
                     this::resetPose, this::getCurrentRobotChassisSpeeds,
                     (speeds, feedforwards)
                         -> this.setControl(autoRequest.withSpeeds(speeds)),
@@ -366,9 +369,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                                 KilogramSquareMeters.of(0.01),
                                                 1.2));
 
+                        Pose2d initialPose = (Math.abs(this.getState().Pose.getX()) < 0.05 && Math.abs(this.getState().Pose.getY()) < 0.05)
+                            ? new Pose2d(3.0, 3.0, new Rotation2d())
+                            : this.getState().Pose;
                         this.mapleSimDrive =
                             new org.ironmaple.simulation.drivesims.SwerveDriveSimulation(
-                                simulationConfig, this.getState().Pose);
+                                simulationConfig, initialPose);
+                        if (initialPose.getX() != this.getState().Pose.getX() || initialPose.getY() != this.getState().Pose.getY()) {
+                                super.resetPose(initialPose);
+                        }
                         org.ironmaple.simulation.SimulatedArena.overrideSimulationTimings(
                             Seconds.of(kSimLoopPeriod), 1);
                         org.ironmaple.simulation.SimulatedArena.getInstance()
@@ -465,6 +474,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         if (mapleSimDrive != null) {
                                 org.ironmaple.simulation.SimulatedArena.getInstance()
                                     .simulationPeriodic();
+                                updateSimState(deltaTime,
+                                    org.ironmaple.simulation.motorsims.SimulatedBattery
+                                        .getBatteryVoltage()
+                                        .in(Volts));
                                 getPigeon2().getSimState().setRawYaw(
                                     mapleSimDrive.getSimulatedDriveTrainPose()
                                         .getRotation()
@@ -522,11 +535,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         /**
-         * Gets the current 2D pose of the robot on the field from odometry.
+         * Seeds the field-centric heading from the current rotation.
+         */
+        @Override
+        public void seedFieldCentric() {
+                super.seedFieldCentric();
+                if (mapleSimDrive != null) {
+                        mapleSimDrive.setSimulationWorldPose(new Pose2d(
+                            mapleSimDrive.getSimulatedDriveTrainPose().getTranslation(), new Rotation2d()));
+                }
+        }
+
+        /**
+         * Gets the current 2D pose of the robot on the field from odometry or physics simulation.
          *
          * @return Current robot {@link Pose2d} in meters and rotation.
          */
         public Pose2d getPose() {
+                if (Utils.isSimulation() && mapleSimDrive != null) {
+                        return mapleSimDrive.getSimulatedDriveTrainPose();
+                }
                 return this.getState().Pose;
         }
 

@@ -232,11 +232,38 @@ public class TunerConstants {
                 kInvertRightSide, kBackRightSteerMotorInverted, kBackRightEncoderInverted);
 
         /**
+         * Sanitizes swerve module constants for simulation by removing hardware mounting offsets
+         * and hardware inversion flags that do not apply to simulated physics plants.
+         *
+         * @param original Original physical module constants.
+         * @return Cleaned module constants for simulation.
+         */
+        private static SwerveModuleConstants<?, ?, ?> sanitizeForSim(
+            SwerveModuleConstants<?, ?, ?> original) {
+                return original.withEncoderOffset(0.0)
+                               .withDriveMotorInverted(false)
+                               .withSteerMotorInverted(false)
+                               .withEncoderInverted(false)
+                               .withSteerMotorGains(original.SteerMotorGains.withKP(70.0).withKD(4.5))
+                               .withDriveFrictionVoltage(Volts.of(0.1))
+                               .withSteerFrictionVoltage(Volts.of(0.15))
+                               .withSteerInertia(KilogramSquareMeters.of(0.05));
+        }
+
+        /**
          * Creates a {@link CommandSwerveDrivetrain} instance.
          *
          * @return Initialized swerve drivetrain instance.
          */
         public static CommandSwerveDrivetrain createDrivetrain() {
+                if (com.ctre.phoenix6.Utils.isSimulation()) {
+                        return new CommandSwerveDrivetrain(
+                            DrivetrainConstants,
+                            sanitizeForSim(FrontLeft),
+                            sanitizeForSim(FrontRight),
+                            sanitizeForSim(BackLeft),
+                            sanitizeForSim(BackRight));
+                }
                 return new CommandSwerveDrivetrain(
                     DrivetrainConstants, FrontLeft, FrontRight, BackLeft, BackRight);
         }
