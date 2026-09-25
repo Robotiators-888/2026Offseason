@@ -36,7 +36,9 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
+import frc.robot.commands.WheelRadiusCharacterizationCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.RobotActions;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
@@ -53,6 +55,7 @@ import frc.robot.utils.RobotTelemetry;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import org.littletonrobotics.junction.Logger;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.json.simple.parser.ParseException;
@@ -116,6 +119,10 @@ public class RobotContainer {
 
         public final ControllerUtil controllerUtil = new ControllerUtil(drivetrain, linear, roller,
             index, photonVision, shooter, hood, metering, Driver1, Driver2);
+
+        /** Coordinated multi-subsystem actions handler (Team 449 pattern). */
+        public final RobotActions actions = new RobotActions(
+            shooter, hood, metering, index, roller, linear);
 
         /** Dashboard chooser for autonomous routines. */
         private final SendableChooser<Command> autoChooser;
@@ -191,6 +198,8 @@ public class RobotContainer {
                 autoChooser = AutoBuilder.buildAutoChooser();
                 SmartDashboard.putData("Autos/Auto Chooser", autoChooser);
                 SmartDashboard.putData("Autos/Active Auto Path", autoField);
+                SmartDashboard.putData("Commands/WheelRadiusCharacterization",
+                    new WheelRadiusCharacterizationCommand(drivetrain));
         }
 
         /**
@@ -199,6 +208,10 @@ public class RobotContainer {
         public void robotInit() {
                 Pathfinding.setPathfinder(new LocalADStar());
                 powerDistribution.setSwitchableChannel(true);
+
+                if (Constants.CURRENT_MODE == Constants.Mode.SIM) {
+                        photonVision.enableSimulation(() -> drivetrain.getPose());
+                }
         }
 
         /**
@@ -363,32 +376,48 @@ public class RobotContainer {
                         EstimatedRobotPose estimatedPose = poseOptional.get();
                         Pose3d photonPose = estimatedPose.estimatedPose;
 
-                        if (photonPose.getX() >= 0 && photonPose.getX() <= Field.fieldLength
-                            && photonPose.getY() >= 0 && photonPose.getY() <= Field.fieldWidth
-                            && !estimatedPose.targetsUsed.isEmpty()) {
-                                double minDist = Double.MAX_VALUE;
-                                for (var target : estimatedPose.targetsUsed) {
-                                        if (target.getPoseAmbiguity() > 0.2)
-                                                continue;
-                                        double dist = target.getBestCameraToTarget()
-                                                          .getTranslation()
-                                                          .getNorm();
-                                        if (dist < minDist)
-                                                minDist = dist;
-                                }
+                        // Outlier rejection checks: field bounds and realistic height (|Z| <= 0.5m)
+                        boolean outOfBounds = photonPose.getX() < 0 || photonPose.getX() > Field.fieldLength
+                            || photonPose.getY() < 0 || photonPose.getY() > Field.fieldWidth
+                            || Math.abs(photonPose.getZ()) > 0.5;
 
-                                if (minDist < 4.0) {
-                                        double xyStddev = Math.pow(minDist, 2) / 16.0;
-                                        double rotStddev = Units.degreesToRadians(120.0);
-                                        SmartDashboard.putNumber(
-                                            "Vision/PhotonVision Future TimeStamp?",
-                                            Timer.getFPGATimestamp()
-                                                - estimatedPose.timestampSeconds);
-                                        drivetrain.addVisionMeasurement(photonPose.toPose2d(),
-                                            estimatedPose.timestampSeconds,
-                                            VecBuilder.fill(xyStddev, xyStddev, rotStddev));
-                                        publisher.set(photonPose);
+                        if (outOfBounds || estimatedPose.targetsUsed.isEmpty()) {
+                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                                return;
+                        }
+
+                        double totalDist = 0.0;
+                        int validTargetCount = 0;
+                        for (var target : estimatedPose.targetsUsed) {
+                                if (target.getPoseAmbiguity() > 0.25) {
+                                        continue;
                                 }
+                                double dist = target.getBestCameraToTarget().getTranslation().getNorm();
+                                totalDist += dist;
+                                validTargetCount++;
+                        }
+
+                        if (validTargetCount == 0) {
+                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
+                                return;
+                        }
+
+                        double avgDist = totalDist / validTargetCount;
+                        if (avgDist < 4.5) {
+                                double stdDevFactor = Math.pow(avgDist, 2.0) / validTargetCount;
+                                double xyStddev = 0.1 * stdDevFactor;
+                                double rotStddev = 0.4 * stdDevFactor;
+
+                                SmartDashboard.putNumber(
+                                    "Vision/PhotonVision Future TimeStamp?",
+                                    Timer.getFPGATimestamp() - estimatedPose.timestampSeconds);
+                                drivetrain.addVisionMeasurement(photonPose.toPose2d(),
+                                    estimatedPose.timestampSeconds,
+                                    VecBuilder.fill(xyStddev, xyStddev, rotStddev));
+                                publisher.set(photonPose);
+                                Logger.recordOutput("Vision/AcceptedPoses", photonPose);
+                        } else {
+                                Logger.recordOutput("Vision/RejectedPoses", photonPose);
                         }
                 }
         }

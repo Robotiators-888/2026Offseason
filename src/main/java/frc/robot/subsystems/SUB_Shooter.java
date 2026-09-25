@@ -1,48 +1,30 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Hertz;
-import static edu.wpi.first.units.Units.RPM;
-
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.Alert;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOHardware;
+import frc.robot.subsystems.shooter.ShooterIOInputsAutoLogged;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.utils.LoggedTunableNumber;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * Subsystem controlling the high-velocity dual-flywheel shooter mechanism.
- *
- * <p>Hardware:
- * <ul>
- *   <li>Leader TalonFX motor controller on CAN ID 43 ({@link
- * Constants.Shooter#kSHOOTER_LEADER_MOTOR_CANID})</li> <li>Follower TalonFX motor controller on CAN
- * ID 44 ({@link Constants.Shooter#kSHOOTER_FOLLOWER_MOTOR_CANID})</li>
- * </ul>
+ * Subsystem controlling the high-velocity dual-flywheel shooter mechanism with AdvantageKit IO abstraction.
  */
 public class SUB_Shooter extends SubsystemBase {
         private static SUB_Shooter INSTANCE = null;
 
-        /** Subsystem hardware and control state */
-        private final TalonFX shooterLeader;
-        private final TalonFX shooterFollower;
-        private final VoltageOut voltageRequest = new VoltageOut(0);
-        // Not used since it is replaced by velocityRequest
-        // private final VelocityVoltage m_request = new VelocityVoltage(0);
-        private final VelocityTorqueCurrentFOC velocityRequest =
-            new VelocityTorqueCurrentFOC(0).withSlot(0);
-        private double desiredSpeed = 0;
-        private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
-        private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
+        private final ShooterIO io;
+        private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
-        /** Active shooting state flag used for dynamic current limit switching. */
+        private double desiredSpeed = 0;
+        private final Debouncer atDesiredRPMDebouncer = new Debouncer(0.04);
+        private final LoggedTunableNumber tunableRPM =
+            new LoggedTunableNumber("Shooter/TunableRPM", Constants.Shooter.kSHOOTER_FLYWHEEL_RPM);
+
         public static boolean isShooting;
         public static boolean wasShooting = false;
         private double currentZoneRPM = RPMIdle;
@@ -51,234 +33,79 @@ public class SUB_Shooter extends SubsystemBase {
         public static final double RPMZone3 = Constants.Shooter.kRPMZone3;
         public static final double RPMIdle = Constants.Shooter.kRPMIdle;
 
-        /**
-         * Singleton pattern provider for the shooter subsystem.
-         *
-         * @return Single instance of {@link SUB_Shooter}.
-         */
         public static SUB_Shooter getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Shooter();
                 }
-
                 return INSTANCE;
         }
 
-        /**
-         * Private constructor initializing leader and follower TalonFX motor controllers,
-         * populating the distance-to-RPM look-up table, and configuring PID/current limit settings.
-         */
-        private SUB_Shooter() {
-                // Initialize dual flywheel motors
-                shooterLeader = new TalonFX(Constants.Shooter.kSHOOTER_LEADER_MOTOR_CANID);
-                shooterFollower = new TalonFX(Constants.Shooter.kSHOOTER_FOLLOWER_MOTOR_CANID);
-
-                configFlywheel();
+        public SUB_Shooter(ShooterIO io) {
+                this.io = io;
+                INSTANCE = this;
         }
 
-        /**
-         * Configures high and low current limit configurations and closed-loop PID gains.
-         */
-        private void configFlywheel() {
-                // Configure current limits and neutral mode
-                shooterConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.StatorCurrentLimit =
-                    Constants.Shooter.kStatorCurrentLimit;
-                shooterConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterConfig.CurrentLimits.SupplyCurrentLimit =
-                    Constants.Shooter.kSupplyCurrentLimit;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerLimit =
-                    Constants.Shooter.kSupplyCurrentLowerLimit;
-                shooterConfig.CurrentLimits.SupplyCurrentLowerTime =
-                    Constants.Shooter.kSupplyCurrentLowerTime;
-                shooterConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-                shooterConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-                // Configure PID control loop coefficients
-                shooterConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
-                shooterConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV;
-                shooterConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
-                shooterConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP;
-                shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
-                shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
-
-                shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.StatorCurrentLimit =
-                    Constants.Shooter.kStatorCurrentLimit;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLimit =
-                    Constants.Shooter.kLowSupplyCurrentLimit;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerLimit =
-                    Constants.Shooter.kLowSupplyCurrentLowerLimit;
-                shooterLowConfig.CurrentLimits.SupplyCurrentLowerTime =
-                    Constants.Shooter.kLowSupplyCurrentLowerTime;
-                shooterLowConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-                shooterLowConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-                // Configure PID control loop coefficients
-                shooterLowConfig.Slot0.kS = Constants.Shooter.kSHOOTER_FLYWHEEL_kS;
-                shooterLowConfig.Slot0.kV = Constants.Shooter.kSHOOTER_FLYWHEEL_kV;
-                shooterLowConfig.Slot0.kA = Constants.Shooter.kSHOOTER_FLYWHEEL_kA;
-                shooterLowConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP;
-                shooterLowConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
-                shooterLowConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
-
-                shooterLeader.getConfigurator().apply(shooterConfig);
-                shooterFollower.getConfigurator().apply(shooterConfig);
-
-                shooterLeader.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); // Only for the leader to update the follower faster
-
-                // Synchronize bottom flywheel to top flywheel
-                shooterFollower.setControl(
-                    new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
+        public SUB_Shooter() {
+                this(createIO());
         }
 
-        /**
-         * Calculates required flywheel exit RPM using kinematic projectile equations based on
-         * distance and hood angle.
-         *
-         * @param distance Distance to target in meters.
-         * @param angle Hood launch angle in radians.
-         * @return Calculated target exit velocity in RPM.
-         */
-        @Deprecated
-        public static double findoptimalRPM(final double distance, final double angle) {
-                double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-                double exitvelocity = (1 / Math.cos(angle))
-                    * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance)
-                        / (2 * (distance * Math.tan(angle) - height)));
-                double exitRPM = ((720 / Constants.Shooter.ShooterDiameter) * exitvelocity * 3.281)
-                    / (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI);
-                return exitRPM;
+        private static ShooterIO createIO() {
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                return new ShooterIOHardware();
+                        case SIM:
+                                return new ShooterIOSim();
+                        case REPLAY:
+                        default:
+                                return new ShooterIO() {};
+                }
         }
 
-        /**
-         * Deprecated open-loop set duty cycle method.
-         *
-         * @param speed Percent output duty cycle.
-         * @deprecated Use {@link #setRPM(double)} for closed-loop velocity control.
-         */
-        @Deprecated
-        public void set(final double speed) {
-                shooterLeader.set(speed);
-        }
-
-        /**
-         * Sets closed-loop target velocity for flywheel motors in RPM.
-         *
-         * @param rpm Target velocity for both flywheels in RPM.
-         */
         public void setRPM(final double rpm) {
                 this.desiredSpeed = rpm;
-                shooterLeader.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+                io.setVelocity(rpm);
         }
 
-        /**
-         * Calculates current average velocity of leader and follower flywheels in RPM.
-         *
-         * @return Average velocity of both flywheels in RPM.
-         */
         public double flywheelRPM() {
-                return (shooterLeader.getVelocity().getValue().in(RPM)
-                           + shooterFollower.getVelocity().getValue().in(RPM))
-                    / 2;
+                return (inputs.leaderVelocityRPM + inputs.followerVelocityRPM) / 2.0;
         }
 
-        /**
-         * Checks whether actual flywheel RPM is within tolerance (75 RPM) of target speed.
-         *
-         * @return True if flywheels are at target RPM, false otherwise.
-         */
         public boolean atDesiredRPM() {
-                return Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPMTolerance;
+                boolean inTolerance =
+                    Math.abs(flywheelRPM() - desiredSpeed) < Constants.Shooter.kRPMTolerance;
+                return atDesiredRPMDebouncer.calculate(inTolerance && desiredSpeed > 500);
         }
 
-        /**
-         * Stops flywheel motors by outputting 0 volts.
-         */
         public void stop() {
                 this.desiredSpeed = 0;
-                shooterLeader.setControl(voltageRequest.withOutput(0));
+                io.stop();
         }
 
-        /**
-         * Direct voltage output override for testing.
-         *
-         * @param volts Target voltage output in volts.
-         */
-        @Deprecated
         public void setVolts(final double volts) {
-                shooterLeader.setControl(voltageRequest.withOutput(volts));
+                io.setVoltage(volts);
         }
 
-        /**
-         * Subsystem periodic loop (20ms). Telemeters flywheel RPM, motor current, supply/motor
-         * voltages, temperatures, and encoder values for both motors to SmartDashboard, dynamically
-         * updating current limit profiles.
-         */
         @Override
         public void periodic() {
-                // Telemetry logging for dashboard and diagnostics
+                io.updateInputs(inputs);
+                Logger.processInputs("Shooter", inputs);
+
                 SmartDashboard.putNumber("Shooter/Desired RPM", desiredSpeed);
-                SmartDashboard.putNumber("Shooter/Motor One Stator Current",
-                    shooterLeader.getStatorCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Stator Current",
-                    shooterFollower.getStatorCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor One Supply Current",
-                    shooterLeader.getSupplyCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Supply Current",
-                    shooterFollower.getSupplyCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor One Supply Voltage",
-                    shooterLeader.getSupplyVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Supply Voltage",
-                    shooterFollower.getSupplyVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor One Voltage",
-                    shooterLeader.getMotorVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Voltage",
-                    shooterFollower.getMotorVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor One Encoder Pos",
-                    shooterLeader.getPosition().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Encoder Pos",
-                    shooterFollower.getPosition().getValueAsDouble());
-
-                SmartDashboard.putNumber("Shooter/Motor One Torque Current",
-                    shooterLeader.getTorqueCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Torque Current",
-                    shooterFollower.getTorqueCurrent().getValueAsDouble());
-
-                SmartDashboard.putNumber("Shooter/Motor One Device Temp",
-                    shooterLeader.getDeviceTemp().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Device Temp",
-                    shooterFollower.getDeviceTemp().getValueAsDouble());
-
-                SmartDashboard.putNumber("Shooter/Motor One Processor Temp",
-                    shooterLeader.getProcessorTemp().getValueAsDouble());
-                SmartDashboard.putNumber("Shooter/Motor Two Processor Temp",
-                    shooterFollower.getProcessorTemp().getValueAsDouble());
-
-                SmartDashboard.putNumber(
-                    "Shooter/FlywheelRPM (One)", shooterLeader.getVelocity().getValue().in(RPM));
-                SmartDashboard.putNumber(
-                    "Shooter/FlywheelRPM (Two)", shooterFollower.getVelocity().getValue().in(RPM));
-
+                SmartDashboard.putNumber("Shooter/FlywheelRPM (One)", inputs.leaderVelocityRPM);
+                SmartDashboard.putNumber("Shooter/FlywheelRPM (Two)", inputs.followerVelocityRPM);
                 SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
+                SmartDashboard.putBoolean("Shooter/AtDesiredRPM", atDesiredRPM());
 
-                Alert.alertKraken(shooterLeader);
-                Alert.alertKraken(shooterFollower);
-
-                if (SUB_Shooter.isShooting
-                    && !SUB_Shooter
-                        .wasShooting) { // TODO: Use TorqueCurrentFOC which allows you to pass a
-                                        // MaxAbsDutyCycle or consider using a command to set the
-                                        // current limit when shooting starts and ends
-                        shooterLeader.getConfigurator().apply(shooterConfig);
-                        shooterFollower.getConfigurator().apply(shooterConfig);
-                } else if (!SUB_Shooter.isShooting && SUB_Shooter.wasShooting) {
-                        shooterLeader.getConfigurator().apply(shooterLowConfig);
-                        shooterFollower.getConfigurator().apply(shooterLowConfig);
-                }
+                SmartDashboard.putNumber("Shooter/Leader Volts", inputs.leaderAppliedVolts);
+                SmartDashboard.putNumber("Shooter/Follower Volts", inputs.followerAppliedVolts);
+                SmartDashboard.putNumber("Shooter/Leader Current", inputs.leaderSupplyCurrentAmps);
+                SmartDashboard.putNumber("Shooter/Follower Current", inputs.followerSupplyCurrentAmps);
 
                 SUB_Shooter.wasShooting = SUB_Shooter.isShooting;
+        }
+
+        public double getInterpolatedRPM(double distanceMeters) {
+                return Constants.Shooter.FLYWHEEL_RPM_MAP.get(distanceMeters);
         }
 
         public double getZonedRPM(double distanceMeters) {

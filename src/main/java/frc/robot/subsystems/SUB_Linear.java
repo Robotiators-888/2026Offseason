@@ -1,34 +1,24 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.Alert;
+import frc.robot.subsystems.linear.LinearIO;
+import frc.robot.subsystems.linear.LinearIOHardware;
+import frc.robot.subsystems.linear.LinearIOInputsAutoLogged;
+import frc.robot.subsystems.linear.LinearIOSim;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * Subsystem controlling linear intake deployment.
- *
- * <p>Hardware: Single REV SPARK Max motor controller driving a 23:1 cycloidal gearbox
- * on CAN ID 31 ({@link Constants.Linear#kLINEAR_MOTOR_CANID}) with a 35A smart current limit.
+ * Subsystem controlling linear intake deployment with AdvantageKit IO abstraction.
  */
 public class SUB_Linear extends SubsystemBase {
-        /** Subsystem extension state flag. */
         public static boolean extended;
-
-        /** SPARK Max motor controller driving linear deploy mechanism. */
-        // 16:1 gear ratio
-        private final SparkMax linear;
-
         private static SUB_Linear INSTANCE = null;
 
-        /**
-         * Singleton provider for the linear intake deploy subsystem.
-         *
-         * @return Single instance of {@link SUB_Linear}.
-         */
+        private final LinearIO io;
+        private final LinearIOInputsAutoLogged inputs = new LinearIOInputsAutoLogged();
+
         public static SUB_Linear getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Linear();
@@ -36,111 +26,73 @@ public class SUB_Linear extends SubsystemBase {
                 return INSTANCE;
         }
 
-        /**
-         * Private constructor initializing SPARK Max controller and applying hardware settings.
-         */
-        private SUB_Linear() {
-                // Defines motors with IDs and motor type
-                linear = new SparkMax(Constants.Linear.kLINEAR_MOTOR_CANID, MotorType.kBrushless);
-                configureMotors();
+        public SUB_Linear(LinearIO io) {
+                this.io = io;
+                INSTANCE = this;
         }
 
-        /**
-         * Configures current limits (35A stall, 5A free) and motor direction.
-         */
-        @SuppressWarnings("removal")
-        private void configureMotors() {
-                SparkMaxConfig config = new SparkMaxConfig();
-                config.smartCurrentLimit(Constants.Linear.kStallLimit, Constants.Linear.kFreeLimit);
-                config.inverted(true);
-                linear.configure(config, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
+        public SUB_Linear() {
+                this(createIO());
         }
 
-        /**
-         * Subsystem periodic loop (20ms). Telemeters encoder position, current, bus voltage,
-         * and motor temperature to SmartDashboard, checking for REV hardware faults.
-         */
+        private static LinearIO createIO() {
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                return new LinearIOHardware();
+                        case SIM:
+                                return new LinearIOSim();
+                        case REPLAY:
+                        default:
+                                return new LinearIO() {};
+                }
+        }
+
         @Override
         public void periodic() {
-                // Telemetry logging for dashboard
-                SmartDashboard.putNumber(
-                    "Linear/Linear Encoder Pos", linear.getEncoder().getPosition());
-                SmartDashboard.putNumber("Linear/Linear Output Current", linear.getOutputCurrent());
-                SmartDashboard.putNumber("Linear/Linear Bus Voltage", linear.getBusVoltage());
-                SmartDashboard.putNumber("Linear/Linear Motor Temp", linear.getMotorTemperature());
+                io.updateInputs(inputs);
+                Logger.processInputs("Linear", inputs);
 
-                Alert.alertNeoFaults(linear);
-                Alert.alertNeoWarnings(linear);
+                SmartDashboard.putNumber("Linear/Linear Encoder Pos", inputs.positionRotations);
+                SmartDashboard.putNumber("Linear/Linear Output Current", inputs.currentAmps);
+                SmartDashboard.putNumber("Linear/Linear Bus Voltage", inputs.busVolts);
+                SmartDashboard.putNumber("Linear/Linear Motor Temp", inputs.tempCelsius);
+                SmartDashboard.putBoolean("Linear/IsForward", isForward());
+                SmartDashboard.putBoolean("Linear/IsBackward", isBackward());
         }
 
-        /**
-         * Returns whether the linear mechanism is extended.
-         *
-         * @return True if extended, false otherwise.
-         */
         public boolean isExtended() {
                 return extended;
         }
 
-        /**
-         * Drives linear mechanism toward extended forward setpoint using specified PIDController.
-         *
-         * @param controller Positional PIDController for motion calculations.
-         */
         public void forward() {
-                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
-                    linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT));
+                setPosition(Constants.Linear.kLINEAR_FORWARD_SETPOINT);
         }
 
-        /**
-         * Drives linear mechanism toward extended forward setpoint using specified PIDController.
-         *
-         * @param controller Positional PIDController for motion calculations.
-         */
         public void setPosition(double position) {
-                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
-                    linear.getEncoder().getPosition(), position));
+                double output = Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
+                    inputs.positionRotations, position);
+                io.setDutyCycle(output);
         }
 
-        /**
-         * Drives linear mechanism toward retracted backward setpoint using specified PIDController.
-         *
-         * @param controller Positional PIDController for motion calculations.
-         */
         public void backward() {
-                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
-                    linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT));
+                setPosition(Constants.Linear.kLINEAR_BACKWARD_SETPOINT);
         }
 
-        /**
-         * Checks whether the linear position is within tolerance (3 degrees) of forward setpoint.
-         *
-         * @return True if at forward setpoint position, false otherwise.
-         */
         public boolean isForward() {
-                return Math.abs(linear.getEncoder().getPosition()
-                           - Constants.Linear.kLINEAR_FORWARD_SETPOINT)
+                return Math.abs(inputs.positionRotations - Constants.Linear.kLINEAR_FORWARD_SETPOINT)
                     < Constants.Linear.kTolerance;
         }
 
-        /**
-         * Checks whether the linear position is within tolerance (3 degrees) of backward setpoint.
-         *
-         * @return True if at backward setpoint position, false otherwise.
-         */
         public boolean isBackward() {
-                return Math.abs(linear.getEncoder().getPosition()
-                           - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
+                return Math.abs(inputs.positionRotations - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
                     < Constants.Linear.kTolerance;
         }
 
-        /**
-         * Sets open-loop percent output speed to linear motor (-1.0 to 1.0).
-         *
-         * @param speed Percent output duty cycle.
-         */
         public void set(double speed) {
-                linear.set(speed);
+                io.setDutyCycle(speed);
+        }
+
+        public void stop() {
+                io.stop();
         }
 }

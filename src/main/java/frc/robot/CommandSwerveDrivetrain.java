@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Command-based wrapper for CTRE Phoenix 6 Swerve Drivetrain.
@@ -288,10 +289,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         public Command sysIdDynamic(SysIdRoutine.Direction direction) {
                 return m_sysIdRoutineToApply.dynamic(direction);
         }
+        private org.ironmaple.simulation.drivesims.SwerveDriveSimulation mapleSimDrive = null;
+
+        /**
+         * Gets the active IronMaple SwerveDriveSimulation instance when running in simulation mode.
+         *
+         * @return SwerveDriveSimulation or null if on real hardware.
+         */
+        public org.ironmaple.simulation.drivesims.SwerveDriveSimulation getMapleSimDrive() {
+                return mapleSimDrive;
+        }
+
+        @Override
+        public void resetPose(Pose2d pose) {
+                if (mapleSimDrive != null) {
+                        mapleSimDrive.setSimulationWorldPose(pose);
+                }
+                super.resetPose(pose);
+        }
 
         /**
          * Periodic subsystem loop called every 20ms. Updates alliance operator perspective
-         * orientation.
+         * orientation and logs simulated battery sag telemetry in simulation mode.
          */
         @Override
         public void periodic() {
@@ -303,22 +322,152 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                                 m_hasAppliedOperatorPerspective = true;
                         });
                 }
+
+                if (Utils.isSimulation()) {
+                        double simBatteryVolts = org.ironmaple.simulation.motorsims.SimulatedBattery
+                                                     .getBatteryVoltage()
+                                                     .in(Volts);
+                        double simBatteryCurrent = org.ironmaple.simulation.motorsims.SimulatedBattery
+                                                       .getTotalCurrentDrawn()
+                                                       .in(Amps);
+                        Logger.recordOutput("Drive/SimulatedBatteryVoltage", simBatteryVolts);
+                        Logger.recordOutput("Drive/SimulatedBatteryCurrentAmps", simBatteryCurrent);
+                        if (mapleSimDrive != null) {
+                                Logger.recordOutput("Drive/SimulatedDrivetrainPose",
+                                    mapleSimDrive.getSimulatedDriveTrainPose());
+                        }
+                }
         }
 
         /**
-         * Starts periodic physics simulation thread.
+         * Starts periodic physics simulation thread utilizing IronMaple (MapleSim) and SimulatedBattery.
          */
         private void startSimThread() {
+                try {
+                        org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig
+                            simulationConfig =
+                                org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig
+                                    .Default()
+                                    .withRobotMass(Kilograms.of(Constants.ROBOT_MASS_KG))
+                                    .withBumperSize(Inches.of(Constants.ROBOT_LENGTH_INCHES),
+                                        Inches.of(Constants.ROBOT_WIDTH_INCHES))
+                                    .withGyro(org.ironmaple.simulation.drivesims.COTS.ofPigeon2())
+                                    .withTrackLengthTrackWidth(Inches.of(22.5), Inches.of(22.5))
+                                    .withSwerveModule(
+                                        new org.ironmaple.simulation.drivesims.configs
+                                            .SwerveModuleSimulationConfig(
+                                                edu.wpi.first.math.system.plant.DCMotor.getKrakenX60(1),
+                                                edu.wpi.first.math.system.plant.DCMotor.getKrakenX60(1),
+                                                6.026785714285714,
+                                                26.09090909090909,
+                                                Volts.of(0.2),
+                                                Volts.of(0.2),
+                                                Inches.of(2),
+                                                KilogramSquareMeters.of(0.01),
+                                                1.2));
+
+                        this.mapleSimDrive =
+                            new org.ironmaple.simulation.drivesims.SwerveDriveSimulation(
+                                simulationConfig, new Pose2d(3.0, 3.0, new Rotation2d()));
+                        org.ironmaple.simulation.SimulatedArena.overrideSimulationTimings(
+                            Seconds.of(kSimLoopPeriod), 1);
+                        org.ironmaple.simulation.SimulatedArena.getInstance()
+                            .addDriveTrainSimulation(mapleSimDrive);
+
+                        for (int i = 0; i < 4; i++) {
+                                final var realModule = this.getModule(i);
+                                final var simModule = mapleSimDrive.getModules()[i];
+
+                                simModule.useDriveMotorController(
+                                    new org.ironmaple.simulation.motorsims
+                                        .SimulatedMotorController() {
+                                            @Override
+                                            public edu.wpi.first.units.measure.Voltage
+                                            updateControlSignal(
+                                                edu.wpi.first.units.measure.Angle mechanismAngle,
+                                                edu.wpi.first.units.measure.AngularVelocity
+                                                    mechanismVelocity,
+                                                edu.wpi.first.units.measure.Angle encoderAngle,
+                                                edu.wpi.first.units.measure.AngularVelocity
+                                                    encoderVelocity) {
+                                                    realModule.getDriveMotor()
+                                                        .getSimState()
+                                                        .setRawRotorPosition(encoderAngle);
+                                                    realModule.getDriveMotor()
+                                                        .getSimState()
+                                                        .setRotorVelocity(encoderVelocity);
+                                                    realModule.getDriveMotor()
+                                                        .getSimState()
+                                                        .setSupplyVoltage(
+                                                            org.ironmaple.simulation.motorsims
+                                                                .SimulatedBattery
+                                                                .getBatteryVoltage());
+                                                    return realModule.getDriveMotor()
+                                                        .getSimState()
+                                                        .getMotorVoltageMeasure();
+                                            }
+                                    });
+
+                                simModule.useSteerMotorController(
+                                    new org.ironmaple.simulation.motorsims
+                                        .SimulatedMotorController() {
+                                            @Override
+                                            public edu.wpi.first.units.measure.Voltage
+                                            updateControlSignal(
+                                                edu.wpi.first.units.measure.Angle mechanismAngle,
+                                                edu.wpi.first.units.measure.AngularVelocity
+                                                    mechanismVelocity,
+                                                edu.wpi.first.units.measure.Angle encoderAngle,
+                                                edu.wpi.first.units.measure.AngularVelocity
+                                                    encoderVelocity) {
+                                                    realModule.getSteerMotor()
+                                                        .getSimState()
+                                                        .setRawRotorPosition(encoderAngle);
+                                                    realModule.getSteerMotor()
+                                                        .getSimState()
+                                                        .setRotorVelocity(encoderVelocity);
+                                                    realModule.getSteerMotor()
+                                                        .getSimState()
+                                                        .setSupplyVoltage(
+                                                            org.ironmaple.simulation.motorsims
+                                                                .SimulatedBattery
+                                                                .getBatteryVoltage());
+                                                    return realModule.getSteerMotor()
+                                                        .getSimState()
+                                                        .getMotorVoltageMeasure();
+                                            }
+                                    });
+                        }
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+
                 m_lastSimTime = Utils.getCurrentTimeSeconds();
 
-                /* Run simulation at a faster rate so PID gains behave more reasonably */
+                /* Run simulation with MapleSim physics steps and dynamic battery sag */
                 m_simNotifier = new Notifier(() -> {
                         final double currentTime = Utils.getCurrentTimeSeconds();
                         double deltaTime = currentTime - m_lastSimTime;
                         m_lastSimTime = currentTime;
 
-                        /* use the measured time delta, get battery voltage from WPILib */
-                        updateSimState(deltaTime, RobotController.getBatteryVoltage());
+                        if (mapleSimDrive != null) {
+                                org.ironmaple.simulation.SimulatedArena.getInstance()
+                                    .simulationPeriodic();
+                                getPigeon2().getSimState().setRawYaw(
+                                    mapleSimDrive.getSimulatedDriveTrainPose()
+                                        .getRotation()
+                                        .getMeasure());
+                                getPigeon2().getSimState().setAngularVelocityZ(RadiansPerSecond.of(
+                                    mapleSimDrive
+                                        .getDriveTrainSimulatedChassisSpeedsRobotRelative()
+                                        .omegaRadiansPerSecond));
+                                updateSimState(deltaTime,
+                                    org.ironmaple.simulation.motorsims.SimulatedBattery
+                                        .getBatteryVoltage()
+                                        .in(Volts));
+                        } else {
+                                updateSimState(deltaTime, RobotController.getBatteryVoltage());
+                        }
                 });
                 m_simNotifier.startPeriodic(kSimLoopPeriod);
         }

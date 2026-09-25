@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
@@ -18,6 +19,29 @@ import edu.wpi.first.wpilibj.DriverStation;
  */
 public final class Constants {
         private Constants() {}
+
+        /** Operational modes for AdvantageKit logging and replay. */
+        public enum Mode {
+                /** Real physical robot hardware execution. */
+                REAL,
+                /** Physics-based desktop simulation (MapleSim / WPILib sim). */
+                SIM,
+                /** Deterministic log replay from AdvantageKit .wpilog files. */
+                REPLAY
+        }
+
+        /** Active operational mode. Automatically detects physical robot vs simulation. */
+        public static final Mode CURRENT_MODE =
+            edu.wpi.first.wpilibj.RobotBase.isReal() ? Mode.REAL : Mode.SIM;
+
+        /** Global flag for live dashboard tuning. Set to false during matches. */
+        public static final boolean TUNING_MODE = false;
+
+        /** Physical robot specifications for simulation and dynamics. */
+        public static final double ROBOT_MASS_KG = 55.0;
+        public static final double ROBOT_WIDTH_INCHES = 34.0;
+        public static final double ROBOT_LENGTH_INCHES = 34.0;
+        public static final double ODOMETRY_LOOP_HZ = 100.0;
 
         /** Controller port mapping and driver preference constants. */
         public static class Operator {
@@ -49,8 +73,8 @@ public final class Constants {
                 /** Outer diameter of the shooter flywheel wheels in inches. */
                 public static final double ShooterDiameter = 3;
 
-                /** Gear ratio from motor to shooter flywheel (1:1). */
-                public static final double kGearRatio = 1.0;
+                /** Gear ratio from motor to shooter flywheel (34:36). */
+                public static final double kGearRatio = 36.0/34.0;
 
                 /** Static friction feedforward gain kS for shooter flywheel (amps). */
                 public static final double kSHOOTER_FLYWHEEL_kS = 0; // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps needed to turn the flywheel when we can test
@@ -91,6 +115,18 @@ public final class Constants {
                 public static final double kRPMZone2 = 2750.0;
                 public static final double kRPMZone3 = 3750.0;
                 public static final double kRPMIdle = kRPMZone2;
+
+                /** Continuous interpolation map for flywheel target RPM based on distance to target in meters. */
+                public static final InterpolatingDoubleTreeMap FLYWHEEL_RPM_MAP =
+                    new InterpolatingDoubleTreeMap();
+                static {
+                        FLYWHEEL_RPM_MAP.put(1.2, 2200.0);
+                        FLYWHEEL_RPM_MAP.put(2.0, 2450.0);
+                        FLYWHEEL_RPM_MAP.put(3.0, 2750.0);
+                        FLYWHEEL_RPM_MAP.put(4.0, 3100.0);
+                        FLYWHEEL_RPM_MAP.put(5.0, 3450.0);
+                        FLYWHEEL_RPM_MAP.put(6.0, 3750.0);
+                }
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
@@ -298,6 +334,18 @@ public final class Constants {
 
                 /** Maximum hood angle in degrees. */
                 public static final double kMaxAngle = 52.0;
+
+                /** Continuous interpolation map for hood angle (degrees) based on distance to target in meters. */
+                public static final InterpolatingDoubleTreeMap HOOD_ANGLE_MAP =
+                    new InterpolatingDoubleTreeMap();
+                static {
+                        HOOD_ANGLE_MAP.put(1.2, 10.0);
+                        HOOD_ANGLE_MAP.put(2.0, 18.0);
+                        HOOD_ANGLE_MAP.put(3.0, 25.0);
+                        HOOD_ANGLE_MAP.put(4.0, 33.0);
+                        HOOD_ANGLE_MAP.put(5.0, 42.0);
+                        HOOD_ANGLE_MAP.put(6.0, 48.0);
+                }
 
                 public static final double kStatorCurrentLimit = 25; // Amperes
                 public static final double kSupplyCurrentLimit = 7; // Amperes

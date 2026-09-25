@@ -1,56 +1,22 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Hertz;
-import static edu.wpi.first.units.Units.RPM;
-
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.CoastOut;
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.Alert;
+import frc.robot.subsystems.roller.RollerIO;
+import frc.robot.subsystems.roller.RollerIOHardware;
+import frc.robot.subsystems.roller.RollerIOInputsAutoLogged;
+import frc.robot.subsystems.roller.RollerIOSim;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * Subsystem controlling the ground intake roller mechanism.
- *
- * <p>Hardware: Dual CTRE TalonFX motors on CAN IDs 30 and 31 ({@link
- * Constants.Roller#kINTAKE_LEFTMOTOR_CANID} and {@link Constants.Roller#kINTAKE_RIGHTMOTOR_CANID})
- * in opposed leader-follower configuration with FOC enabled.
+ * Subsystem controlling the ground intake roller mechanism with AdvantageKit IO abstraction.
  */
 public class SUB_Roller extends SubsystemBase {
-        /** Left roller TalonFX motor controller (Leader). */
-        private final TalonFX LeftRollerMotor;
-
-        /** Right roller TalonFX motor controller (Follower). */
-        private final TalonFX RightRollerMotor;
-
-        /** Voltage output control request object with Field Oriented Control (FOC) enabled. */
-        private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
-
-        private final CoastOut coast = new CoastOut();
-        /**
-         * Duty cycle percent output control request object with Field Oriented Control (FOC)
-         * enabled.
-         */
-        private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
-
-        private final VelocityTorqueCurrentFOC velocityRequest =
-            new VelocityTorqueCurrentFOC(0).withSlot(0);
-
         private static SUB_Roller INSTANCE = null;
+        private final RollerIO io;
+        private final RollerIOInputsAutoLogged inputs = new RollerIOInputsAutoLogged();
 
-        /**
-         * Singleton pattern provider for the roller subsystem.
-         *
-         * @return Single instance of {@link SUB_Roller}.
-         */
         public static SUB_Roller getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Roller();
@@ -58,130 +24,56 @@ public class SUB_Roller extends SubsystemBase {
                 return INSTANCE;
         }
 
-        /**
-         * Private constructor initializing TalonFX motors and applying configuration.
-         */
-        private SUB_Roller() {
-                // Defines motor with ID from Constants
-                LeftRollerMotor = new TalonFX(Constants.Roller.kINTAKE_LEFTMOTOR_CANID);
-                RightRollerMotor = new TalonFX(Constants.Roller.kINTAKE_RIGHTMOTOR_CANID);
-                configureMotors();
+        public SUB_Roller(RollerIO io) {
+                this.io = io;
+                INSTANCE = this;
         }
 
-        /**
-         * Configures current limits (30A supply limit, 15A lower limit) and sets follower mode.
-         */
-        private void configureMotors() {
-                // Configure TalonFX motor controller with current limits and inversion
-                final TalonFXConfiguration talonConfig = new TalonFXConfiguration();
-                talonConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
-                talonConfig.CurrentLimits.SupplyCurrentLimit = Constants.Roller.kSupplyCurrentLimit;
-                talonConfig.CurrentLimits.SupplyCurrentLowerLimit =
-                    Constants.Roller.kSupplyCurrentLowerLimit;
-                talonConfig.CurrentLimits.SupplyCurrentLowerTime =
-                    Constants.Roller.kSupplyCurrentLowerTime;
-                talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-                talonConfig.Slot0.withKS(Constants.Roller.kS)
-                    .withKV(Constants.Roller.kV)
-                    .withKA(Constants.Roller.kA)
-                    .withKP(Constants.Roller.kP)
-                    .withKI(Constants.Roller.kI)
-                    .withKD(Constants.Roller.kD);
-                talonConfig.Feedback.SensorToMechanismRatio = Constants.Roller.kGearRatio;
-                LeftRollerMotor.getConfigurator().apply(talonConfig);
-                RightRollerMotor.getConfigurator().apply(talonConfig);
-                LeftRollerMotor.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); //Only for the leader to update the follower faster
-                RightRollerMotor.setControl(
-                    new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+        public SUB_Roller() {
+                this(createIO());
         }
 
-        /**
-         * Sets target output voltage for the roller motors.
-         *
-         * @param speed Target output in volts.
-         */
-        @Deprecated
+        private static RollerIO createIO() {
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                return new RollerIOHardware();
+                        case SIM:
+                                return new RollerIOSim();
+                        case REPLAY:
+                        default:
+                                return new RollerIO() {};
+                }
+        }
+
         public void setVolts(final double volts) {
-                LeftRollerMotor.setControl(voltageRequest.withOutput(volts));
+                io.setVoltage(volts);
         }
 
         public void setRPM(final double rpm) {
-                LeftRollerMotor.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+                io.setRPM(rpm);
         }
 
-        /**
-         * Sets target duty cycle percent output for the roller motor (-1.0 to 1.0).
-         *
-         * @param speed Target percent duty cycle.
-         */
-        @Deprecated
         public void set(final double speed) {
-                LeftRollerMotor.setControl(dutyCycleRequest.withOutput(speed));
+                io.setVoltage(speed * 12.0);
         }
 
         public void stop() {
-                LeftRollerMotor.setControl(coast);
+                io.stop();
         }
 
-        /**
-         * Calculates average velocity of left and right roller motors in RPM.
-         *
-         * @return Average rotational velocity in RPM.
-         */
         public double rollerRPM() {
-                return (LeftRollerMotor.getVelocity().getValue().in(RPM)
-                        + Math.abs(RightRollerMotor.getVelocity().getValue().in(RPM)))
-                    / 2;
+                return (inputs.leftVelocityRPM + Math.abs(inputs.rightVelocityRPM)) / 2.0;
         }
 
-        /**
-         * Subsystem periodic loop (20ms). Telemeters roller RPM, positions, current draws,
-         * voltages, and device temperatures for both Kraken motors to SmartDashboard, monitoring
-         * motor health.
-         */
         @Override
         public void periodic() {
-                // Telemetry logging for dashboard
+                io.updateInputs(inputs);
+                Logger.processInputs("Roller", inputs);
+
                 SmartDashboard.putNumber("Roller/Roller Average RPM", rollerRPM());
-                SmartDashboard.putNumber("Roller/Left Roller Encoder Pos",
-                    LeftRollerMotor.getPosition().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Encoder Pos",
-                    RightRollerMotor.getPosition().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Left Roller Stator Current",
-                    LeftRollerMotor.getStatorCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Stator Current",
-                    RightRollerMotor.getStatorCurrent().getValueAsDouble());
-
-                SmartDashboard.putNumber("Roller/Left Roller Supply Current",
-                    LeftRollerMotor.getSupplyCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Supply Current",
-                    RightRollerMotor.getSupplyCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Left Roller Torque Current",
-                    LeftRollerMotor.getTorqueCurrent().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Torque Current",
-                    RightRollerMotor.getTorqueCurrent().getValueAsDouble());
-
-                SmartDashboard.putNumber("Roller/Left Roller Supply Voltage",
-                    LeftRollerMotor.getSupplyVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Supply Voltage",
-                    RightRollerMotor.getSupplyVoltage().getValueAsDouble());
-
-                SmartDashboard.putNumber("Roller/Left Roller Motor Voltage",
-                    LeftRollerMotor.getMotorVoltage().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Motor Voltage",
-                    RightRollerMotor.getMotorVoltage().getValueAsDouble());
-
-                SmartDashboard.putNumber("Roller/Left Roller Device Temp",
-                    LeftRollerMotor.getDeviceTemp().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Device Temp",
-                    RightRollerMotor.getDeviceTemp().getValueAsDouble());
-
-                SmartDashboard.putNumber("Roller/Left Roller Processor Temp",
-                    LeftRollerMotor.getProcessorTemp().getValueAsDouble());
-                SmartDashboard.putNumber("Roller/Right Roller Processor Temp",
-                    RightRollerMotor.getProcessorTemp().getValueAsDouble());
-
-                Alert.alertKraken(LeftRollerMotor);
-                Alert.alertKraken(RightRollerMotor);
+                SmartDashboard.putNumber("Roller/Left Applied Volts", inputs.leftAppliedVolts);
+                SmartDashboard.putNumber("Roller/Right Applied Volts", inputs.rightAppliedVolts);
+                SmartDashboard.putNumber("Roller/Left Supply Current", inputs.leftSupplyCurrentAmps);
+                SmartDashboard.putNumber("Roller/Right Supply Current", inputs.rightSupplyCurrentAmps);
         }
 }

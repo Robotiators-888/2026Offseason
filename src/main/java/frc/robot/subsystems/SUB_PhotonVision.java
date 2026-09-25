@@ -215,6 +215,55 @@ public class SUB_PhotonVision extends SubsystemBase {
                 return target.getFiducialId();
         }
 
+        private org.photonvision.simulation.VisionSystemSim visionSim = null;
+        private org.photonvision.simulation.PhotonCameraSim camSim1 = null;
+        private org.photonvision.simulation.PhotonCameraSim camSim2 = null;
+        private org.photonvision.simulation.PhotonCameraSim camSim3 = null;
+        private java.util.function.Supplier<edu.wpi.first.math.geometry.Pose2d> simPoseSupplier = null;
+
+        /**
+         * Enables simulated cameras using PhotonVision VisionSystemSim tied to virtual field tags.
+         *
+         * @param poseSupplier Supplier providing the simulated drivetrain pose.
+         */
+        public void enableSimulation(
+            java.util.function.Supplier<edu.wpi.first.math.geometry.Pose2d> poseSupplier) {
+                this.simPoseSupplier = poseSupplier;
+                this.visionSim = new org.photonvision.simulation.VisionSystemSim("main");
+                if (at_field != null) {
+                        this.visionSim.addAprilTags(at_field);
+                }
+
+                org.photonvision.simulation.SimCameraProperties cameraProperties =
+                    new org.photonvision.simulation.SimCameraProperties();
+                cameraProperties.setCalibration(
+                    1280, 800, edu.wpi.first.math.geometry.Rotation2d.fromDegrees(99.41));
+                cameraProperties.setFPS(60.0);
+                cameraProperties.setAvgLatencyMs(20.0);
+                cameraProperties.setLatencyStdDevMs(5.0);
+
+                camSim1 = new org.photonvision.simulation.PhotonCameraSim(
+                    cam1, cameraProperties, at_field);
+                camSim2 = new org.photonvision.simulation.PhotonCameraSim(
+                    cam2, cameraProperties, at_field);
+                camSim3 = new org.photonvision.simulation.PhotonCameraSim(
+                    cam3, cameraProperties, at_field);
+
+                visionSim.addCamera(camSim1, PhotonVision.kRobotToCamera1);
+                visionSim.addCamera(camSim2, PhotonVision.kRobotToCamera2);
+                visionSim.addCamera(camSim3, PhotonVision.kRobotToCamera3);
+        }
+
+        /**
+         * Simulation periodic loop (20ms). Updates simulated camera scene with virtual robot pose.
+         */
+        @Override
+        public void simulationPeriodic() {
+                if (visionSim != null && simPoseSupplier != null) {
+                        visionSim.update(simPoseSupplier.get());
+                }
+        }
+
         /**
          * Periodic subsystem loop (20ms). Checks connection status of each hardware camera
          * and reports errors to dashboard using Alert utility if disconnected.

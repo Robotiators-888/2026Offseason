@@ -1,37 +1,23 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.Alert;
+import frc.robot.subsystems.index.IndexIO;
+import frc.robot.subsystems.index.IndexIOHardware;
+import frc.robot.subsystems.index.IndexIOInputsAutoLogged;
+import frc.robot.subsystems.index.IndexIOSim;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * Subsystem controlling the spindexer and feeder mechanism.
- *
- * <p>Hardware:
- * <ul>
- *   <li>Primary spindexer SPARK Max motor controller on CAN ID 41 ({@link
- * Constants.Index#KINDEX_MOTOR_CANID})</li> <li>High-speed metering SPARK Max motor controller on
- * CAN ID 42 ({@link Constants.Index#kMETERING_WHEEL_CANID})</li>
- * </ul>
+ * Subsystem controlling the spindexer and feeder mechanism with AdvantageKit IO abstraction.
  */
 public class SUB_Index extends SubsystemBase {
-        /** Left indexer SPARK Max motor controller (Follower). */
-        private final SparkMax LeftIndexer;
-
-        /** Right indexer SPARK Max motor controller (Leader). */
-        private final SparkMax RightIndexer;
-
         private static SUB_Index INSTANCE = null;
 
-        /**
-         * Singleton pattern provider for the index subsystem.
-         *
-         * @return Single instance of the {@link SUB_Index} subsystem.
-         */
+        private final IndexIO io;
+        private final IndexIOInputsAutoLogged inputs = new IndexIOInputsAutoLogged();
+
         public static SUB_Index getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Index();
@@ -39,95 +25,52 @@ public class SUB_Index extends SubsystemBase {
                 return INSTANCE;
         }
 
-        /**
-         * Private constructor initializing SPARK Max motor controllers, current limits (15A), and
-         * follower relationships.
-         */
-        @SuppressWarnings("removal")
-        private SUB_Index() {
-                // Defines motors for indexing and metering
-                LeftIndexer =
-                    new SparkMax(Constants.Index.kINDEX_MOTOR_CANID, MotorType.kBrushless);
-                RightIndexer =
-                    new SparkMax(Constants.Index.kINDEX_FOLLOWER_WHEEL_CANID, MotorType.kBrushless);
-
-                // Configure main indexer motor 
-                SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
-                RightIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
-                RightIndexConfig.inverted(true);
-                RightIndexConfig.signals.appliedOutputPeriodMs(10);
-                RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
-
-                SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
-                LeftIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
-                LeftIndexConfig.follow(RightIndexer, true);
-                LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
-                
+        public SUB_Index(IndexIO io) {
+                this.io = io;
+                INSTANCE = this;
         }
 
-        /**
-         * Sets target open-loop speed for indexer motors.
-         *
-         * @param speed Target percent output for indexing (-1.0 to 1.0 scale).
-         */
+        public SUB_Index() {
+                this(createIO());
+        }
+
+        private static IndexIO createIO() {
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                return new IndexIOHardware();
+                        case SIM:
+                                return new IndexIOSim();
+                        case REPLAY:
+                        default:
+                                return new IndexIO() {};
+                }
+        }
+
         public void set(double speed) {
-                RightIndexer.set(speed);
+                io.setDutyCycle(speed);
         }
 
-        /**
-         * Calculates average velocity of left and right indexer motor encoders in RPM.
-         *
-         * @return Average velocity of the indexer in RPM.
-         */
         public double indexRPM() {
-                return (RightIndexer.getEncoder().getVelocity()
-                           + Math.abs(LeftIndexer.getEncoder().getVelocity()))
-                    / 2;
+                return (inputs.rightVelocityRPM + Math.abs(inputs.leftVelocityRPM)) / 2.0;
         }
 
-        /**
-         * Sets target voltage for indexer motor controllers.
-         *
-         * @param volts Target voltage in volts.
-         */
         public void setVolts(double volts) {
-                RightIndexer.setVoltage(volts);
+                io.setVoltage(volts);
         }
 
-        /**
-         * Periodic subsystem loop (20ms). Telemeters average RPM, output current, bus voltage,
-         * encoder position, and motor temperature for both SPARK Max controllers to SmartDashboard,
-         * checking for REV hardware faults.
-         */
+        public void stop() {
+                io.stop();
+        }
+
         @Override
         public void periodic() {
-                // Telemetry logging for dashboard
+                io.updateInputs(inputs);
+                Logger.processInputs("Index", inputs);
+
                 SmartDashboard.putNumber("Index/Index Average RPM", indexRPM());
-                SmartDashboard.putNumber(
-                    "Index/Right Index Output Current", RightIndexer.getOutputCurrent());
-                SmartDashboard.putNumber(
-                    "Index/Left Index Output Current", LeftIndexer.getOutputCurrent());
-
-                SmartDashboard.putNumber(
-                    "Index/Right Index Bus Voltage", RightIndexer.getBusVoltage());
-                SmartDashboard.putNumber(
-                    "Index/Left Index Bus Voltage", LeftIndexer.getBusVoltage());
-
-                SmartDashboard.putNumber(
-                    "Index/Right Index Encoder Pos", RightIndexer.getEncoder().getPosition());
-                SmartDashboard.putNumber(
-                    "Index/Left Index Encoder Pos", LeftIndexer.getEncoder().getPosition());
-
-                SmartDashboard.putNumber(
-                    "Index/Right Index Motor Temp", RightIndexer.getMotorTemperature());
-                SmartDashboard.putNumber(
-                    "Index/Left Index Motor Temp", LeftIndexer.getMotorTemperature());
-
-                Alert.alertNeoFaults(RightIndexer);
-                Alert.alertNeoWarnings(RightIndexer);
-                Alert.alertNeoFaults(LeftIndexer);
-                Alert.alertNeoWarnings(LeftIndexer);
+                SmartDashboard.putNumber("Index/Right Output Current", inputs.rightCurrentAmps);
+                SmartDashboard.putNumber("Index/Left Output Current", inputs.leftCurrentAmps);
+                SmartDashboard.putNumber("Index/Right Bus Voltage", inputs.rightBusVolts);
+                SmartDashboard.putNumber("Index/Left Bus Voltage", inputs.leftBusVolts);
         }
 }

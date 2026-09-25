@@ -1,37 +1,25 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.utils.Alert;
+import frc.robot.subsystems.hood.HoodIO;
+import frc.robot.subsystems.hood.HoodIOHardware;
+import frc.robot.subsystems.hood.HoodIOInputsAutoLogged;
+import frc.robot.subsystems.hood.HoodIOSim;
+import org.littletonrobotics.junction.Logger;
 
 /**
- * Subsystem controlling the adjustable shooter hood angle mechanism.
- *
- * <p>Hardware: Single CTRE TalonFX motor on CAN ID 47 ({@link Constants.Hood#kHOOD_CAN_ID})
- * with stator current limits (25A) and supply current limits (7A/5A).
+ * Subsystem controlling the adjustable shooter hood angle mechanism with AdvantageKit IO abstraction.
  */
 public class SUB_Hood extends SubsystemBase {
         private static SUB_Hood INSTANCE = null;
-        private final TalonFX hood;
-
-        private final PositionTorqueCurrentFOC positionRequest =
-            new PositionTorqueCurrentFOC(0).withSlot(0);
+        private final HoodIO io;
+        private final HoodIOInputsAutoLogged inputs = new HoodIOInputsAutoLogged();
 
         private double desiredAngle = 0;
 
-        /**
-         * Singleton pattern provider for the hood subsystem.
-         *
-         * @return The single instance of {@link SUB_Hood}.
-         */
         public static SUB_Hood getInstance() {
                 if (INSTANCE == null) {
                         INSTANCE = new SUB_Hood();
@@ -39,137 +27,86 @@ public class SUB_Hood extends SubsystemBase {
                 return INSTANCE;
         }
 
-        /**
-         * Private constructor initializing the TalonFX motor controller with current limits.
-         */
-        private SUB_Hood() {
-                final TalonFXConfiguration config =
-                    new TalonFXConfiguration().withCurrentLimits(new CurrentLimitsConfigs()
-                            .withStatorCurrentLimitEnable(true)
-                            .withStatorCurrentLimit(Constants.Hood.kStatorCurrentLimit)
-                            .withSupplyCurrentLimitEnable(true)
-                            .withSupplyCurrentLimit(Constants.Hood.kSupplyCurrentLimit)
-                            .withSupplyCurrentLowerLimit(Constants.Hood.kSupplyCurrentLowerLimit)
-                            .withSupplyCurrentLowerTime(Constants.Hood.kSupplyCurrentLowerTime));
-                config.Slot0.withKS(Constants.Hood.kS)
-                    .withKV(Constants.Hood.kV)
-                    .withKA(Constants.Hood.kA)
-                    .withKP(Constants.Hood.kP)
-                    .withKI(Constants.Hood.kI)
-                    .withKD(Constants.Hood.kD)
-                    .withKG(Constants.Hood.kG);
-                config.Feedback.SensorToMechanismRatio = Constants.Hood.kGearRatio;
-                hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
-                hood.getConfigurator().apply(config);
+        public SUB_Hood(HoodIO io) {
+                this.io = io;
+                INSTANCE = this;
         }
 
-        /**
-         * Drives the hood motor to a specified target position using PID control.
-         *
-         * @param angle Target position in motor rotations.
-         */
+        public SUB_Hood() {
+                this(createIO());
+        }
+
+        private static HoodIO createIO() {
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                return new HoodIOHardware();
+                        case SIM:
+                                return new HoodIOSim();
+                        case REPLAY:
+                        default:
+                                return new HoodIO() {};
+                }
+        }
+
         public void setPosition(final double angle) {
-                desiredAngle = Math.max(Constants.Hood.kMinAngle, Math.min(Constants.Hood.kMaxAngle, 90 - angle));
-                hood.setControl(positionRequest.withPosition(Degrees.of(desiredAngle)));
+                desiredAngle = Math.max(
+                    Constants.Hood.kMinAngle, Math.min(Constants.Hood.kMaxAngle, 90 - angle));
+                io.setPositionDegrees(desiredAngle);
         }
 
-        /**
-         * Returns the current hood motor position in rotations.
-         *
-         * @return Current position in motor rotations.
-         */
         public double getPosition() {
-                return hood.getPosition().getValueAsDouble();
+                return inputs.positionRotations;
         }
 
-        /**
-         * Calculates optimal hood angle in radians based on target distance and target height.
-         *
-         * @param distance Horizontal distance to target in meters.
-         * @return Calculated optimal launch angle in radians.
-         */
+        public double getPositionDegrees() {
+                return inputs.positionDegrees;
+        }
+
         public static double findoptimalangle(final double distance) {
                 double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
                 return (Math.PI / 4.0) + 0.5 * Math.atan2(height, distance);
         }
 
-        /**
-         * Resets the hood towards position 0 safely.
-         */
         public void resetSafe() {
-            setPosition(90);
+                setPosition(90);
         }
 
-        /**
-         * Resets the motor encoder position reading to zero.
-         */
         public void resetEncoder() {
-                hood.setPosition(0);
+                io.resetPosition(0.0);
         }
 
-        /**
-         * Sets raw duty cycle power output to the hood motor (-1.0 to 1.0).
-         *
-         * @param speed Duty cycle speed percentage.
-         */
         public void set(double speed) {
-                hood.set(speed);
+                io.setVoltage(speed * 12.0);
         }
 
-        /**
-         * Subsystem periodic loop (20ms). Telemeters position, current, voltage, temperature,
-         * and velocity to SmartDashboard, and checks Kraken motor health status via Alert class.
-         */
+        public void stop() {
+                io.stop();
+        }
+
         @Override
         public void periodic() {
+                io.updateInputs(inputs);
+                Logger.processInputs("Hood", inputs);
+
                 SmartDashboard.putNumber("Hood/Desired Angle", desiredAngle);
                 SmartDashboard.putNumber("Hood/Position", getPosition());
-                SmartDashboard.putNumber(
-                    "Hood/Stator Current", hood.getStatorCurrent().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Supply Current", hood.getSupplyCurrent().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Supply Voltage", hood.getSupplyVoltage().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Motor Voltage", hood.getMotorVoltage().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Torque Current", hood.getTorqueCurrent().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Device Temp", hood.getDeviceTemp().getValueAsDouble());
-                SmartDashboard.putNumber(
-                    "Hood/Processor Temp", hood.getProcessorTemp().getValueAsDouble());
-                SmartDashboard.putNumber("Hood/Velocity", hood.getVelocity().getValueAsDouble());
-                Alert.alertKraken(hood);
+                SmartDashboard.putNumber("Hood/PositionDegrees", inputs.positionDegrees);
+                SmartDashboard.putNumber("Hood/Stator Current", inputs.statorCurrentAmps);
+                SmartDashboard.putNumber("Hood/Supply Current", inputs.supplyCurrentAmps);
+                SmartDashboard.putNumber("Hood/Motor Voltage", inputs.appliedVolts);
+                SmartDashboard.putNumber("Hood/Velocity", inputs.velocityDegreesPerSec);
+                SmartDashboard.putBoolean("Hood/AtDesiredAngle", atDesiredAngle());
         }
 
         public boolean atDesiredAngle() {
-                return Math.abs(getPosition() - (desiredAngle / 360))
+                return Math.abs(getPosition() - (desiredAngle / 360.0))
                     < Constants.Hood.kHoodTolerance;
         }
 
         public static double calculateLaunchAngle(
             double distanceMeters, double exitVelocityMps, boolean highArc) {
                 double deltaHeightMeters = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-                double v2 = exitVelocityMps * exitVelocityMps;
-                double v4 = v2 * v2;
-                double x = distanceMeters;
-                double y = deltaHeightMeters;
-
-                // Discriminant check (feasibility)
-                double discriminant = v4
-                    - Constants.Shooter.kGRAVITATIONAL_CONSTANT
-                        * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
-                if (discriminant < 0) {
-                        return 0;
-                }
-
-                double sqrtDisc = Math.sqrt(discriminant);
-                double sign = highArc ? 1.0 : -1.0;
-                double tanTheta =
-                    (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
-
-                double angleRadians = Math.atan(tanTheta);
-                return angleRadians;
+                return calculateLaunchAngle(distanceMeters, deltaHeightMeters, exitVelocityMps, highArc);
         }
 
         public static double calculateLaunchAngle(double distanceMeters, double deltaHeightMeters,
@@ -179,7 +116,6 @@ public class SUB_Hood extends SubsystemBase {
                 double x = distanceMeters;
                 double y = deltaHeightMeters;
 
-                // Discriminant check (feasibility)
                 double discriminant = v4
                     - Constants.Shooter.kGRAVITATIONAL_CONSTANT
                         * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
@@ -192,7 +128,6 @@ public class SUB_Hood extends SubsystemBase {
                 double tanTheta =
                     (v2 + (sign * sqrtDisc)) / (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x);
 
-                double angleRadians = Math.atan(tanTheta);
-                return angleRadians;
+                return Math.atan(tanTheta);
         }
 }

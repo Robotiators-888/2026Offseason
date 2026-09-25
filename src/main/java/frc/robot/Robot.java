@@ -9,9 +9,15 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.utils.Alert;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedPowerDistribution;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 /**
  * Main Robot class extending AdvantageKit's {@link LoggedRobot}.
@@ -30,10 +36,30 @@ public class Robot extends LoggedRobot {
          * instantiates the {@link RobotContainer}, and sets up alert mechanisms.
          */
         public Robot() {
-                DataLogManager.start();
-                DriverStation.startDataLog(DataLogManager.getLog());
+                RobotController.setBrownoutVoltage(6.3);
+                DriverStation.silenceJoystickConnectionWarning(true);
+
+                // Configure AdvantageKit logging based on current operational mode
+                switch (Constants.CURRENT_MODE) {
+                        case REAL:
+                                Logger.addDataReceiver(new WPILOGWriter());
+                                Logger.addDataReceiver(new NT4Publisher());
+                                break;
+                        case SIM:
+                                Logger.addDataReceiver(new NT4Publisher());
+                                break;
+                        case REPLAY:
+                                setUseTiming(false); // Run as fast as possible for replay
+                                String logPath = LogFileUtil.findReplayLog();
+                                Logger.setReplaySource(new WPILOGReader(logPath));
+                                Logger.addDataReceiver(
+                                    new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+                                break;
+                }
+
+                LoggedPowerDistribution.getInstance();
+                SignalLogger.enableAutoLogging(false);
                 Logger.start();
-                SignalLogger.start();
 
                 // Instantiate our RobotContainer. This will perform all our button bindings, and
                 // put our autonomous chooser on the dashboard.
@@ -58,6 +84,10 @@ public class Robot extends LoggedRobot {
                 // framework to work.
                 CommandScheduler.getInstance().run();
                 m_robotContainer.robotPeriodic();
+
+                Logger.recordOutput("Robot/Mode", Constants.CURRENT_MODE.name());
+                Logger.recordOutput("Robot/MatchTime", DriverStation.getMatchTime());
+                Logger.recordOutput("Robot/BatteryVoltage", RobotController.getBatteryVoltage());
         }
 
         /** This function is called once each time the robot enters Disabled mode. */

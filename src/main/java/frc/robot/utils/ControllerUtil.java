@@ -18,6 +18,7 @@ import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
+import frc.robot.commands.WheelRadiusCharacterizationCommand;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
@@ -105,8 +106,7 @@ public class ControllerUtil {
 
                 // Left Bumper: Initiate trench alignment sequence
                 Driver1.leftBumper()
-                    .onTrue(Commands.runOnce(() -> {
-                            trenchAligning = true;
+                    .whileTrue(Commands.defer(() -> {
                             Pose2d currentPose = drivetrain.getPose();
 
                             Pose2d p1 = AllianceFlipUtil.apply(pathLeftToNeutral != null
@@ -146,20 +146,10 @@ public class ControllerUtil {
                                     selectedPath = pathRightToNeutral;
                             }
 
-                            try {
-                                    PathConstraints constraints = new PathConstraints(4.0, 4.0,
-                                        Units.degreesToRadians(360), Units.degreesToRadians(540));
-                                    trenchAlign =
-                                        AutoBuilder
-                                            .pathfindThenFollowPath(selectedPath, constraints)
-                                            .until(() -> { return !trenchAligning; });
-                                    trenchAlign.schedule();
-                            } catch (Exception e) {
-                                    Alert.registerError(
-                                        "Failed to retrieve trench command: " + e.getMessage());
-                            }
-                    }))
-                    .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
+                            PathConstraints constraints = new PathConstraints(4.0, 4.0,
+                                Units.degreesToRadians(360), Units.degreesToRadians(540));
+                            return AutoBuilder.pathfindThenFollowPath(selectedPath, constraints);
+                    }, java.util.Set.of(drivetrain)));
                 // Left Trigger: Run intake roller
                 Driver1.leftTrigger().whileTrue(Commands.run(
                     () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller, linear));
@@ -249,6 +239,8 @@ public class ControllerUtil {
                 Driver2.povRight()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+                // POV Left: Wheel radius characterization routine
+                Driver2.povLeft().whileTrue(new WheelRadiusCharacterizationCommand(drivetrain));
         }
 
         @Deprecated

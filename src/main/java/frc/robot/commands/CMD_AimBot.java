@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -69,8 +70,10 @@ public class CMD_AimBot extends RunCommand {
         private final ProfiledPIDController robotAngleController =
             new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
 
-        /** Status flag indicating whether heading error is within 5 degrees tolerance. */
+        /** Status flag indicating whether heading error is within tolerance. */
         public static boolean isThetaErrorCorrect = false;
+
+        private final Debouncer thetaDebouncer = new Debouncer(0.04);
 
         private final SwerveRequest.SwerveDriveBrake brakeRequest =
             new SwerveRequest.SwerveDriveBrake();
@@ -175,10 +178,11 @@ public class CMD_AimBot extends RunCommand {
                 SmartDashboard.putNumber(
                     "CMD_AimBot/Theta Error (Deg)", Units.radiansToDegrees(thetaErrorRads));
 
-                isThetaErrorCorrect = thetaErrorRads <= Units.degreesToRadians(5)
+                boolean rawThetaCorrect = thetaErrorRads <= Units.degreesToRadians(4.5)
                     && Math.abs(
                            drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
-                        <= 20;
+                        <= 15.0;
+                isThetaErrorCorrect = thetaDebouncer.calculate(rawThetaCorrect);
                 SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
                 double distance = drivetrain.getPose().getTranslation().getDistance(
                     SUB_PhotonVision.getInstance()
@@ -195,14 +199,11 @@ public class CMD_AimBot extends RunCommand {
                                         : 23.5),
                                 0)))
                         .orElse(drivetrain.getPose().getTranslation()));
+                // Use zoned RPM to avoid continuous acceleration/deceleration on the heavy flywheel
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
-                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
-                                          * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)
-                    / (720 * 3.281);
-                hood.setPosition(Units.radiansToDegrees(
-                    SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
-                
+                double targetHoodAngle = Constants.Hood.HOOD_ANGLE_MAP.get(distance);
+                hood.setPosition(targetHoodAngle);
 
                 if (isThetaErrorCorrect && shooter.atDesiredRPM() && hood.atDesiredAngle()) {
                         metering.setRPM(Constants.Metering.kMETERING_MOTOR_RPM);
