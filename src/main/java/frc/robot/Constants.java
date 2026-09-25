@@ -161,7 +161,7 @@ public final class Constants {
 
                 /** High-speed positional PID controller for linear intake movement. */
                 public static final PIDController kLINEAR_PID_CONTROLLER =
-                    new PIDController(1.0, 0, 0); // 1.0 means that if the motor is off 1 rotation from its target, we will put the full 12 V to get it back. TODO: Maybe make this less for a less agressive PID since it is only lik 4.5. If there is oscillation, just lower the P
+                    new PIDController(1.0/4.2, 0, 0); // 1.0 means that if the motor is off 1 rotation from its target, we will put the full 12 V to get it back. TODO: Maybe make this less for a less agressive PID since it is only lik 4.5. If there is oscillation, just lower the P
 
                 public static final double kLinearAgitatePeriodics =
                     100; // Number of periodic cycles for linear intake movement

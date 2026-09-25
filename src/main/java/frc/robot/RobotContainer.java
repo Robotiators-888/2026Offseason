@@ -121,9 +121,9 @@ public class RobotContainer {
         private final SendableChooser<Command> autoChooser;
 
         /** Slew rate limiters for smooth driver translation (X and Y) and rotation. */
-        private final SlewRateLimiter xLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
-        private final SlewRateLimiter yLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
-        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(4.0, -8.0, 0.0);
+        private final SlewRateLimiter xLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
+        private final SlewRateLimiter yLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
+        private final SlewRateLimiter rotLimiter = new SlewRateLimiter(3.0, -8.0, 0.0);
 
         /** Swerve request object for robot-centric velocity driving. */
         private final SwerveRequest.RobotCentric driveRobot =
