@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -22,8 +23,8 @@ public class SUB_Hood extends SubsystemBase {
         private static SUB_Hood INSTANCE = null;
         private final TalonFX hood;
 
-        private final PositionTorqueCurrentFOC positionRequest =
-            new PositionTorqueCurrentFOC(0).withSlot(0);
+        private final PositionVoltage positionRequest =
+            new PositionVoltage(0).withSlot(0);
 
         private double desiredAngle = 0;
 

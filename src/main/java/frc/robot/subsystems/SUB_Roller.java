@@ -8,6 +8,7 @@ import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -41,8 +42,8 @@ public class SUB_Roller extends SubsystemBase {
          */
         private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
 
-        private final VelocityTorqueCurrentFOC velocityRequest =
-            new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityVoltage velocityRequest =
+            new VelocityVoltage(0).withSlot(0);
 
         private static SUB_Roller INSTANCE = null;
 

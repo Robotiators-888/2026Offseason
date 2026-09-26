@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.RPM;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -36,8 +37,8 @@ public class SUB_Shooter extends SubsystemBase {
         private final VoltageOut voltageRequest = new VoltageOut(0);
         // Not used since it is replaced by velocityRequest
         // private final VelocityVoltage m_request = new VelocityVoltage(0);
-        private final VelocityTorqueCurrentFOC velocityRequest =
-            new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityVoltage velocityRequest =
+            new VelocityVoltage(0).withSlot(0);
         private double desiredSpeed = 0;
         private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();

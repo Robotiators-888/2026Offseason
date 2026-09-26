@@ -8,6 +8,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -30,8 +31,8 @@ public class SUB_Metering extends SubsystemBase {
         /** Follower TalonFX motor controller for metering wheel. */
         private final TalonFX meteringFollower;
 
-        private final VelocityTorqueCurrentFOC velocityRequest =
-            new VelocityTorqueCurrentFOC(0).withSlot(0);
+        private final VelocityVoltage velocityRequest =
+            new VelocityVoltage(0).withSlot(0);
 
         private final CoastOut coastRequest = new CoastOut();
 
