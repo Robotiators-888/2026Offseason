@@ -165,7 +165,7 @@ public class ControllerUtil {
                     () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller, linear));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
-                    hood, metering, shooter, linear, Constants.Linear.kLinearAgitatePeriodics));
+                    hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));
                 // Left Stick Button: Toggle field-relative driving mode
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));

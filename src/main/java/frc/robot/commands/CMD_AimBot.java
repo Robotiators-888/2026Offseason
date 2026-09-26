@@ -27,6 +27,7 @@ import frc.robot.subsystems.SUB_Index;
 import frc.robot.subsystems.SUB_Linear;
 import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
+import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
 import java.util.Optional;
 
@@ -95,7 +96,7 @@ public class CMD_AimBot extends RunCommand {
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter,
-            SUB_Linear linear, double periodics) {
+            SUB_Linear linear, SUB_Roller roller, double periodics) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
@@ -108,7 +109,10 @@ public class CMD_AimBot extends RunCommand {
                 linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT
                                   - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
                     / periodics;
-                addRequirements(drivetrain, metering, index, hood, shooter,linear);
+                addRequirements(drivetrain, metering, index, hood, shooter, linear, roller);
+                // We don't assign roller to a field to show the intent that we don't want to do anything else with it other than stop it
+                // Stop the roller becuase we can't have it roll while agitating
+                roller.stop(); // TODO: Hopefully doesn't cause an issue since it is coast mode
         }
 
         /**
