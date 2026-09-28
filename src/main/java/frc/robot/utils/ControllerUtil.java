@@ -162,7 +162,7 @@ public class ControllerUtil {
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 // Left Trigger: Run intake roller
                 Driver1.leftTrigger().whileTrue(Commands.run(
-                    () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller, linear));
+                    () -> { roller.set(.75); }, roller, linear));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
                     hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));
@@ -243,8 +243,8 @@ public class ControllerUtil {
                         shooter.setRPM(-500);
                 }, index, metering, shooter));
                 // POV Up/Down: Manual linear intake control
-                Driver2.povDown().onTrue(Commands.run(() -> linear.forward(), linear));
-                Driver2.povUp().onTrue(Commands.run(() -> linear.backward(), linear));
+                Driver2.povUp().whileTrue(new RunCommand(() -> linear.forward(), linear));
+                Driver2.povDown().whileTrue(new RunCommand(() -> linear.backward(), linear));
                 // POV Right: Manual hood reset
                 Driver2.povRight()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))

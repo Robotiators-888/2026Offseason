@@ -2,7 +2,10 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SoftLimitConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -55,6 +58,7 @@ public class SUB_Linear extends SubsystemBase {
                 config.inverted(true);
                 linear.configure(config, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
+                linear.getEncoder().setPosition(0);
         }
 
         /**
@@ -89,8 +93,8 @@ public class SUB_Linear extends SubsystemBase {
          * @param controller Positional PIDController for motion calculations.
          */
         public void forward() {
-                linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
-                    linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT));
+                linear.set(MathUtil.clamp(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
+                    linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_FORWARD_SETPOINT) ,0.0, 0.5));
         }
 
         /**
