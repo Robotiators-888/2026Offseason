@@ -273,7 +273,7 @@ public class RobotContainer {
                 Elastic.selectTab("Teleoperated");
                 Elastic.Notification notification =
                     new Elastic.Notification(Elastic.Notification.NotificationLevel.INFO,
-                        "Alexander the Great would like to remind you:", "CHICKEN JOCKEY!!!!!");
+                        "67!67!67!67!67!67!6...(67 6 or 7 times):", "Cave divers for literally no reason: ");
                 Elastic.sendNotification(notification);
                 Hub.fetchMatchData();
         }

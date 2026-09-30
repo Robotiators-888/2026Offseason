@@ -162,7 +162,7 @@ public class ControllerUtil {
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 // Left Trigger: Run intake roller
                 Driver1.leftTrigger().whileTrue(Commands.run(
-                    () -> { roller.set(.75); }, roller, linear));
+                    () -> { roller.set(.75); }, roller));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
                     hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));
@@ -171,10 +171,10 @@ public class ControllerUtil {
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
                 // B Button: Shuttle
                 Driver1.b().whileTrue(
-                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
+                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering,false));
                 // X Button: Shuttle
                 Driver1.x().whileTrue(
-                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering));
+                    new CMD_Shuttle(drivetrain, photonVision, index, shooter, hood, metering,true));
         }
         private void configureDriver2Bindings() {
                 // Driver 2 Bindings
@@ -236,11 +236,10 @@ public class ControllerUtil {
                                     .orElse(drivetrain.getPose().getTranslation())));
                 }));
 
-                // Left Bumper: Unclog indexer and shooter
+                // Left Bumper: Unclog indexer 
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         metering.setRPM(-500);
-                        shooter.setRPM(-500);
                 }, index, metering, shooter));
                 // POV Up/Down: Manual linear intake control
                 Driver2.povUp().whileTrue(new RunCommand(() -> linear.forward(), linear));

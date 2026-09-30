@@ -68,6 +68,7 @@ public class CMD_Shuttle extends RunCommand {
         private Pose2d targetPose = new Pose2d();
         private boolean isThetaErrorCorrect;
         private boolean isLocked = false;
+        private boolean isLeft;
 
         /**
          * Constructs a new CMD_Shuttle command for long-range scoring or passing.
@@ -80,8 +81,9 @@ public class CMD_Shuttle extends RunCommand {
          * @param metering The metering subsystem.
          */
         public CMD_Shuttle(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
-            SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering) {
+            SUB_Index index, SUB_Shooter shooter, SUB_Hood hood, SUB_Metering metering, boolean isLeft) {
                 super(() -> {});
+                this.isLeft = isLeft;
                 this.index = index;
                 this.shooter = shooter;
                 this.hood = hood;
@@ -122,7 +124,7 @@ public class CMD_Shuttle extends RunCommand {
                                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
                                     ? -Units.inchesToMeters(140)
                                     : Units.inchesToMeters(140),
-                                (drivetrain.getPose().getY() < 4) ? Units.inchesToMeters(75)
+                                (!isLeft) ? Units.inchesToMeters(75)
                                                                   : -Units.inchesToMeters(75),
                                 Rotation2d.fromDegrees(0))))
                         .orElse(drivetrain.getPose());
