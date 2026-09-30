@@ -120,13 +120,13 @@ public class CMD_Shuttle extends RunCommand {
                         .map(pose
                             -> pose.toPose2d().relativeTo(new Pose2d(
                                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                                    ? -Units.inchesToMeters(100)
-                                    : Units.inchesToMeters(100),
-                                (drivetrain.getPose().getY() < 4) ? Units.inchesToMeters(100)
-                                                                  : -Units.inchesToMeters(100),
+                                    ? -Units.inchesToMeters(140)
+                                    : Units.inchesToMeters(140),
+                                (drivetrain.getPose().getY() < 4) ? Units.inchesToMeters(75)
+                                                                  : -Units.inchesToMeters(75),
                                 Rotation2d.fromDegrees(0))))
                         .orElse(drivetrain.getPose());
-
+                
                 Pose2d currentPose = drivetrain.getPose();
                 Translation2d shooterPosition = currentPose.getTranslation().plus(
                     shooterOffset.rotateBy(currentPose.getRotation()));
@@ -135,7 +135,7 @@ public class CMD_Shuttle extends RunCommand {
                 Rotation2d targetRotation =
                     new Rotation2d(shooterPosition.getX() - targetTranslation.getX(),
                         shooterPosition.getY() - targetTranslation.getY());
-
+                drivetrain.publisher1.set(new Pose2d(targetTranslation, targetRotation));
                 double omegaSpeed = robotAngleController.calculate(
                     currentPose.getRotation().getRadians(), targetRotation.getRadians());
 
