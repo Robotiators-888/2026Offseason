@@ -49,8 +49,8 @@ public final class Constants {
                 /** Outer diameter of the shooter flywheel wheels in inches. */
                 public static final double ShooterDiameter = 3;
 
-                /** Gear ratio from motor to shooter flywheel (1:1). */
-                public static final double kGearRatio = 1.0;
+                /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
+                public static final double kGearRatio = 1.0588;
 
                 /** Static friction feedforward gain kS for shooter flywheel (amps). */
                 public static final double kSHOOTER_FLYWHEEL_kS = 0; // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps needed to turn the flywheel when we can test
@@ -311,7 +311,7 @@ public final class Constants {
                 public static final double kP = 100.0; // For every 18 degrees off we output 5 amps to instanly jump to the position
                 public static final double kI = 0.0;
                 public static final double kD = 4.0; // to dampen the rapid speeds this will move at and prevent overshooting
-                public static final double kG = 0; // If you want this, make sure to chnage the code to make it cosine gravity
+                public static final double kG = 0; //TODO: If you want this, make sure to chnage the code to make it cosine gravity
 
                 public static final double kHoodTolerance =
                     0.0028; // Tolerance for hood position in rotations

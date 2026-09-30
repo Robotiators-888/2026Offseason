@@ -103,6 +103,8 @@ public class SUB_Shooter extends SubsystemBase {
                 shooterConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
                 shooterConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
 
+                shooterConfig.Feedback.SensorToMechanismRatio=Constants.Shooter.kGearRatio;
+
                 shooterLowConfig.CurrentLimits.StatorCurrentLimitEnable = true;
                 shooterLowConfig.CurrentLimits.StatorCurrentLimit =
                     Constants.Shooter.kStatorCurrentLimit;
@@ -123,6 +125,8 @@ public class SUB_Shooter extends SubsystemBase {
                 shooterLowConfig.Slot0.kP = Constants.Shooter.kSHOOTER_FLYWHEEL_kP;
                 shooterLowConfig.Slot0.kI = Constants.Shooter.kSHOOTER_FLYWHEEL_kI;
                 shooterLowConfig.Slot0.kD = Constants.Shooter.kSHOOTER_FLYWHEEL_kD;
+
+                shooterLowConfig.Feedback.SensorToMechanismRatio=Constants.Shooter.kGearRatio;
 
                 shooterLeader.getConfigurator().apply(shooterConfig);
                 shooterFollower.getConfigurator().apply(shooterConfig);
