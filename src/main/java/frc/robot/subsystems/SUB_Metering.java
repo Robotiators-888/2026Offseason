@@ -75,8 +75,6 @@ public class SUB_Metering extends SubsystemBase {
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
 
-                metering.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); // Only for the leader to update the follower faster
-                
                 meteringFollower.setControl(
                     new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
         }

@@ -52,22 +52,11 @@ public final class Constants {
                 /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
                 public static final double kGearRatio = 1.0588;
 
-                /** Static friction feedforward gain kS for shooter flywheel (amps). */
-                public static final double kSHOOTER_FLYWHEEL_kS = 0; // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps needed to turn the flywheel when we can test
-
-                /** Velocity feedforward gain kV for shooter flywheel (amps per RPS). */
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;  // Theoreticaly should be 0, but IRL should be set to the minimum amount of amps to keep a consistnet speed when we can test
-
-                /** Acceleration feedforward gain kA for shooter flywheel (amps per RPS/s). */
-                public static final double kSHOOTER_FLYWHEEL_kA = 0; // Not considered by code
-
-                /** Proportional gain kP for shooter flywheel closed-loop control. */
-                public static final double kSHOOTER_FLYWHEEL_kP = 4.0; // Ths controls two motors, so the lets say the RPM drops 2 RPS when we shoot a ball, it will apply a total 16 Amps to correct. If we need to increaese it, I wouldn't go above 8.0 for P
-
-                /** Integral gain kI for shooter flywheel closed-loop control. */
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.2;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.12;
+                public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
+                public static final double kSHOOTER_FLYWHEEL_kP = 0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
-
-                /** Derivative gain kD for shooter flywheel closed-loop control. */
                 public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
                 /** Compression ratio applied to game piece during launch */
@@ -129,12 +118,12 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
                 public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
 
-                public static final double kS = 0.0;
-                public static final double kV = 0.0;
+                public static final double kS = 0.2;
+                public static final double kV = 0.12;
                 public static final double kA = 0.0;
-                public static final double kP = 15.0; // For every drop in 60 RPM we pull 15 amps to garuntee it never falls low and always can keep pulling balls.
+                public static final double kP = 0.2;
                 public static final double kI = 0.0;
-                public static final double kD = 0.0; // TODO: If the roller jitters, maybe add a D value of like 0.2 or 0.4
+                public static final double kD = 0.0;
         }
 
         /**
@@ -305,13 +294,13 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 5; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.0;
+                public static final double kS = 0.2;
                 public static final double kV = 0.0;
                 public static final double kA = 0.0;
-                public static final double kP = 100.0; // For every 18 degrees off we output 5 amps to instanly jump to the position
+                public static final double kP = 2.5;
                 public static final double kI = 0.0;
-                public static final double kD = 4.0; // to dampen the rapid speeds this will move at and prevent overshooting
-                public static final double kG = 0; //TODO: If you want this, make sure to chnage the code to make it cosine gravity
+                public static final double kD = 0.1;
+                public static final double kG = 0.0;
 
                 public static final double kHoodTolerance =
                     0.0028; // Tolerance for hood position in rotations
@@ -335,12 +324,12 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 25; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.0;
-                public static final double kV = 0.0;
+                public static final double kS = 0.2;
+                public static final double kV = 0.12;
                 public static final double kA = 0.0;
-                public static final double kP = 8.0; // 8 Amps per 60 RPM off
+                public static final double kP = 0.25;
                 public static final double kI = 0.0;
-                public static final double kD = 0.2; // Get rid of oscillation
+                public static final double kD = 0.0;
 
                 public static final double kMETERING_MOTOR_RPM =
                     1000; // Target RPM for metering motor

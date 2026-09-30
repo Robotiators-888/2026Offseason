@@ -32,15 +32,14 @@ public class SUB_Roller extends SubsystemBase {
         /** Right roller TalonFX motor controller (Follower). */
         private final TalonFX RightRollerMotor;
 
-        /** Voltage output control request object with Field Oriented Control (FOC) enabled. */
-        private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
+        /** Voltage output control request object. */
+        private final VoltageOut voltageRequest = new VoltageOut(0);
 
         private final CoastOut coast = new CoastOut();
         /**
-         * Duty cycle percent output control request object with Field Oriented Control (FOC)
-         * enabled.
+         * Duty cycle percent output control request object.
          */
-        private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0).withEnableFOC(true);
+        private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
         private final VelocityVoltage velocityRequest =
             new VelocityVoltage(0).withSlot(0);
@@ -91,7 +90,6 @@ public class SUB_Roller extends SubsystemBase {
                 talonConfig.Feedback.SensorToMechanismRatio = Constants.Roller.kGearRatio;
                 LeftRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.getConfigurator().apply(talonConfig);
-                LeftRollerMotor.getTorqueCurrent().setUpdateFrequency(Hertz.of(100)); //Only for the leader to update the follower faster
                 RightRollerMotor.setControl(
                     new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
         }
