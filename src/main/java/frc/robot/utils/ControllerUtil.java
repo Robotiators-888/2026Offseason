@@ -240,7 +240,7 @@ public class ControllerUtil {
                 Driver2.leftBumper().whileTrue(new RunCommand(() -> {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         metering.setRPM(-500);
-                }, index, metering, shooter));
+                }, index, metering));
                 // POV Up/Down: Manual linear intake control
                 Driver2.povUp().whileTrue(new RunCommand(() -> linear.forward(), linear));
                 Driver2.povDown().whileTrue(new RunCommand(() -> linear.backward(), linear));

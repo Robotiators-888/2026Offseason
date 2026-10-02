@@ -92,7 +92,7 @@ public class CMD_Shuttle extends RunCommand {
                 this.drivetrain = drivetrain;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 isThetaErrorCorrect = false;
-                addRequirements(photonVision, drivetrain, index, shooter, hood, metering);
+                addRequirements(drivetrain, index, shooter, hood, metering);
         }
 
         /**
@@ -101,6 +101,7 @@ public class CMD_Shuttle extends RunCommand {
         @Override
         public void initialize() {
                 isLocked = false;
+                SUB_Shooter.isShooting = true;
                 robotAngleController.setTolerance(Units.degreesToRadians(0.0));
                 // Reset the PID controller to the current state of the robot
                 robotAngleController.reset(drivetrain.getPose().getRotation().getRadians(),
@@ -114,20 +115,19 @@ public class CMD_Shuttle extends RunCommand {
          */
         @Override
         public void execute() {
-                targetPose =
-                    photonVision.at_field
-                        .getTagPose(
-                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10
-                                                                                              : 26)
-                        .map(pose
-                            -> pose.toPose2d().relativeTo(new Pose2d(
-                                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-                                    ? -Units.inchesToMeters(140)
-                                    : Units.inchesToMeters(140),
-                                (!isLeft) ? Units.inchesToMeters(75)
-                                                                  : -Units.inchesToMeters(75),
-                                Rotation2d.fromDegrees(0))))
-                        .orElse(drivetrain.getPose());
+                boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
+                double deltaX = isRed ? Units.inchesToMeters(140) : -Units.inchesToMeters(140);
+                double deltaY = isRed
+                    ? (isLeft ? -Units.inchesToMeters(75) : Units.inchesToMeters(75))
+                    : (isLeft ? Units.inchesToMeters(75) : -Units.inchesToMeters(75));
+
+                targetPose = photonVision.at_field
+                    .getTagPose(isRed ? 10 : 26)
+                    .map(pose -> new Pose2d(
+                        pose.getX() + deltaX,
+                        pose.getY() + deltaY,
+                        Rotation2d.kZero))
+                    .orElse(drivetrain.getPose());
                 
                 Pose2d currentPose = drivetrain.getPose();
                 Translation2d shooterPosition = currentPose.getTranslation().plus(
@@ -186,5 +186,6 @@ public class CMD_Shuttle extends RunCommand {
         public void end(boolean interrupted) {
                 index.setVolts(0);
                 metering.setRPM(0);
+                SUB_Shooter.isShooting = false;
         }
 }

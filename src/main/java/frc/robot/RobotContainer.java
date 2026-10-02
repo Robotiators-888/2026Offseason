@@ -137,10 +137,10 @@ public class RobotContainer {
         private static String autoName, newAutoName;
 
         /** Previous alliance state tracker. */
-        Optional<Alliance> lastAlliance;
+        Optional<Alliance> lastAlliance = Optional.empty();
 
         /** Current alliance state tracker. */
-        Optional<Alliance> alliance;
+        Optional<Alliance> alliance = Optional.empty();
 
         /** Field2d display object for visualizing active autonomous trajectory. */
         public static Field2d autoField = new Field2d();
@@ -292,12 +292,14 @@ public class RobotContainer {
          * trajectory visualization on field dashboard when auto selection or alliance changes.
          */
         public void disabledPeriodic() {
-                newAutoName = getAutonomousCommand().getName();
-                alliance = DriverStation.getAlliance();
-                if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
-                        autoName = newAutoName;
-                        lastAlliance = alliance;
-                        if (AutoBuilder.getAllAutoNames().contains(autoName)) {
+                Command selectedAuto = getAutonomousCommand();
+                if (selectedAuto != null) {
+                        newAutoName = selectedAuto.getName();
+                        alliance = DriverStation.getAlliance();
+                        if (!newAutoName.equals(autoName) || !alliance.equals(lastAlliance)) {
+                                autoName = newAutoName;
+                                lastAlliance = alliance;
+                                if (AutoBuilder.getAllAutoNames().contains(autoName)) {
                                 try {
                                         List<PathPlannerPath> pathPlannerPaths =
                                             PathPlannerAuto.getPathGroupFromAutoFile(autoName);
@@ -336,6 +338,7 @@ public class RobotContainer {
                                         return;
                                 }
                         }
+                }
                 }
                 photonPoseUpdate();
         }

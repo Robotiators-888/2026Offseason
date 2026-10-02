@@ -50,6 +50,7 @@ public class CMD_AimBot extends RunCommand {
         private final SUB_Metering metering;
         private final SUB_Shooter shooter;
         private final SUB_Linear linear;
+        private final SUB_Roller roller;
         private boolean isLocked;
 
         /** Physical offsets for targeting calibration */
@@ -105,14 +106,12 @@ public class CMD_AimBot extends RunCommand {
                 this.shooter = shooter;
                 this.metering = metering;
                 this.linear = linear;
+                this.roller = roller;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT
                                   - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
                     / periodics;
                 addRequirements(drivetrain, metering, index, hood, shooter, linear, roller);
-                // We don't assign roller to a field to show the intent that we don't want to do anything else with it other than stop it
-                // Stop the roller becuase we can't have it roll while agitating
-                roller.stop(); // TODO: Hopefully doesn't cause an issue since it is coast mode
         }
 
         /**
@@ -142,6 +141,7 @@ public class CMD_AimBot extends RunCommand {
                 isLocked = false;
                 running = true;
                 SUB_Shooter.isShooting = true;
+                roller.stop();
                 linearPosition = Constants.Linear.kLINEAR_FORWARD_SETPOINT;
         }
 
@@ -236,6 +236,7 @@ public class CMD_AimBot extends RunCommand {
                 }
 
                 linear.setPosition(linearPosition);
+                roller.stop();
         }
 
         /**
@@ -248,6 +249,7 @@ public class CMD_AimBot extends RunCommand {
         public void end(boolean interrupted) {
                 running = false;
                 SUB_Shooter.isShooting = false;
+                roller.stop();
         }
 
         /**
