@@ -38,10 +38,11 @@ public final class Constants {
                 private Shooter() {}
 
                 /** CAN ID for follower flywheel TalonFX motor controller. */
-                public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 44;
+                public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 54;
 
                 /** CAN ID for leader flywheel TalonFX motor controller. */
-                public static final int kSHOOTER_LEADER_MOTOR_CANID = 43;
+                public static final int kSHOOTER_LEADER_MOTOR_CANID = 53
+                ;
 
                 /** Nominal flywheel rotational speed setpoint in RPM. */
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
@@ -79,7 +80,7 @@ public final class Constants {
                 public static final double kRPMZone1 = 2200.0;
                 public static final double kRPMZone2 = 2750.0;
                 public static final double kRPMZone3 = 3750.0;
-                public static final double kRPMIdle = kRPMZone2;
+                public static final double kRPMIdle = 0.0;
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
@@ -272,7 +273,7 @@ public final class Constants {
                 private Hood() {}
 
                 /** CAN ID for adjustable hood SPARK Max motor controller. */
-                public static final int kHOOD_CAN_ID = 47;
+                public static final int kHOOD_CAN_ID = 55;
 
                 /** Positional PID controller for hood angle control. */
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0, 0);
@@ -311,10 +312,10 @@ public final class Constants {
                 private Metering() {}
 
                 /** CAN ID for primary metering motor controller. */
-                public static final int kMETERING_MOTOR_CAN_ID = 45;
+                public static final int kMETERING_MOTOR_CAN_ID = 51;
 
                 /** CAN ID for follower metering motor controller. */
-                public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 46;
+                public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 52;
 
                 /** Gear reduction ratio for metering wheel (2:1). */
                 public static final double kGearRatio = 2.0;
@@ -332,6 +333,6 @@ public final class Constants {
                 public static final double kD = 0.0;
 
                 public static final double kMETERING_MOTOR_RPM =
-                    1000; // Target RPM for metering motor
+                    100.0; // Target RPM for metering motor
         }
 }
