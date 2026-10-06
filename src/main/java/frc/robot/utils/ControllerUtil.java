@@ -246,7 +246,7 @@ public class ControllerUtil {
                 Driver2.povDown().whileTrue(new RunCommand(() -> linear.backward(), linear));
                 // POV Right: Manual hood reset
                 Driver2.povRight()
-                    .whileTrue(new RunCommand(() -> hood.set(.05), hood))
+                    .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
         }
 

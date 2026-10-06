@@ -7,6 +7,8 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -60,6 +62,7 @@ public class SUB_Hood extends SubsystemBase {
                     .withKD(Constants.Hood.kD)
                     .withKG(Constants.Hood.kG);
                 config.Feedback.SensorToMechanismRatio = Constants.Hood.kGearRatio;
+                config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
         }
