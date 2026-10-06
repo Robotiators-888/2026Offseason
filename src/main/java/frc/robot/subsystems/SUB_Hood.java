@@ -164,7 +164,7 @@ public class SUB_Hood extends SubsystemBase {
                     - Constants.Shooter.kGRAVITATIONAL_CONSTANT
                         * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
                 if (discriminant < 0) {
-                        return 0;
+                        return 90;
                 }
 
                 double sqrtDisc = Math.sqrt(discriminant);
@@ -188,7 +188,7 @@ public class SUB_Hood extends SubsystemBase {
                     - Constants.Shooter.kGRAVITATIONAL_CONSTANT
                         * (Constants.Shooter.kGRAVITATIONAL_CONSTANT * x * x + 2 * y * v2);
                 if (discriminant < 0) {
-                        return 0;
+                        return 90;
                 }
 
                 double sqrtDisc = Math.sqrt(discriminant);
