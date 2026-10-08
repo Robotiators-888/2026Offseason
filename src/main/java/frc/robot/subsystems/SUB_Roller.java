@@ -92,6 +92,8 @@ public class SUB_Roller extends SubsystemBase {
                 RightRollerMotor.getConfigurator().apply(talonConfig);
                 RightRollerMotor.setControl(
                     new Follower(LeftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+                RightRollerMotor.setPosition(0);
+                LeftRollerMotor.setPosition(0);
         }
 
         /**

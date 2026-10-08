@@ -77,6 +77,8 @@ public class SUB_Metering extends SubsystemBase {
 
                 meteringFollower.setControl(
                     new Follower(metering.getDeviceID(), MotorAlignmentValue.Aligned));
+                metering.setPosition(0);
+                meteringFollower.setPosition(0);
         }
 
         /**

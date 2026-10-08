@@ -80,7 +80,7 @@ public final class Constants {
                 public static final double kRPMZone1 = 2200.0;
                 public static final double kRPMZone2 = 2750.0;
                 public static final double kRPMZone3 = 3750.0;
-                public static final double kRPMIdle = 0.0;
+                public static final double kRPMIdle = 0;
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
@@ -177,7 +177,7 @@ public final class Constants {
                 /** Operating voltage for spindexer motor in volts. */
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;
 
-                public static final int kSmartCurrentLimit = 15; // Amps
+                public static final int kSmartCurrentLimit = 40; // Amps
         }
 
         /** Field geometry and physical dimension constants in meters. */
@@ -290,9 +290,9 @@ public final class Constants {
                 /** Maximum hood angle in degrees. */
                 public static final double kMaxAngle = 52.0;
 
-                public static final double kStatorCurrentLimit = 25; // Amperes
-                public static final double kSupplyCurrentLimit = 7; // Amperes
-                public static final double kSupplyCurrentLowerLimit = 5; // Amperes
+                public static final double kStatorCurrentLimit = 120; // Amperes
+                public static final double kSupplyCurrentLimit = 15; // Amperes
+                public static final double kSupplyCurrentLowerLimit = 10; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
                 public static final double kS = 0.2;

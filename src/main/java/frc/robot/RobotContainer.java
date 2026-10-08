@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
@@ -73,12 +74,12 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
 
         /** Maximum linear velocity of the robot in meters/second. */
-        private double MaxSpeed = 1.0
+        private double MaxSpeed = 0.5
             * TunerConstants.kSpeedAt12Volts.in(
                 MetersPerSecond); // kSpeedAt12Volts desired top speed
 
         /** Maximum angular rate of the robot in radians/second (0.75 rot/s). */
-        private double MaxAngularRate = RotationsPerSecond.of(0.75).in(
+        private double MaxAngularRate = 0.5 * RotationsPerSecond.of(0.75).in(
             RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
         /** Flywheel shooter subsystem instance. */
@@ -178,9 +179,9 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.set(0); }, linear));
                 shooter.setDefaultCommand(
-                    new RunCommand(() -> { shooter.setRPM(SUB_Shooter.RPMIdle); }, shooter));
+                    new RunCommand(() -> { shooter.setRPM(0); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
@@ -207,7 +208,7 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                return autoChooser.getSelected();
+                return Commands.none();
                 // return Commands.none();
         }
 

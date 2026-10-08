@@ -64,6 +64,8 @@ public class SUB_Index extends SubsystemBase {
                 LeftIndexConfig.follow(RightIndexer, true);
                 LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
+                RightIndexer.getEncoder().setPosition(0);
+                LeftIndexer.getEncoder().setPosition(0);
                 
         }
 

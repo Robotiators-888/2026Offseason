@@ -65,6 +65,7 @@ public class SUB_Hood extends SubsystemBase {
                 config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
                 hood = new TalonFX(Constants.Hood.kHOOD_CAN_ID);
                 hood.getConfigurator().apply(config);
+                resetEncoder();
         }
 
         /**

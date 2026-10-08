@@ -134,6 +134,8 @@ public class SUB_Shooter extends SubsystemBase {
                 // Synchronize bottom flywheel to top flywheel
                 shooterFollower.setControl(
                     new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
+                shooterLeader.setPosition(0);
+                shooterFollower.setPosition(0);
         }
 
         /**
