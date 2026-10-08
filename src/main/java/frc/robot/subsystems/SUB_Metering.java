@@ -10,6 +10,7 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -72,6 +73,7 @@ public class SUB_Metering extends SubsystemBase {
                     .withKI(Constants.Metering.kI)
                     .withKD(Constants.Metering.kD);
                 config.Feedback.SensorToMechanismRatio = Constants.Metering.kGearRatio;
+                config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
                 metering.getConfigurator().apply(config);
                 meteringFollower.getConfigurator().apply(config);
 

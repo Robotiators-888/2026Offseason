@@ -181,7 +181,7 @@ public class RobotContainer {
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
                 linear.setDefaultCommand(new RunCommand(() -> { linear.set(0); }, linear));
                 shooter.setDefaultCommand(
-                    new RunCommand(() -> { shooter.setRPM(0); }, shooter));
+                    new RunCommand(() -> { shooter.stop(); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));

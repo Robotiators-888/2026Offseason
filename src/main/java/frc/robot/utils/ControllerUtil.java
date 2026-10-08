@@ -248,6 +248,8 @@ public class ControllerUtil {
                 Driver2.povRight()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+                // POV Left: Manual Linear retract
+                Driver2.povLeft().whileTrue(new RunCommand(() -> linear.backward(), linear));
         }
 
         @Deprecated

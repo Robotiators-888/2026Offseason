@@ -41,8 +41,7 @@ public final class Constants {
                 public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 54;
 
                 /** CAN ID for leader flywheel TalonFX motor controller. */
-                public static final int kSHOOTER_LEADER_MOTOR_CANID = 53
-                ;
+                public static final int kSHOOTER_LEADER_MOTOR_CANID = 53;
 
                 /** Nominal flywheel rotational speed setpoint in RPM. */
                 public static final double kSHOOTER_FLYWHEEL_RPM = 1000;
@@ -318,7 +317,7 @@ public final class Constants {
                 public static final int kMETERING_MOTOR_FOLLOWER_CAN_ID = 52;
 
                 /** Gear reduction ratio for metering wheel (2:1). */
-                public static final double kGearRatio = 2.0;
+                public static final double kGearRatio = 3.0;
 
                 public static final double kStatorCurrentLimit = 120; // Amperes
                 public static final double kSupplyCurrentLimit = 60; // Amperes
@@ -333,6 +332,6 @@ public final class Constants {
                 public static final double kD = 0.0;
 
                 public static final double kMETERING_MOTOR_RPM =
-                    100.0; // Target RPM for metering motor
+                    1000.0; // Target RPM for metering motor
         }
 }
