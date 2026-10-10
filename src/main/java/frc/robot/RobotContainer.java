@@ -37,6 +37,8 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
+import frc.robot.commands.CMD_VelocityTuner;
+import frc.robot.commands.Motor.SimTuneableMotor;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
@@ -208,7 +210,9 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                return Commands.none();
+
+                return new CMD_VelocityTuner(new SimTuneableMotor());
+                // return Commands.none();
                 // return Commands.none();
         }
 

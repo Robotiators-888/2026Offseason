@@ -217,17 +217,17 @@ public class CMD_AimBotAuto extends RunCommand {
                 }
 
                 // Wheel locking logic
-                if (!isLocked && thetaErrorRads <= Units.degreesToRadians(1)) {
+                if (!isLocked && thetaErrorRads <= Units.degreesToRadians(2)) {
                         isLocked = true;
-                        if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
-                                linearPosition -= linearDelta;
-                        }
                 } else if (isLocked && thetaErrorRads >= Units.degreesToRadians(5)) {
                         isLocked = false;
                 }
 
                 // Lock wheels or drive
                 if (isThetaErrorCorrect && isLocked) {
+                        if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
+                                linearPosition -= linearDelta;
+                        }
                         drivetrain.setControl(brakeRequest);
                 } else {
                         drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
