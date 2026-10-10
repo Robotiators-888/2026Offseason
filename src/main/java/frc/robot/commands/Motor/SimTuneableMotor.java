@@ -38,8 +38,7 @@ public class SimTuneableMotor extends SubsystemBase implements TuneableMotor {
     private static final double kGearing = 1.0;
 
     /** Rotational moment of inertia in kilogram meters squared (kg*m^2) (e.g. 0.0005 kg*m^2 for a 4-inch shooter wheel). */
-    private static final double kMOI = 0.0005;
-
+    private static final double kMOI = 0.0015;
     /** Static friction breakaway threshold in Volts (V) (simulated kS). */
     private static final double kStaticFrictionVolts = 0.25;
 

@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
+import frc.robot.commands.CMD_VelocityTester;
 import frc.robot.commands.CMD_VelocityTuner;
 import frc.robot.commands.Motor.SimTuneableMotor;
 import frc.robot.generated.TunerConstants;
@@ -104,6 +105,9 @@ public class RobotContainer {
 
         /** REV Power Distribution Module for monitoring current and switchable channels. */
         public static final PowerDistribution powerDistribution = new PowerDistribution();
+
+        /** Simulated motor instance for testing velocity tuning and control. */
+        private final SimTuneableMotor simMotor = new SimTuneableMotor();
 
         /** Xbox controller on port 0 for primary driver controls. */
         private final CommandXboxController Driver1 =
@@ -210,9 +214,10 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
+                CMD_VelocityTuner tuner = new CMD_VelocityTuner(simMotor);
+                CMD_VelocityTester tester = new CMD_VelocityTester(simMotor, tuner);
 
-                return new CMD_VelocityTuner(new SimTuneableMotor());
-                // return Commands.none();
+                return tuner.andThen(tester);
                 // return Commands.none();
         }
 
