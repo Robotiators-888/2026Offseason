@@ -10,7 +10,6 @@ public class CMD_VelocityTuner extends Command {
     private final TuneableMotor motor;
     private final Timer timer = new Timer();
     
-    // States for our tuning sequence
     private enum TuneState {
         FIND_KS,
         SETUP_KV_TEST,
@@ -22,40 +21,45 @@ public class CMD_VelocityTuner extends Command {
     
     private TuneState currentState = TuneState.FIND_KS;
 
-    // Results
     public double kS = 0;
     public double kV = 0;
-    public double kP = 0.0001; // Starting guess: 1V per 100 RPM error
+    public double kA = 0;
+    public double kP = 0.0;
+    public double recoveryTime = 0.080; 
 
-    // Internal tracking variables
     private double currentVoltage = 0.0;
     private double sumX, sumY, sumXY, sumXX; private int n;   
-    // kP Optimization variables
     private double kpTestTargetSpeed = 0.0;
-    private double maxOvershoot = 0.0;
-    private double riseTime = 0.0;
-    private boolean crossedTarget = false;
+    private double t10 = -1.0;
+    private double t90 = -1.0;
+    private double v10 = 0.0;
+    private double v90 = 0.0;
 
     private double skibidi = 2.0;
 
-    public CMD_VelocityTuner(TuneableMotor motor) {
+    public CMD_VelocityTuner(TuneableMotor motor, double recoveryTime) {
         this.motor = motor;
+        this.recoveryTime = recoveryTime/1000.0;
+    }
+
+    public CMD_VelocityTuner(TuneableMotor motor) {
+        this(motor, 0.080);
     }
 
     @Override
     public void initialize() {
         currentState = TuneState.FIND_KS;
         currentVoltage = 0.0;
-        kP = 0.0001; 
-        sumX=0;
-        sumY=0;
-        sumXY=0;
-        sumXX=0;
+        kP = 0.0;
+        kA = 0.0;
+        sumX = 0;
+        sumY = 0;
+        sumXY = 0;
+        sumXX = 0;
         n = 0; 
         skibidi = 2.0;
         timer.reset();
         timer.start();
-        
     }
 
     @Override
@@ -67,7 +71,7 @@ public class CMD_VelocityTuner extends Command {
                 motor.setVoltage(currentVoltage);
                 
                 if (motor.getVelocity().in(RPM) > 0.1) {
-                    kS = currentVoltage-0.02; // Account for 0.05 step size and for that the velocity doesn't instantly update
+                    kS = currentVoltage-0.02;
                     motor.setVoltage(0);
                     timer.reset();
                     currentState = TuneState.FIND_KV;
@@ -114,45 +118,45 @@ public class CMD_VelocityTuner extends Command {
                 }
                 break;
 
-            case SETUP_KP_TEST: // This is the most confusing one for me and for whoever reads this, so more comments are here
-                motor.setVoltage(0); // Stop the motor before starting the kP test
-                kpTestTargetSpeed = (6.0 - kS) / kV; // 6V - kS, divided by kV to get the speed the motor runs at 6V
-                timer.reset(); // Reset the timer
-                crossedTarget = false; // This tracks whether in 1.5 seconds we crossed the target speed or not
-                maxOvershoot = -kpTestTargetSpeed; // This tracks the maximum overshoot we had in 1.5 seconds
-                if (motor.getVelocity().in(RPM) > 0.1) {
-                    currentState = TuneState.SETUP_KP_TEST; // If the motor is still moving, we wait until it stops before starting the kP test
-                } else {
-                    currentState = TuneState.RUN_KP_STEP; // Start the kP test! I hope this isn't super violent not trying to blow up another motor lol
+            case SETUP_KP_TEST: 
+                motor.setVoltage(0);
+                kpTestTargetSpeed = (6.0 - kS) / kV;
+                timer.reset();
+                t10 = -1.0;
+                t90 = -1.0;
+                v10 = 0.0;
+                v90 = 0.0;
+                if (motor.getVelocity().in(RPM) > 5.0) {
+                    currentState = TuneState.SETUP_KP_TEST; 
+                    currentState = TuneState.RUN_KP_STEP;
                 }
                 break;
 
             case RUN_KP_STEP:
-                double currentSpeed = motor.getVelocity().in(RPM); // Get the current speed of the motor
-                double error = kpTestTargetSpeed - currentSpeed; // Calculate the error between the target speed and the current speed
-                motor.setVoltage(kS + (kV * kpTestTargetSpeed * 0.90) + (kP * error)); // Do SVAPID
+                motor.setVoltage(6.0);
+                double currentSpeed = motor.getVelocity().in(RPM);
                 
-                if (!crossedTarget && currentSpeed >= kpTestTargetSpeed) { // If we just crossed the target speed, we record the rise time and set crossedTarget to true
-                    riseTime = timer.get();
-                    crossedTarget = true;
+                if (t10 < 0 && currentSpeed >= 0.20 * kpTestTargetSpeed) {
+                    t10 = timer.get();
+                    v10 = currentSpeed;
+                }
+                if (t90 < 0 && currentSpeed >= 0.70 * kpTestTargetSpeed) {
+                    t90 = timer.get();
+                    v90 = currentSpeed;
                 }
                 
-                double overshoot = currentSpeed - kpTestTargetSpeed;
-                if (overshoot > maxOvershoot && timer.get()>0.5) {
-                    maxOvershoot = overshoot;
-                }
-                
-                // Once we reach 1.5 seconds, no matter what happens we evaluate
-                if (timer.get() >= 1.5) {
-                    double percentOff = (maxOvershoot / kpTestTargetSpeed) * 100.0; // Calculate the percent overshoot
-                    
-                    if (percentOff <= 5.0 && percentOff >= 0.0) { 
-                        currentState = TuneState.DONE;
-                    } else { 
-                        kP -= 2*kP*percentOff/100.0;
-                        currentState = TuneState.SETUP_KP_TEST;
+                if ((t90 > 0 && t10 > 0) || timer.get() >= 1.5) {
+                    if (t90 > 0 && t10 > 0 && t90 > t10) {
+                        double dt = t90 - t10;
+                        double dw = v90 - v10;
+                        double alpha = dw / dt;
+                        double avgSpeed = (v10 + v90) / 2.0;
+                        double netVolts = 6.0 - kS - (kV * avgSpeed);
+                        kA = netVolts / alpha;
+                        kP = kA / recoveryTime;
                     }
-
+                    motor.setVoltage(0);
+                    currentState = TuneState.DONE;
                 }
                 break;
 
@@ -165,14 +169,11 @@ public class CMD_VelocityTuner extends Command {
         SmartDashboard.putNumber("VelocityTuner/State", currentState.ordinal());
         SmartDashboard.putNumber("VelocityTuner/S", kS);
         SmartDashboard.putNumber("VelocityTuner/V", kV);
+        SmartDashboard.putNumber("VelocityTuner/A", kA);
         SmartDashboard.putNumber("VelocityTuner/P", kP);
 
         SmartDashboard.putNumber("VelocityTuner/Current Voltage", currentVoltage);
-        
         SmartDashboard.putNumber("VelocityTuner/kpTestTargetSpeed", kpTestTargetSpeed);
-        SmartDashboard.putNumber("VelocityTuner/Max Overshoot",maxOvershoot);
-        SmartDashboard.putNumber("VelocityTuner/riseTime", riseTime);
-        SmartDashboard.putBoolean("VelocityTuner/crossedTarget", crossedTarget);
         SmartDashboard.putNumber("VelocityTuner/skibidi", skibidi);
     }
 
@@ -189,7 +190,8 @@ public class CMD_VelocityTuner extends Command {
         System.out.println("--- TUNING RESULTS ---");
         System.out.println("Calculated kS: " + kS);
         System.out.println("Calculated kV: " + kV);
-        System.out.println("Optimized kP:  " + kP);
+        System.out.println("Calculated kA: " + kA);
+        System.out.println("Optimized kP:  " + kP + " (for " + String.format("%.0f ms", recoveryTime * 1000.0) + " recovery)");
     }
 
     
