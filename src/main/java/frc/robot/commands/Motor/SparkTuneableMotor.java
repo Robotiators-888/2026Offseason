@@ -24,8 +24,6 @@ public class SparkTuneableMotor implements TuneableMotor {
     /** The underlying physical REV {@link SparkBase} controller (SparkMax or SparkFlex). */
     private final SparkBase motor;
 
-    /** Configuration applied to the controller. */
-    private final SparkBaseConfig config;
 
     /**
      * Constructs a new {@link SparkTuneableMotor} with a specified smart current limit.
@@ -34,12 +32,8 @@ public class SparkTuneableMotor implements TuneableMotor {
      * @param config The {@link SparkBaseConfig} profile containing motor settings and sensor setups.
      * @param currentLimit Smart current limit threshold in Amperes (A) (e.g., 40 A for NEO, 60 A for Vortex) to prevent breaker trips.
      */
-    public SparkTuneableMotor(SparkBase motor, SparkBaseConfig config, int currentLimit) {
+    public SparkTuneableMotor(SparkBase motor) {
         this.motor = motor;
-        this.config = config;
-        this.config.smartCurrentLimit(currentLimit);
-        motor.configure(config, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
     }
 
     /**

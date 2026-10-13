@@ -25,8 +25,7 @@ public class TalonTuneableMotor implements TuneableMotor {
     /** The underlying physical CTRE {@link TalonFX} controller. */
     private final TalonFX motor;
 
-    /** Configuration applied to the TalonFX, including current limits. */
-    private final TalonFXConfiguration config;
+
 
     /**
      * Constructs a new {@link TalonTuneableMotor} with specified hardware protection limits.
@@ -36,15 +35,8 @@ public class TalonTuneableMotor implements TuneableMotor {
      * @param SupplyCurrentLimit Breaker/battery supply current threshold in Amperes (A) (e.g. 40.0A or 60.0A).
      * @param StatorCurrentLimit Motor winding/stator current threshold in Amperes (A) (e.g. 80.0A) to prevent motor burn-out.
      */
-    public TalonTuneableMotor(TalonFX motor, TalonFXConfiguration config, double SupplyCurrentLimit, double StatorCurrentLimit) {
+    public TalonTuneableMotor(TalonFX motor) {
         this.motor = motor;
-        this.config = config;
-        this.config.withCurrentLimits(new CurrentLimitsConfigs()
-                .withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimit(StatorCurrentLimit)
-                .withSupplyCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(SupplyCurrentLimit));
-        motor.getConfigurator().apply(config);
     }
 
     /**

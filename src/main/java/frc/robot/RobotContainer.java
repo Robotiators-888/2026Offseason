@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -40,6 +41,7 @@ import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_VelocityTester;
 import frc.robot.commands.CMD_VelocityTuner;
 import frc.robot.commands.Motor.SimTuneableMotor;
+import frc.robot.commands.Motor.TalonTuneableMotor;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
@@ -185,7 +187,7 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> { linear.set(0); }, linear));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
                 shooter.setDefaultCommand(
                     new RunCommand(() -> { shooter.stop(); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
@@ -214,10 +216,13 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                CMD_VelocityTuner tuner = new CMD_VelocityTuner(simMotor);
-                CMD_VelocityTester tester = new CMD_VelocityTester(simMotor, tuner);
+                TalonTuneableMotor motor = new TalonTuneableMotor(roller.LeftRollerMotor);
+                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor);
+                CMD_VelocityTester tester = new CMD_VelocityTester(motor, tuner);
 
-                return tuner.andThen(tester);
+                Command skibidi2 =  tuner.andThen(tester);
+                skibidi2.addRequirements(roller);
+                return skibidi2;
                 // return Commands.none();
         }
 

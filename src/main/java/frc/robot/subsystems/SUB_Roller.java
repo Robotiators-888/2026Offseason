@@ -27,10 +27,10 @@ import frc.robot.utils.Alert;
  */
 public class SUB_Roller extends SubsystemBase {
         /** Left roller TalonFX motor controller (Leader). */
-        private final TalonFX LeftRollerMotor;
+        public final TalonFX LeftRollerMotor;
 
         /** Right roller TalonFX motor controller (Follower). */
-        private final TalonFX RightRollerMotor;
+        public final TalonFX RightRollerMotor;
 
         /** Voltage output control request object. */
         private final VoltageOut voltageRequest = new VoltageOut(0);
