@@ -20,10 +20,10 @@ import frc.robot.utils.Alert;
  */
 public class SUB_Index extends SubsystemBase {
         /** Left indexer SPARK Max motor controller (Follower). */
-        private final SparkMax LeftIndexer;
+        public final SparkMax LeftIndexer;
 
         /** Right indexer SPARK Max motor controller (Leader). */
-        private final SparkMax RightIndexer;
+        public final SparkMax RightIndexer;
 
         private static SUB_Index INSTANCE = null;
 

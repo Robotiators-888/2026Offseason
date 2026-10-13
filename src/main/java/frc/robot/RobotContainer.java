@@ -187,7 +187,7 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.set(0); }, linear));
                 shooter.setDefaultCommand(
                     new RunCommand(() -> { shooter.stop(); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
@@ -216,12 +216,12 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                TalonTuneableMotor motor = new TalonTuneableMotor(roller.LeftRollerMotor);
-                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor);
+                TalonTuneableMotor motor = new TalonTuneableMotor(shooter.shooterLeader);
+                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor, "SkibidiShooter");
                 CMD_VelocityTester tester = new CMD_VelocityTester(motor, tuner);
 
                 Command skibidi2 =  tuner.andThen(tester);
-                skibidi2.addRequirements(roller);
+                skibidi2.addRequirements(shooter);
                 return skibidi2;
                 // return Commands.none();
         }

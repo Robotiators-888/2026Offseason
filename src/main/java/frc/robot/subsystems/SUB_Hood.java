@@ -23,7 +23,7 @@ import frc.robot.utils.Alert;
  */
 public class SUB_Hood extends SubsystemBase {
         private static SUB_Hood INSTANCE = null;
-        private final TalonFX hood;
+        public final TalonFX hood;
 
         private final PositionVoltage positionRequest =
             new PositionVoltage(0).withSlot(0);

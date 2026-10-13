@@ -23,7 +23,7 @@ public class SUB_Linear extends SubsystemBase {
 
         /** SPARK Max motor controller driving linear deploy mechanism. */
         // 16:1 gear ratio
-        private final SparkMax linear;
+        public final SparkMax linear;
 
         private static SUB_Linear INSTANCE = null;
 

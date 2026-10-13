@@ -27,10 +27,10 @@ import frc.robot.utils.Alert;
  */
 public class SUB_Metering extends SubsystemBase {
         /** Leader TalonFX motor controller for metering wheel. */
-        private final TalonFX metering;
+        public final TalonFX metering;
 
         /** Follower TalonFX motor controller for metering wheel. */
-        private final TalonFX meteringFollower;
+        public final TalonFX meteringFollower;
 
         private final VelocityVoltage velocityRequest =
             new VelocityVoltage(0).withSlot(0);

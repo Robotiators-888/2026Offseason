@@ -32,8 +32,8 @@ public class SUB_Shooter extends SubsystemBase {
         private static SUB_Shooter INSTANCE = null;
 
         /** Subsystem hardware and control state */
-        private final TalonFX shooterLeader;
-        private final TalonFX shooterFollower;
+        public final TalonFX shooterLeader;
+        public final TalonFX shooterFollower;
         private final VoltageOut voltageRequest = new VoltageOut(0);
         // Not used since it is replaced by velocityRequest
         // private final VelocityVoltage m_request = new VelocityVoltage(0);

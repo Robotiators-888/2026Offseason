@@ -44,6 +44,8 @@ public class CMD_VelocityTuner extends Command {
     /** The motor or mechanism abstraction under test. */
     private final TuneableMotor motor;
 
+    private final String subsystemName;
+
     /** Universal timer used across state transitions and step measurements. */
     private final Timer timer = new Timer();
     
@@ -131,8 +133,9 @@ public class CMD_VelocityTuner extends Command {
      *
      * @param motor The {@link TuneableMotor} mechanism to characterize and tune.
      */
-    public CMD_VelocityTuner(TuneableMotor motor) {
+    public CMD_VelocityTuner(TuneableMotor motor, String subsystemName) {
         this.motor = motor;
+        this.subsystemName = subsystemName;
     }
 
     /**
@@ -366,5 +369,13 @@ public class CMD_VelocityTuner extends Command {
         System.out.println("SysId Tuned kP: " + kP + " Volts/RPM (Latency-compensated LQR, 0% overshoot, zero oscillation)");
         System.out.println("SysId Tuned kI: " + kI + " Volts/(RPM*s) (Pure feedforward tracking, zero integrator windup)");
         System.out.println("SysId Tuned kD: " + kD + " Volts/(RPM/s) (Filtered velocity state feedback)");
+        try {
+            java.io.FileWriter file = new java.io.FileWriter("/media/sda1/logs/tunedpids" + subsystemName + ".txt");
+            file.write(subsystemName + ": " + "kS: " + kS + " kV: " + kV + " kP: " + kP + "\n");
+            file.flush();
+            file.close();
+        }
+        catch (java.io.IOException e) {
+        }
     }
 }
