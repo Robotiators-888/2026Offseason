@@ -202,9 +202,9 @@ public class ControllerUtil {
                                                 : 23.5),
                                         0)))
                                 .orElse(drivetrain.getPose().getTranslation()));
-                        hood.setPosition(Units.radiansToDegrees(
-                            SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
-                }, shooter, hood));
+                        // hood.setPosition(Units.radiansToDegrees(
+                        //     SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
+                }, shooter));
                 // Right Trigger: Manual Indexer control while held
                 Driver2.rightBumper().whileTrue(new RunCommand(
                     () -> {

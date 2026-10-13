@@ -234,13 +234,13 @@ public final class Constants {
 
                 /** 3D rotation of high camera relative to robot frame (radians). */
                 public static final Rotation3d cameraRotation3 =
-                    new Rotation3d(Units.degreesToRadians(3), Units.degreesToRadians(-1.5),
-                        Units.degreesToRadians(-4));
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-15),
+                        Units.degreesToRadians(180));
 
                 /** Physical 3D offset transform of high camera from robot center. */
                 public static final Transform3d kRobotToCamera3 =
-                    new Transform3d(Units.inchesToMeters(-4), Units.inchesToMeters(0),
-                        Units.inchesToMeters(20.5), cameraRotation3);
+                    new Transform3d(Units.inchesToMeters(-13.5), Units.inchesToMeters(0),
+                        Units.inchesToMeters(16.5), cameraRotation3);
         }
 
         /** PWM port assignments and preset Blinkin LED pattern code constants. */

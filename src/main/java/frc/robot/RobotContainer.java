@@ -42,6 +42,7 @@ import frc.robot.commands.CMD_VelocityTester;
 import frc.robot.commands.CMD_VelocityTuner;
 import frc.robot.commands.Motor.SimTuneableMotor;
 import frc.robot.commands.Motor.TalonTuneableMotor;
+import frc.robot.commands.Motor.SparkTuneableMotor;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.SUB_Hood;
 import frc.robot.subsystems.SUB_Index;
@@ -192,7 +193,7 @@ public class RobotContainer {
                     new RunCommand(() -> { shooter.stop(); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
-                hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe(); }, hood));
+                hood.setDefaultCommand(new RunCommand(() -> { hood.setPosition(40);}, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();
@@ -216,12 +217,12 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                TalonTuneableMotor motor = new TalonTuneableMotor(shooter.shooterLeader);
-                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor, "SkibidiShooter");
+                SparkTuneableMotor motor = new SparkTuneableMotor(index.RightIndexer);
+                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor, "Index");
                 CMD_VelocityTester tester = new CMD_VelocityTester(motor, tuner);
 
                 Command skibidi2 =  tuner.andThen(tester);
-                skibidi2.addRequirements(shooter);
+                skibidi2.addRequirements(index);
                 return skibidi2;
                 // return Commands.none();
         }

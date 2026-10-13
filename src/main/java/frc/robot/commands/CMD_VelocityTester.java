@@ -107,7 +107,7 @@ public class CMD_VelocityTester extends Command {
      * @param tuner The {@link CMD_VelocityTuner} instance from which to read {@code kS}, {@code kV}, {@code kP}, {@code kI}, and {@code kD}.
      */
     public CMD_VelocityTester(TuneableMotor motor, CMD_VelocityTuner tuner) {
-        this(motor, tuner, 1500.0, 5000.0);
+        this(motor, tuner, 1200.0, 3000.0);
     }
 
     /**
@@ -143,7 +143,7 @@ public class CMD_VelocityTester extends Command {
      * @param kP Proportional feedback gain in Volts per RPM error (V / RPM).
      */
     public CMD_VelocityTester(TuneableMotor motor, double kS, double kV, double kP) {
-        this(motor, kS, kV, kP, 0.0, 0.0, 1500.0, 5000.0);
+        this(motor, kS, kV, kP, 0.0, 0.0, 1200.0, 3000.0);
     }
 
     /**

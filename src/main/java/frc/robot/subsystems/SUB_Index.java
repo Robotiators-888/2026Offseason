@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -56,14 +57,17 @@ public class SUB_Index extends SubsystemBase {
                 RightIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
                 RightIndexConfig.inverted(false);
                 RightIndexConfig.signals.appliedOutputPeriodMs(10);
+                RightIndexConfig.idleMode(IdleMode.kCoast);
                 RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
                     SparkMax.PersistMode.kPersistParameters);
 
                 SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
                 LeftIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
+                LeftIndexConfig.idleMode(IdleMode.kCoast);
                 LeftIndexConfig.follow(RightIndexer, true);
                 LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
+                   SparkMax.PersistMode.kPersistParameters);
+
                 RightIndexer.getEncoder().setPosition(0);
                 LeftIndexer.getEncoder().setPosition(0);
                 

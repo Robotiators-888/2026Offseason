@@ -217,7 +217,7 @@ public class CMD_VelocityTuner extends Command {
                 }
 
                 // Finish regression when all 10 voltage steps have been sampled
-                if (skibidi > 21.0) {
+                if (skibidi > (10.0*2)+1.0) {
                     kV = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
                     motor.setVoltage(0);
                     currentState = TuneState.SETUP_KP_TEST;
@@ -330,9 +330,9 @@ public class CMD_VelocityTuner extends Command {
         // Live dashboard telemetry
         SmartDashboard.putNumber("VelocityTuner/State", currentState.ordinal());
         SmartDashboard.putNumber("VelocityTuner/S", kS);
-        SmartDashboard.putNumber("VelocityTuner/V", kV);
-        SmartDashboard.putNumber("VelocityTuner/A", kA);
-        SmartDashboard.putNumber("VelocityTuner/P", kP);
+        SmartDashboard.putNumber("VelocityTuner/V", kV*1000);
+        SmartDashboard.putNumber("VelocityTuner/A", kA*1000);
+        SmartDashboard.putNumber("VelocityTuner/P", kP*1000);
         SmartDashboard.putNumber("VelocityTuner/I", kI);
         SmartDashboard.putNumber("VelocityTuner/D", kD);
 

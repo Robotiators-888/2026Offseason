@@ -69,7 +69,7 @@ public class CMD_AimBot extends RunCommand {
 
         /** Profiled PID controller for heading alignment (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
+            new ProfiledPIDController(0.05, 0, 0.02, thetaConstraints);
 
         /** Status flag indicating whether heading error is within 5 degrees tolerance. */
         public static boolean isThetaErrorCorrect = false;
