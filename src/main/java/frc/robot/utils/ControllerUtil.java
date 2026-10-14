@@ -241,7 +241,7 @@ public class ControllerUtil {
                         index.setVolts(-Constants.Index.kINDEX_MOTOR_VOLTS);
                         metering.setRPM(-500);
                 }, index, metering));
-                // POV Up/Down: Manual linear intake control
+                // POV Up/Down: Manual hood control
                 Driver2.povUp().whileTrue(new RunCommand(() -> hood.set(.05), hood));
                 Driver2.povDown().whileTrue(new RunCommand(() -> hood.set(-.05), hood));
                 // POV Right: Manual hood reset

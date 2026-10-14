@@ -52,8 +52,8 @@ public final class Constants {
                 /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
                 public static final double kGearRatio = 1.0588;
 
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.2;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.12;
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.19;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.12; //Standard free speed value :skull:
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
@@ -118,8 +118,8 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
                 public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
 
-                public static final double kS = 0.2;
-                public static final double kV = 0.12;
+                public static final double kS = 0.16;
+                public static final double kV = 0.00363;
                 public static final double kA = 0.0;
                 public static final double kP = 0.2;
                 public static final double kI = 0.0;
@@ -280,8 +280,8 @@ public final class Constants {
                 /** Scoring target height in inches. */
                 public static final double ScoreHeight = 55; // Hood launches balls approx 25 inches off the ground. Since the ball is 3 inches in radius, it must score at least at 72+3 inches in height to score, 25+55 = 80 giving a good buffer while still maitning all possible shots we take.
 
-                /** Gear reduction ratio for hood (12:124). */
-                public static final double kGearRatio = 124.0 / 12.0;
+                /** Gear reduction ratio for hood to belt (12:124) and for belt to motor (2:1). */
+                public static final double kGearRatio = (124.0 / 12.0) * (2.0/1.0);
 
                 /** Minimum hood angle in degrees. */
                 public static final double kMinAngle = 0.0;
@@ -324,8 +324,8 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 25; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.2;
-                public static final double kV = 0.12;
+                public static final double kS = 0.18;
+                public static final double kV = 60.0*0.005724;
                 public static final double kA = 0.0;
                 public static final double kP = 0.25;
                 public static final double kI = 0.0;
