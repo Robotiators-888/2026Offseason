@@ -129,6 +129,7 @@ public class SUB_Hood extends SubsystemBase {
         public void periodic() {
                 SmartDashboard.putNumber("Hood/Desired Angle", desiredAngle);
                 SmartDashboard.putNumber("Hood/Position", getPosition());
+                SmartDashboard.putNumber("Hood/PositionDegrees", getPosition()*360);
                 SmartDashboard.putNumber(
                     "Hood/Stator Current", hood.getStatorCurrent().getValueAsDouble());
                 SmartDashboard.putNumber(

@@ -69,7 +69,7 @@ public class CMD_AimBot extends RunCommand {
 
         /** Profiled PID controller for heading alignment (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(0.05, 0, 0.02, thetaConstraints);
+            new ProfiledPIDController(0.5, 0, 0.02, thetaConstraints);
 
         /** Status flag indicating whether heading error is within 5 degrees tolerance. */
         public static boolean isThetaErrorCorrect = false;
@@ -141,7 +141,7 @@ public class CMD_AimBot extends RunCommand {
                 isLocked = false;
                 running = true;
                 SUB_Shooter.isShooting = true;
-                roller.stop();
+                roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM);
                 linearPosition = Constants.Linear.kLINEAR_FORWARD_SETPOINT;
         }
 
@@ -222,8 +222,8 @@ public class CMD_AimBot extends RunCommand {
                                 Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
                 }
 
-                linear.setPosition(linearPosition);
-                roller.stop();
+                // linear.setPosition(linearPosition);
+                // roller.stop();
         }
 
         /**

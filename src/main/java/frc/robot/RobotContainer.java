@@ -194,7 +194,7 @@ public class RobotContainer {
                         new RunCommand(() -> { shooter.stop(); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
-                hood.setDefaultCommand(new RunCommand(() -> { hood.setPosition(40);}, hood));
+                hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe();}, hood));
 
                 robotTelemetry = new RobotTelemetry(drivetrain, powerDistribution);
                 commandUtil.registerAllNamedCommands();

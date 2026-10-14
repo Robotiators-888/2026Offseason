@@ -245,11 +245,12 @@ public class ControllerUtil {
                 Driver2.povUp().whileTrue(new RunCommand(() -> hood.set(.05), hood));
                 Driver2.povDown().whileTrue(new RunCommand(() -> hood.set(-.05), hood));
                 // POV Right: Manual hood reset
-                Driver2.povRight()
-                    .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
-                    .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+                // Driver2.povRight()
+                //     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                //     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+               Driver2.povRight().whileTrue(new RunCommand(() -> linear.set(-0.075), linear));
                 // POV Left: Manual Linear retract
-                Driver2.povLeft().whileTrue(new RunCommand(() -> linear.backward(), linear));
+                Driver2.povLeft().whileTrue(new RunCommand(() -> linear.set(0.075), linear));
         }
 
         @Deprecated

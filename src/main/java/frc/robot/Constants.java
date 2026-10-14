@@ -53,14 +53,14 @@ public final class Constants {
                 public static final double kGearRatio = 1.0588;
 
                 public static final double kSHOOTER_FLYWHEEL_kS = 0.19;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.12; //Standard free speed value :skull:
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.12+0.02; //Standard free speed value :skull:
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kP = 0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
                 /** Compression ratio applied to game piece during launch */
-                public static final double kSHOOTER_COMPRESSION_RATIO = .8; // TODO: NEED TO CHANGE THIS ASAP. THIS DETERMINES SHOOTER ACCURACY AND IS THE ONLY VARIABLE THAT NEEDS TO BE TUNED
+                public static final double kSHOOTER_COMPRESSION_RATIO = 1.0; // TODO: NEED TO CHANGE THIS ASAP. THIS DETERMINES SHOOTER ACCURACY AND IS THE ONLY VARIABLE THAT NEEDS TO BE TUNED
 
                 /** Standard acceleration due to gravity in m/s^2. */
                 public static final double kGRAVITATIONAL_CONSTANT = 9.80665;
@@ -141,7 +141,7 @@ public final class Constants {
 
                 /** Extended forward setpoint position in relative encoder rotations. */
                 // public static final double kLINEAR_FORWARD_SETPOINT = 4.2;
-                public static final double kLINEAR_FORWARD_SETPOINT = 14;
+                public static final double kLINEAR_FORWARD_SETPOINT = 16;
 
                 /** Retracted backward setpoint position in relative encoder rotations. */
                 public static final double kLINEAR_BACKWARD_SETPOINT = 0;
@@ -157,7 +157,7 @@ public final class Constants {
                     100; // Number of periodic cycles for linear intake movement
 
                 public static final int kStallLimit = 35; // Amperes
-                public static final int kFreeLimit = 5; // Amperes
+                public static final int kFreeLimit = 20; // Amperes
 
                 public static final double kTolerance =
                     0.1; // Tolerance for linear intake position in rotations
@@ -297,13 +297,13 @@ public final class Constants {
                 public static final double kS = 0.2;
                 public static final double kV = 0.0;
                 public static final double kA = 0.0;
-                public static final double kP = 50.0;
+                public static final double kP = 150.0;
                 public static final double kI = 0.0;
-                public static final double kD = 0.5;
+                public static final double kD = 1.5;
                 public static final double kG = 0.0;
 
                 public static final double kHoodTolerance =
-                    0.0028; // Tolerance for hood position in rotations
+                    (1.0/360.0); // Tolerance for hood position in rotations
         }
 
         /** Metering system motor CAN IDs. */
