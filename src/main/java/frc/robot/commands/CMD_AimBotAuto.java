@@ -55,7 +55,7 @@ public class CMD_AimBotAuto extends RunCommand {
 
         /** Physical offsets for targeting calibration */
         Translation2d shooterOffset =
-            new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
+            new Translation2d(Units.inchesToMeters(7.5), Units.inchesToMeters(0));
         Rotation2d shooterThetaOffset =
             new Rotation2d(Units.degreesToRadians(0)); // CounterClockwise Positive
 
@@ -184,21 +184,8 @@ public class CMD_AimBotAuto extends RunCommand {
                            drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
                         <= 20;
                 SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
-                double distance = drivetrain.getPose().getTranslation().getDistance(
-                    SUB_PhotonVision.getInstance()
-                        .at_field
-                        .getTagPose(
-                            DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red ? 10
-                                                                                              : 26)
-                        .map(pose
-                            -> pose.toPose2d().getTranslation().plus(new Translation2d(
-                                Units.inchesToMeters(
-                                    DriverStation.getAlliance().orElse(Alliance.Blue)
-                                            == Alliance.Red
-                                        ? -23.5
-                                        : 23.5),
-                                0)))
-                        .orElse(drivetrain.getPose().getTranslation()));
+                double distance = shooterFieldPosition.getDistance(targetTranslation);
+                SmartDashboard.putNumber("CMD_AimBot/Target Distance (m)", distance);
                 double targetFlywheelRPM = shooter.getZonedRPM(distance);
                 shooter.setRPM(targetFlywheelRPM);
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI

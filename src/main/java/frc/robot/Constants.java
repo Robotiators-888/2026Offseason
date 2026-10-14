@@ -278,7 +278,7 @@ public final class Constants {
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0, 0);
 
                 /** Scoring target height in inches. */
-                public static final double ScoreHeight = 55;
+                public static final double ScoreHeight = 55; // Hood launches balls approx 25 inches off the ground. Since the ball is 3 inches in radius, it must score at least at 72+3 inches in height to score, 25+55 = 80 giving a good buffer while still maitning all possible shots we take.
 
                 /** Gear reduction ratio for hood (12:124). */
                 public static final double kGearRatio = 124.0 / 12.0;
