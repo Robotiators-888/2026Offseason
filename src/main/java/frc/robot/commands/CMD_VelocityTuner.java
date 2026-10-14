@@ -155,6 +155,7 @@ public class CMD_VelocityTuner extends Command {
         sumXX = 0;
         n = 0; 
         skibidi = 2.0;
+        resultsSaved = false;
         timer.reset();
         timer.start();
     }
@@ -184,6 +185,7 @@ public class CMD_VelocityTuner extends Command {
                 if (currentVoltage >= 6.0) {
                     motor.setVoltage(0);
                     currentState = TuneState.DONE;
+                    saveResults();
                 }
                 break;
 
@@ -220,6 +222,8 @@ public class CMD_VelocityTuner extends Command {
                 if (skibidi > (10.0*2)+1.0) {
                     kV = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
                     motor.setVoltage(0);
+                    timer.reset();
+                    timer.start();
                     currentState = TuneState.SETUP_KP_TEST;
                 }
                 break;
@@ -227,15 +231,14 @@ public class CMD_VelocityTuner extends Command {
             case SETUP_KP_TEST: 
                 motor.setVoltage(0);
                 kpTestTargetSpeed = (6.0 - kS) / kV;
-                timer.reset();
                 t10 = -1.0;
                 t90 = -1.0;
                 v10 = 0.0;
                 v90 = 0.0;
-                // Ensure motor comes completely to rest before firing step response
-                if (motor.getVelocity().in(RPM) > 5.0) {
-                    currentState = TuneState.SETUP_KP_TEST; 
-                } else {
+                // Ensure motor comes completely to rest before firing step response (with 2.0s timeout for coast/sensor noise)
+                if (motor.getVelocity().in(RPM) <= 5.0 || timer.get() > 2.0) {
+                    timer.reset();
+                    timer.start();
                     currentState = TuneState.RUN_KP_STEP;
                 }
                 break;
@@ -319,11 +322,13 @@ public class CMD_VelocityTuner extends Command {
                     }
                     motor.setVoltage(0);
                     currentState = TuneState.DONE;
+                    saveResults();
                 }
                 break;
 
             case DONE:
                 motor.setVoltage(0);
+                saveResults();
                 break;
         }
 
@@ -351,17 +356,18 @@ public class CMD_VelocityTuner extends Command {
         return currentState == TuneState.DONE;
     }
 
+    /** Tracks whether results have already been saved to prevent duplicate writes. */
+    private boolean resultsSaved = false;
+
     /**
-     * Cleanup hook called when the command finishes or is interrupted.
-     * Safely shuts off motor voltage and prints final tuned constants to standard output.
-     *
-     * @param interrupted {@code true} if the command was cancelled prior to completing.
+     * Prints and writes tuning results to stdout and disk.
      */
-    @Override
-    public void end(boolean interrupted) {
-        motor.setVoltage(0);
-        timer.stop();
-        
+    private void saveResults() {
+        if (resultsSaved) {
+            return;
+        }
+        resultsSaved = true;
+
         System.out.println("--- TUNING RESULTS (WPILib SysId Methodology) ---");
         System.out.println("Calculated kS: " + kS + " Volts");
         System.out.println("Calculated kV: " + kV + " Volts/RPM");
@@ -369,13 +375,33 @@ public class CMD_VelocityTuner extends Command {
         System.out.println("SysId Tuned kP: " + kP + " Volts/RPM (Latency-compensated LQR, 0% overshoot, zero oscillation)");
         System.out.println("SysId Tuned kI: " + kI + " Volts/(RPM*s) (Pure feedforward tracking, zero integrator windup)");
         System.out.println("SysId Tuned kD: " + kD + " Volts/(RPM/s) (Filtered velocity state feedback)");
+
+        String filePath = "/media/sda1/logs/tunedpids" + subsystemName + ".txt";
         try {
-            java.io.FileWriter file = new java.io.FileWriter("/media/sda1/logs/tunedpids" + subsystemName + ".txt");
-            file.write(subsystemName + ": " + "kS: " + kS + " kV: " + kV + " kP: " + kP + "\n");
-            file.flush();
-            file.close();
+            java.io.File fileObj = new java.io.File(filePath);
+            if (fileObj.getParentFile() != null && !fileObj.getParentFile().exists()) {
+                fileObj.getParentFile().mkdirs();
+            }
+            try (java.io.FileWriter file = new java.io.FileWriter(fileObj)) {
+                file.write(subsystemName + ": " + "kS: " + kS + " kV: " + kV + " kP: " + kP + "\n");
+                file.flush();
+            }
+            System.out.println("Successfully saved tuning results to " + filePath);
+        } catch (java.io.IOException e) {
+            edu.wpi.first.wpilibj.DriverStation.reportError("Failed to write tuned PIDs file: " + e.getMessage(), e.getStackTrace());
         }
-        catch (java.io.IOException e) {
-        }
+    }
+
+    /**
+     * Cleanup hook called when the command finishes or is interrupted.
+     * Safely shuts off motor voltage and prints/saves final tuned constants.
+     *
+     * @param interrupted {@code true} if the command was cancelled prior to completing.
+     */
+    @Override
+    public void end(boolean interrupted) {
+        motor.setVoltage(0);
+        timer.stop();
+        saveResults();
     }
 }
