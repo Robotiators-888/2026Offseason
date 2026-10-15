@@ -52,10 +52,10 @@ public final class Constants {
                 /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
                 public static final double kGearRatio = 1.0588;
 
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.19;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.12+0.02; //Standard free speed value :skull:
+                public static final double kSHOOTER_FLYWHEEL_kS = 0.0;//0.19;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;//0.12+0.02; //Standard free speed value :skull:
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 0.15;
+                public static final double kSHOOTER_FLYWHEEL_kP = 4.0;//0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
@@ -79,7 +79,7 @@ public final class Constants {
                 public static final double kRPMZone1 = 2200.0;
                 public static final double kRPMZone2 = 2750.0;
                 public static final double kRPMZone3 = 3750.0;
-                public static final double kRPMIdle = 0;
+                public static final double kRPMIdle = kRPMZone1;
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
@@ -118,10 +118,10 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
                 public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
 
-                public static final double kS = 0.16;
-                public static final double kV = 0.00363;
+                public static final double kS = 0.0;//0.16;
+                public static final double kV = 0.0;//0.00363;
                 public static final double kA = 0.0;
-                public static final double kP = 0.2;
+                public static final double kP = 5.0;//0.2; 5A/RPS
                 public static final double kI = 0.0;
                 public static final double kD = 0.0;
         }
@@ -176,7 +176,7 @@ public final class Constants {
                 /** Operating voltage for spindexer motor in volts. */
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;
 
-                public static final int kSmartCurrentLimit = 40; // Amps
+                public static final int kSmartCurrentLimit = 20; // Amps
         }
 
         /** Field geometry and physical dimension constants in meters. */
@@ -324,12 +324,12 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 25; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.18;
-                public static final double kV = 60.0*0.005724;
+                public static final double kS = 0.0;//0.18;
+                public static final double kV = 0.0;//60.0*0.005724;
                 public static final double kA = 0.0;
-                public static final double kP = 0.25;
+                public static final double kP = 8.0;//0.25;
                 public static final double kI = 0.0;
-                public static final double kD = 0.0;
+                public static final double kD = 0.2;//0.0;
 
                 public static final double kMETERING_MOTOR_RPM =
                     1000.0; // Target RPM for metering motor

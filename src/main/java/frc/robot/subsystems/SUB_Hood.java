@@ -75,7 +75,7 @@ public class SUB_Hood extends SubsystemBase {
          */
         public void setPosition(final double angle) {
                 desiredAngle = Math.max(Constants.Hood.kMinAngle, Math.min(Constants.Hood.kMaxAngle, 90 - angle));
-                hood.setControl(positionRequest.withPosition(Degrees.of(desiredAngle)));
+                hood.setControl(positionRequest.withPosition(Degrees.of(desiredAngle)).withEnableFOC(true));
         }
 
         /**
