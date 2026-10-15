@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.Field;
 import frc.robot.Constants.Operator;
+import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_VelocityTester;
 import frc.robot.commands.CMD_VelocityTuner;
 import frc.robot.commands.Motor.SimTuneableMotor;
@@ -218,14 +219,17 @@ public class RobotContainer {
          * @return Selected autonomous {@link Command}.
          */
         public Command getAutonomousCommand() {
-                SparkTuneableMotor motor = new SparkTuneableMotor(index.RightIndexer);
-                CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor, "Index");
-                CMD_VelocityTester tester = new CMD_VelocityTester(motor, tuner);
+                // SparkTuneableMotor motor = new SparkTuneableMotor(index.RightIndexer);
+                // CMD_VelocityTuner tuner = new CMD_VelocityTuner(motor, "Index");
+                // CMD_VelocityTester tester = new CMD_VelocityTester(motor, tuner);
 
-                Command skibidi2 =  tuner.andThen(tester);
-                skibidi2.addRequirements(index);
-                return skibidi2;
-                // return Commands.none();
+                // Command skibidi2 =  tuner.andThen(tester);
+                // skibidi2.addRequirements(index);
+                // return skibidi2;
+                // // return Commands.none();
+
+                return new CMD_AimBot(drivetrain, photonVision, index,
+                    hood, metering, shooter, linear, roller);
         }
 
         /**

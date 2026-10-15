@@ -17,11 +17,9 @@ import edu.wpi.first.wpilibj.DriverStation;
  * documents its physical units (e.g. meters, volts, RPM, degrees, CAN IDs) and physical relevance.
  */
 public final class Constants {
-        private Constants() {}
 
         /** Controller port mapping and driver preference constants. */
-        public static class Operator {
-                private Operator() {}
+        public static final class Operator {
 
                 /** USB port index for primary driver Xbox controller. */
                 public static final int kDriver1ControllerPort = 0;
@@ -35,7 +33,6 @@ public final class Constants {
 
         /** Shooter motor CAN IDs, flywheel specifications, and PIDF gain parameters. */
         public static final class Shooter {
-                private Shooter() {}
 
                 /** CAN ID for follower flywheel TalonFX motor controller. */
                 public static final int kSHOOTER_FOLLOWER_MOTOR_CANID = 54;
@@ -91,7 +88,6 @@ public final class Constants {
 
         /** Intake roller motor CAN IDs, speeds, and target voltages. */
         public static final class Roller {
-                private Roller() {}
 
                 /** CAN ID for left roller SPARK Max motor controller. */
                 public static final int kINTAKE_LEFTMOTOR_CANID = 30;
@@ -100,13 +96,13 @@ public final class Constants {
                 public static final int kINTAKE_RIGHTMOTOR_CANID = 31;
 
                 /** Duty cycle speed output for intake roller motor (scaled -1.0 to 1.0). */
-                public static final double kROLLER_MOTOR_SPEED = 0.9;
+                // public static final double kROLLER_MOTOR_SPEED = 0.9;
 
-                /** Target output voltage for intake roller motors in volts. */
-                public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254;
+                // /** Target output voltage for intake roller motors in volts. */
+                // public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254;
 
                 /** Target RPM for intake roller motors. */
-                public static final double kROLLER_MOTOR_RPM = 1000;
+                public static final double kROLLER_MOTOR_RPM = 1500;
 
                 /** Outer diameter of the intake roller in inches. */
                 public static final double kRollerDiameter = 3.0;
@@ -153,8 +149,6 @@ public final class Constants {
                 public static final PIDController kLINEAR_PID_CONTROLLER =
                     new PIDController(.03, 0, 0); // 1.0 means that if the motor is off 1 rotation from its target, we will put the full 12 V to get it back. TODO: Maybe make this less for a less agressive PID since it is only lik 4.5. If there is oscillation, just lower the P
 
-                public static final double kLinearAgitatePeriodics =
-                    100; // Number of periodic cycles for linear intake movement
 
                 public static final int kStallLimit = 35; // Amperes
                 public static final int kFreeLimit = 20; // Amperes
@@ -165,7 +159,6 @@ public final class Constants {
 
         /** Spindexer and metering wheel CAN IDs, voltage limits, and calculated RPM values. */
         public static final class Index {
-                private Index() {}
 
                 /** CAN ID for spindexer motor controller. */
                 public static final int kINDEX_MOTOR_CANID = 41;
@@ -181,7 +174,6 @@ public final class Constants {
 
         /** Field geometry and physical dimension constants in meters. */
         public static final class Field {
-                private Field() {}
 
                 /** Total length of the competition field along X axis in meters. */
                 public static final double fieldLength = 1653.2 / 100.0;
@@ -192,7 +184,6 @@ public final class Constants {
 
         /** Vision camera names, filtering thresholds, and 3D transform configurations. */
         public static final class PhotonVision {
-                private PhotonVision() {}
 
                 /** Device name of camera 1 on local network. */
                 public static final String kCamName1 = "BackLeftCam";
@@ -244,8 +235,7 @@ public final class Constants {
         }
 
         /** PWM port assignments and preset Blinkin LED pattern code constants. */
-        public static class LEDs {
-                private LEDs() {}
+        public static final class LEDs {
 
                 /** PWM port assignment on roboRIO for LED light controller. */
                 public static final int kPWMPort = 9;
@@ -268,8 +258,7 @@ public final class Constants {
         }
 
         /** Adjustable hood CAN ID, PID gains, and scoring target height. */
-        public static class Hood {
-                private Hood() {}
+        public static final class Hood {
 
                 /** CAN ID for adjustable hood SPARK Max motor controller. */
                 public static final int kHOOD_CAN_ID = 55;
@@ -307,8 +296,7 @@ public final class Constants {
         }
 
         /** Metering system motor CAN IDs. */
-        public static class Metering {
-                private Metering() {}
+        public static final class Metering {
 
                 /** CAN ID for primary metering motor controller. */
                 public static final int kMETERING_MOTOR_CAN_ID = 51;

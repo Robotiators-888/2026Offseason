@@ -69,7 +69,7 @@ public class CMD_AimBot extends RunCommand {
 
         /** Profiled PID controller for heading alignment (P=5.0, I=0.0, D=0.2). */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(0.5, 0, 0.02, thetaConstraints);
+            new ProfiledPIDController(5.0, 0, 0.02, thetaConstraints);
 
         /** Status flag indicating whether heading error is within 5 degrees tolerance. */
         public static boolean isThetaErrorCorrect = false;
@@ -80,8 +80,6 @@ public class CMD_AimBot extends RunCommand {
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-        private double linearPosition;
-        private final double linearDelta;
 
         /**
          * Constructs a new AimBot command.
@@ -93,11 +91,10 @@ public class CMD_AimBot extends RunCommand {
          * @param metering The metering subsystem.
          * @param shooter The shooter subsystem.
          * @param linear The linear intake deploy subsystem.
-         * @param periodics Periodics count for linear agitation.
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter,
-            SUB_Linear linear, SUB_Roller roller, double periodics) {
+            SUB_Linear linear, SUB_Roller roller) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
@@ -108,9 +105,6 @@ public class CMD_AimBot extends RunCommand {
                 this.linear = linear;
                 this.roller = roller;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
-                linearDelta = (Constants.Linear.kLINEAR_FORWARD_SETPOINT
-                                  - Constants.Linear.kLINEAR_BACKWARD_SETPOINT)
-                    / periodics;
                 addRequirements(drivetrain, metering, index, hood, shooter, linear, roller);
         }
 
@@ -141,8 +135,6 @@ public class CMD_AimBot extends RunCommand {
                 isLocked = false;
                 running = true;
                 SUB_Shooter.isShooting = true;
-                roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM);
-                linearPosition = Constants.Linear.kLINEAR_FORWARD_SETPOINT;
         }
 
         /**
@@ -152,6 +144,7 @@ public class CMD_AimBot extends RunCommand {
          */
         @Override
         public void execute() {
+                roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM);
                 // Set up poses
                 Pose2d currentPose = drivetrain.getPose();
 
@@ -212,9 +205,6 @@ public class CMD_AimBot extends RunCommand {
 
                 // Lock wheels or drive
                 if (isThetaErrorCorrect && isLocked) {
-                    if (linearPosition > Constants.Linear.kLINEAR_BACKWARD_SETPOINT) {
-                        linearPosition -= linearDelta;
-                    }
                     drivetrain.setControl(brakeRequest);
                 } else {
                         drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
@@ -222,8 +212,6 @@ public class CMD_AimBot extends RunCommand {
                                 Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
                 }
 
-                // linear.setPosition(linearPosition);
-                // roller.stop();
         }
 
         /**

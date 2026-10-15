@@ -41,6 +41,8 @@ public class ControllerUtil {
         /** Target flywheel RPM setpoint in revolutions per minute. */
         public double targetRPM = 1000;
 
+        public double hoodPosition = 0;
+
         /** Scheduled command for automatic trench alignment. */
         private Command trenchAlign = Commands.none();
 
@@ -162,10 +164,10 @@ public class ControllerUtil {
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 // Left Trigger: Run intake roller
                 Driver1.leftTrigger().whileTrue(Commands.run(
-                    () -> { roller.setRPM(1000); }, roller));
+                    () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
-                    hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));
+                    hood, metering, shooter, linear, roller));
                 // Left Stick Button: Toggle field-relative driving mode
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));
@@ -242,15 +244,14 @@ public class ControllerUtil {
                         metering.setRPM(-500);
                 }, index, metering));
                 // POV Up/Down: Manual hood control
-                Driver2.povUp().whileTrue(new RunCommand(() -> hood.set(.05), hood));
-                Driver2.povDown().whileTrue(new RunCommand(() -> hood.set(-.05), hood));
+                Driver2.povUp().whileTrue(new InstantCommand(() -> { hoodPosition = Math.min(Constants.Hood.kMaxAngle, hoodPosition+3); }));
+                Driver2.povDown().whileTrue(new InstantCommand(() -> { hoodPosition = Math.max(Constants.Hood.kMinAngle, hoodPosition-3); }));
                 // POV Right: Manual hood reset
-                // Driver2.povRight()
-                //     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
-                //     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
-               Driver2.povRight().whileTrue(new RunCommand(() -> linear.set(-0.075), linear));
-                // POV Left: Manual Linear retract
-                Driver2.povLeft().whileTrue(new RunCommand(() -> linear.set(0.075), linear));
+                Driver2.povRight()
+                    .whileTrue(new RunCommand(() -> hood.set(-.05), hood))
+                    .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
+
+                Driver2.leftTrigger().whileTrue(new RunCommand(() -> hood.setPosition(hoodPosition), hood));
         }
 
         @Deprecated

@@ -75,7 +75,7 @@ public class CommandUtil {
                 // Shooter and Indexer
                 NamedCommands.registerCommand("ShootAutoAim",
                     new CMD_AimBotAuto(
-                        drivetrain, photonVision, index, hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));
+                        drivetrain, photonVision, index, hood, metering, shooter, linear, roller));
 
                 NamedCommands.registerCommand("StopShooting",
                     Commands.parallel(new InstantCommand(() -> { index.set(0); }, index),
