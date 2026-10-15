@@ -162,7 +162,7 @@ public class ControllerUtil {
                     .onFalse(new InstantCommand(() -> { trenchAligning = false; }));
                 // Left Trigger: Run intake roller
                 Driver1.leftTrigger().whileTrue(Commands.run(
-                    () -> { roller.set(.75); }, roller));
+                    () -> { roller.setRPM(1000); }, roller));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
                     hood, metering, shooter, linear, roller, Constants.Linear.kLinearAgitatePeriodics));

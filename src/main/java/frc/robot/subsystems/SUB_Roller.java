@@ -49,6 +49,9 @@ public class SUB_Roller extends SubsystemBase {
 
         private static SUB_Roller INSTANCE = null;
 
+
+        private double request = 0.0;
+
         /**
          * Singleton pattern provider for the roller subsystem.
          *
@@ -110,6 +113,7 @@ public class SUB_Roller extends SubsystemBase {
         }
 
         public void setRPM(final double rpm) {
+                request = rpm;
                 LeftRollerMotor.setControl(velocityTorqueRequest.withVelocity(RPM.of(rpm)));
         }
 
@@ -147,6 +151,7 @@ public class SUB_Roller extends SubsystemBase {
         public void periodic() {
                 // Telemetry logging for dashboard
                 SmartDashboard.putNumber("Roller/Roller Average RPM", rollerRPM());
+                SmartDashboard.putNumber("Roller/Roller Requested RPM",request);
                 SmartDashboard.putNumber("Roller/Left Roller Encoder Pos",
                     LeftRollerMotor.getPosition().getValueAsDouble());
                 SmartDashboard.putNumber("Roller/Right Roller Encoder Pos",

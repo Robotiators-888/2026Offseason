@@ -52,10 +52,10 @@ public final class Constants {
                 /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
                 public static final double kGearRatio = 1.0588;
 
-                public static final double kSHOOTER_FLYWHEEL_kS = 0.19;
-                public static final double kSHOOTER_FLYWHEEL_kV = 0.12+0.02; //Standard free speed value :skull:
+                public static final double kSHOOTER_FLYWHEEL_kS = 25.0;//0.19;
+                public static final double kSHOOTER_FLYWHEEL_kV = 0.0;//0.12+0.02; //Standard free speed value :skull:
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 0.15;
+                public static final double kSHOOTER_FLYWHEEL_kP = 8.0;//0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
@@ -118,10 +118,10 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 15; // Amperes
                 public static final double kSupplyCurrentLowerTime = 1.0; // Seconds
 
-                public static final double kS = 0.16;
-                public static final double kV = 0.00363;
+                public static final double kS = 2.8;//0.16;
+                public static final double kV = 0.0;//0.00363;
                 public static final double kA = 0.0;
-                public static final double kP = 0.2;
+                public static final double kP = 4.0;//0.2;
                 public static final double kI = 0.0;
                 public static final double kD = 0.0;
         }
@@ -208,8 +208,8 @@ public final class Constants {
 
                 /** 3D rotation of back-left camera relative to robot frame (radians). */ // TODO: GET THESE VALUES FROM THE CAD. WE DON'T HAVE TIME TO MEASUR THIS ON THE FIELD
                 public static final Rotation3d cameraRotation =
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                        Units.degreesToRadians(172 - 90));
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0),
+                        Units.degreesToRadians(90));
 
                 /** Physical 3D offset transform of back-left camera from robot center. */
                 public static final Transform3d kRobotToCamera1 =
@@ -221,8 +221,8 @@ public final class Constants {
 
                 // /** 3D rotation of back-right camera relative to robot frame (radians). */
                 public static final Rotation3d cameraRotation2 =
-                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-25),
-                        Units.degreesToRadians(-172 + 90));
+                    new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(0),
+                        Units.degreesToRadians(-90));
 
                 /** Physical 3D offset transform of back-right camera from robot center. */
                 public static final Transform3d kRobotToCamera2 =
@@ -324,10 +324,10 @@ public final class Constants {
                 public static final double kSupplyCurrentLowerLimit = 25; // Amperes
                 public static final double kSupplyCurrentLowerTime = 0.5; // Seconds
 
-                public static final double kS = 0.18;
-                public static final double kV = 60.0*0.005724;
+                public static final double kS = 6.7646;//0.18;
+                public static final double kV = 0.0;//60.0*0.005724;
                 public static final double kA = 0.0;
-                public static final double kP = 0.25;
+                public static final double kP = 4.0;//0.25;
                 public static final double kI = 0.0;
                 public static final double kD = 0.0;
 
