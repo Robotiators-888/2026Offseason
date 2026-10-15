@@ -35,6 +35,9 @@ public class SUB_Metering extends SubsystemBase {
         private final VelocityVoltage velocityRequest =
             new VelocityVoltage(0).withSlot(0);
 
+        private final VelocityTorqueCurrentFOC velocityTorqueRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
+
         private final CoastOut coastRequest = new CoastOut();
 
         private static SUB_Metering INSTANCE = null;
@@ -99,7 +102,7 @@ public class SUB_Metering extends SubsystemBase {
         }
 
         public void setRPM(final double rpm) {
-                metering.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+                metering.setControl(velocityTorqueRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**

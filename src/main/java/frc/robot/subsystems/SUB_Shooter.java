@@ -39,6 +39,9 @@ public class SUB_Shooter extends SubsystemBase {
         // private final VelocityVoltage m_request = new VelocityVoltage(0);
         private final VelocityVoltage velocityRequest =
             new VelocityVoltage(0).withSlot(0);
+
+        private final VelocityTorqueCurrentFOC velocityTorqueRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
         private double desiredSpeed = 0;
         private final TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
         private final TalonFXConfiguration shooterLowConfig = new TalonFXConfiguration();
@@ -130,7 +133,6 @@ public class SUB_Shooter extends SubsystemBase {
 
                 shooterLeader.getConfigurator().apply(shooterConfig);
                 shooterFollower.getConfigurator().apply(shooterConfig);
-
                 // Synchronize bottom flywheel to top flywheel
                 shooterFollower.setControl(
                     new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
@@ -175,7 +177,7 @@ public class SUB_Shooter extends SubsystemBase {
          */
         public void setRPM(final double rpm) {
                 this.desiredSpeed = rpm;
-                shooterLeader.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+                shooterLeader.setControl(velocityTorqueRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**

@@ -44,6 +44,9 @@ public class SUB_Roller extends SubsystemBase {
         private final VelocityVoltage velocityRequest =
             new VelocityVoltage(0).withSlot(0);
 
+        private final VelocityTorqueCurrentFOC velocityTorqueRequest =
+            new VelocityTorqueCurrentFOC(0).withSlot(0);
+
         private static SUB_Roller INSTANCE = null;
 
         /**
@@ -107,7 +110,7 @@ public class SUB_Roller extends SubsystemBase {
         }
 
         public void setRPM(final double rpm) {
-                LeftRollerMotor.setControl(velocityRequest.withVelocity(RPM.of(rpm)));
+                LeftRollerMotor.setControl(velocityTorqueRequest.withVelocity(RPM.of(rpm)));
         }
 
         /**
