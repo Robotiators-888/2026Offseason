@@ -244,8 +244,8 @@ public class ControllerUtil {
                         metering.setRPM(-500);
                 }, index, metering));
                 // POV Up/Down: Manual hood control
-                Driver2.povUp().whileTrue(new InstantCommand(() -> { hoodPosition = Math.min(Constants.Hood.kMaxAngle, hoodPosition+3); }));
-                Driver2.povDown().whileTrue(new InstantCommand(() -> { hoodPosition = Math.max(Constants.Hood.kMinAngle, hoodPosition-3); }));
+                Driver2.povUp().onTrue(new InstantCommand(() -> { hoodPosition = Math.min(Constants.Hood.kMaxAngle, hoodPosition+3); }));
+                Driver2.povDown().onTrue(new InstantCommand(() -> { hoodPosition = Math.max(Constants.Hood.kMinAngle, hoodPosition-3); }));
                 // POV Right: Manual hood reset
                 Driver2.povRight()
                     .whileTrue(new RunCommand(() -> hood.set(-.05), hood))

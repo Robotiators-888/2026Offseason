@@ -230,6 +230,8 @@ public class RobotContainer {
 
                 return new CMD_AimBot(drivetrain, photonVision, index,
                     hood, metering, shooter, linear, roller);
+
+                // return autoChooser.getSelected();
         }
 
         /**

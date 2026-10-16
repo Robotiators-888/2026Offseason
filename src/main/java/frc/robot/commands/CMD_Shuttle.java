@@ -14,6 +14,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
@@ -33,7 +34,7 @@ import frc.robot.subsystems.SUB_Shooter;
 public class CMD_Shuttle extends RunCommand {
         /** Physical offsets for targeting calibration */
         Translation2d shooterOffset =
-            new Translation2d(Units.inchesToMeters(0), Units.inchesToMeters(0));
+            new Translation2d(Units.inchesToMeters(-7.5), Units.inchesToMeters(0));
         /** Subsystems and state variables for shuttle targeting */
         private SUB_Index index;
         private SUB_Shooter shooter;
@@ -64,7 +65,7 @@ public class CMD_Shuttle extends RunCommand {
          * D=0.2).
          */
         private final ProfiledPIDController robotAngleController =
-            new ProfiledPIDController(5.0, 0, 0.2, thetaConstraints);
+            new ProfiledPIDController(3.0, 0, 0.0, thetaConstraints);
         private Pose2d targetPose = new Pose2d();
         private boolean isThetaErrorCorrect;
         private boolean isLocked = false;
@@ -148,15 +149,17 @@ public class CMD_Shuttle extends RunCommand {
                            drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble())
                         <= 40;
 
+                SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
                 double distance = shooterPosition.getDistance(targetTranslation);
-                double targetFlywheelRPM = shooter.getZonedRPM(distance);
+                double hoodAngle = SUB_Hood.findoptimalangle(distance);
+                SmartDashboard.putNumber("CMD_AimBot/Target Distance (m)", distance);
+                SmartDashboard.putNumber("CMD_AimBot/Target Hood Angle (°)", 90 - Units.radiansToDegrees(hoodAngle));
+                hood.setPosition(Units.radiansToDegrees(hoodAngle));
+                double targetFlywheelRPM = SUB_Shooter.findoptimalRPM(distance,hoodAngle);
+                SmartDashboard.putNumber("CMD_AimBot/Target Flywheel RPM", targetFlywheelRPM);
                 shooter.setRPM(targetFlywheelRPM);
-                
-                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
-                                          * Constants.Shooter.ShooterDiameter * targetFlywheelRPM)
-                    / (720 * 3.281);
-                hood.setPosition(Units.radiansToDegrees(
-                    SUB_Hood.calculateLaunchAngle(distance, 0.0, exitVelocity, true)));
+                double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
+                SmartDashboard.putNumber("CMD_AimBot/Exit Velocity (m per s)",exitVelocity);
 
                 boolean isShooterReady = shooter.atDesiredRPM();
 

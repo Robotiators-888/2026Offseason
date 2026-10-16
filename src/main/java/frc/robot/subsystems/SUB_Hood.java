@@ -71,7 +71,7 @@ public class SUB_Hood extends SubsystemBase {
         /**
          * Drives the hood motor to a specified target position using PID control.
          *
-         * @param angle Target position in motor rotations.
+         * @param angle Target position in motor degrees.
          */
         public void setPosition(final double angle) {
                 desiredAngle = Math.max(Constants.Hood.kMinAngle, Math.min(Constants.Hood.kMaxAngle, 90 - angle));
