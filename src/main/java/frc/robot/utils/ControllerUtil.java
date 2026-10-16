@@ -154,6 +154,7 @@ public class ControllerUtil {
                                     trenchAlign =
                                         AutoBuilder
                                             .pathfindThenFollowPath(selectedPath, constraints)
+                                            .alongWith(new RunCommand(() -> hood.resetSafe(), hood))
                                             .until(() -> { return !trenchAligning; });
                                     trenchAlign.schedule();
                             } catch (Exception e) {
