@@ -204,8 +204,8 @@ public final class Constants {
 
                 /** Physical 3D offset transform of back-left camera from robot center. */
                 public static final Transform3d kRobotToCamera1 =
-                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(10.5),
-                        Units.inchesToMeters(7.8), cameraRotation);
+                    new Transform3d(Units.inchesToMeters((-(27.0/2.0)) + (1.0 + (1.0 / 8.0))), Units.inchesToMeters((27.0/2.0)),
+                        Units.inchesToMeters(11.5), cameraRotation);
 
                 /** Device name of camera 2 on local network. */
                 public static final String kCam2Name = "BackRightCam";
@@ -217,8 +217,8 @@ public final class Constants {
 
                 /** Physical 3D offset transform of back-right camera from robot center. */
                 public static final Transform3d kRobotToCamera2 =
-                    new Transform3d(Units.inchesToMeters(-11.55), Units.inchesToMeters(-10.5),
-                        Units.inchesToMeters(7.8), cameraRotation2);
+                    new Transform3d(Units.inchesToMeters((-(27.0/2.0)) + 1.0), Units.inchesToMeters(-(27.0/2.0)),
+                        Units.inchesToMeters(16.75), cameraRotation2);
 
                 /** Device name of camera 3 on local network. */
                 public static final String kCam3Name = "HighCam";
