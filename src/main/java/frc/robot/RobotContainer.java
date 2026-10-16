@@ -9,6 +9,8 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.ControlModeValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -81,12 +83,12 @@ public class RobotContainer {
         private static final SUB_PhotonVision photonVision = SUB_PhotonVision.getInstance();
 
         /** Maximum linear velocity of the robot in meters/second. */
-        private double MaxSpeed = 0.5
+        private double MaxSpeed = 1.0
             * TunerConstants.kSpeedAt12Volts.in(
                 MetersPerSecond); // kSpeedAt12Volts desired top speed
 
         /** Maximum angular rate of the robot in radians/second (0.75 rot/s). */
-        private double MaxAngularRate = 0.5 * RotationsPerSecond.of(0.75).in(
+        private double MaxAngularRate = 1.0 * RotationsPerSecond.of(0.75).in(
             RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
         /** Flywheel shooter subsystem instance. */
@@ -170,6 +172,9 @@ public class RobotContainer {
          * button bindings, and sets up the autonomous chooser.
          */
         public RobotContainer() {
+
+                drivetrain.configNeutralMode(NeutralModeValue.Coast);
+
                 field = new Field2d();
                 drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> {
                         double xInput = xLimiter.calculate(
@@ -189,10 +194,9 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> { linear.set(0); }, linear));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
                 shooter.setDefaultCommand(
-                //     new RunCommand(() -> { shooter.setRPM(Constants.Shooter.kRPMIdle); }, shooter));
-                        new RunCommand(() -> { shooter.stop(); }, shooter));
+                    new RunCommand(() -> { shooter.setRPM(Constants.Shooter.kRPMIdle); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
                 metering.setDefaultCommand(new RunCommand(() -> { metering.setRPM(0); }, metering));
                 hood.setDefaultCommand(new RunCommand(() -> { hood.resetSafe();}, hood));
@@ -250,6 +254,9 @@ public class RobotContainer {
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)",
                     drivetrain.getPigeon2().getAngularVelocityZDevice().getValueAsDouble());
                 robotTelemetry.update();
+
+                SmartDashboard.putNumber("Module 0 Control Mode Value", drivetrain.getControlModeValue(0).ordinal());
+                        
         }
 
         /**

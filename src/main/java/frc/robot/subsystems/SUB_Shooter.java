@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.RPM;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -38,7 +39,7 @@ public class SUB_Shooter extends SubsystemBase {
         // Not used since it is replaced by velocityRequest
         // private final VelocityVoltage m_request = new VelocityVoltage(0);
         private final VelocityVoltage velocityRequest =
-            new VelocityVoltage(0).withSlot(0);
+            new VelocityVoltage(0).withEnableFOC(true).withSlot(0);
 
         private final VelocityTorqueCurrentFOC velocityTorqueRequest =
             new VelocityTorqueCurrentFOC(0).withSlot(0);
@@ -269,6 +270,8 @@ public class SUB_Shooter extends SubsystemBase {
                     "Shooter/FlywheelRPM (Two)", shooterFollower.getVelocity().getValue().in(RPM));
 
                 SmartDashboard.putNumber("Shooter/FlywheelRPM (Average)", flywheelRPM());
+
+                SmartDashboard.putBoolean("Shooter/IsShooting",SUB_Shooter.isShooting);
 
                 Alert.alertKraken(shooterLeader);
                 Alert.alertKraken(shooterFollower);

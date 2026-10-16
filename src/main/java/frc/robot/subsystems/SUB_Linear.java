@@ -112,6 +112,7 @@ public class SUB_Linear extends SubsystemBase {
          *
          * @param controller Positional PIDController for motion calculations.
          */
+        @Deprecated
         public void backward() {
                 linear.set(Constants.Linear.kLINEAR_PID_CONTROLLER.calculate(
                     linear.getEncoder().getPosition(), Constants.Linear.kLINEAR_BACKWARD_SETPOINT));

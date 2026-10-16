@@ -42,7 +42,7 @@ public class SUB_Roller extends SubsystemBase {
         private final DutyCycleOut dutyCycleRequest = new DutyCycleOut(0);
 
         private final VelocityVoltage velocityRequest =
-            new VelocityVoltage(0).withSlot(0);
+            new VelocityVoltage(0).withEnableFOC(true).withSlot(0);
 
         private final VelocityTorqueCurrentFOC velocityTorqueRequest =
             new VelocityTorqueCurrentFOC(0).withSlot(0);

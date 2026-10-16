@@ -33,7 +33,7 @@ public class SUB_Metering extends SubsystemBase {
         public final TalonFX meteringFollower;
 
         private final VelocityVoltage velocityRequest =
-            new VelocityVoltage(0).withSlot(0);
+            new VelocityVoltage(0).withEnableFOC(true).withSlot(0);
 
         private final VelocityTorqueCurrentFOC velocityTorqueRequest =
             new VelocityTorqueCurrentFOC(0).withSlot(0);

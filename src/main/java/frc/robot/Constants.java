@@ -76,7 +76,7 @@ public final class Constants {
                 public static final double kRPMZone1 = 2200.0;
                 public static final double kRPMZone2 = 2750.0;
                 public static final double kRPMZone3 = 3750.0;
-                public static final double kRPMIdle = 0;
+                public static final double kRPMIdle = 1500.0;
 
                 public static final double kZone3ThresholdMeters = 6.0;
                 public static final double kZone2InitialThresholdMeters = 3.2;
@@ -169,7 +169,7 @@ public final class Constants {
                 /** Operating voltage for spindexer motor in volts. */
                 public static final double kINDEX_MOTOR_VOLTS = 8.5;
 
-                public static final int kSmartCurrentLimit = 40; // Amps
+                public static final int kSmartCurrentLimit = 15; // Amps
         }
 
         /** Field geometry and physical dimension constants in meters. */

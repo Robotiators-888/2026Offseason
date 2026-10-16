@@ -26,7 +26,7 @@ public class SUB_Hood extends SubsystemBase {
         public final TalonFX hood;
 
         private final PositionVoltage positionRequest =
-            new PositionVoltage(0).withSlot(0);
+            new PositionVoltage(0).withEnableFOC(true).withSlot(0);
 
         private double desiredAngle = 0;
 
