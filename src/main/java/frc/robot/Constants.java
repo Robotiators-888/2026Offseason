@@ -221,16 +221,16 @@ public final class Constants {
                         Units.inchesToMeters(16.75), cameraRotation2);
 
                 /** Device name of camera 3 on local network. */
-                public static final String kCam3Name = "HighCam";
+                public static final String kCam3Name = "ShooterCam";
 
                 /** 3D rotation of high camera relative to robot frame (radians). */
                 public static final Rotation3d cameraRotation3 =
                     new Rotation3d(Units.degreesToRadians(0), Units.degreesToRadians(-15),
-                        Units.degreesToRadians(180));
+                        Units.degreesToRadians(180 + 1));
 
                 /** Physical 3D offset transform of high camera from robot center. */
                 public static final Transform3d kRobotToCamera3 =
-                    new Transform3d(Units.inchesToMeters(-13.5), Units.inchesToMeters(0),
+                    new Transform3d(Units.inchesToMeters(-13.5 + (7.0 / 16.0)), Units.inchesToMeters(0),
                         Units.inchesToMeters(16.5), cameraRotation3);
         }
 

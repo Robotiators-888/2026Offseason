@@ -198,10 +198,23 @@ class Traj:
         r1 = float(ges.get("rotation", 0.0))
         self.v0 = float(iss.get("velocity", 0.0))
         self.v1 = float(ges.get("velocity", 0.0))
-        rts = d.get("rotationTargets", [])
-        gc = d.get("globalConstraints", {})
+        rts = sorted(d.get("rotationTargets", []), key=lambda r: float(r["waypointRelativePos"]))
+        if d.get("useDefaultConstraints", False):
+            gc = {}
+        else:
+            gc = d.get("globalConstraints", {}) or {}
         mv = float(gc.get("maxVelocity", MV))
         ma = float(gc.get("maxAcceleration", MA))
+        zones = d.get("constraintZones", []) or []
+
+        def lim_at(rp):
+            zv, za = mv, ma
+            for z in zones:
+                if float(z.get("minWaypointRelativePos", 0)) <= rp <= float(z.get("maxWaypointRelativePos", 0)):
+                    c = z.get("constraints", {})
+                    zv = float(c.get("maxVelocity", zv))
+                    za = float(c.get("maxAcceleration", za))
+            return zv, za
 
         raw = []
         seg_n = 50
@@ -249,12 +262,15 @@ class Traj:
 
         ac = COF * G
         vlim = []
+        alim = []
         for k in range(N):
             x, y, dx, dy, ddx, ddy, rp = raw[k]
+            zv, za = lim_at(rp)
+            alim.append(za)
             sp2 = dx * dx + dy * dy
             curv = abs(dx * ddy - dy * ddx) / (sp2 ** 1.5) if sp2 > 1e-6 else 0.0
-            vc = math.sqrt(ac / curv) if curv > 1e-4 else mv
-            vlim.append(min(mv, max(1.0, vc)))
+            vc = math.sqrt(ac / curv) if curv > 1e-4 else zv
+            vlim.append(min(zv, max(min(1.0, zv), vc)))
 
         vp = list(vlim)
         vp[0] = min(vp[0], self.v0) if self.v0 > 0.0 else min(vp[0], 0.2)
@@ -262,11 +278,11 @@ class Traj:
 
         for k in range(1, N):
             ds = cum[k] - cum[k-1]
-            vp[k] = min(vp[k], math.sqrt(vp[k-1]**2 + 2.0 * ma * ds))
+            vp[k] = min(vp[k], math.sqrt(vp[k-1]**2 + 2.0 * alim[k-1] * ds))
 
         for k in range(N - 2, -1, -1):
             ds = cum[k+1] - cum[k]
-            vp[k] = min(vp[k], math.sqrt(vp[k+1]**2 + 2.0 * ma * ds))
+            vp[k] = min(vp[k], math.sqrt(vp[k+1]**2 + 2.0 * alim[k] * ds))
 
         tms = [0.0]
         for k in range(1, N):
@@ -786,10 +802,13 @@ class E:
         self.elapsed_t = 0.0
         self.completed_t = None
         self.theo_duration = 0.0
+        self.started = False
 
     def load_auto(self, aname, mx=False, my=False):
         self.cache.clear()
         self.active = False
+        self.started = False
+        self.exec = None
         self.cur_cmd = "Idle"
         if aname == "Stay Still (Idle)" or not aname:
             self.root = Node("wait", {"waitTime": 9999.0})
@@ -861,11 +880,14 @@ class E:
             elif n.t == "sequential":
                 return sum(calc_node_duration(c) for c in n.ch)
             elif n.t == "parallel":
-                # Primary command (index 0) dictates duration in ParallelCommandGroup
+                # ParallelCommandGroup waits for every command
+                return max((calc_node_duration(c) for c in n.ch), default=0.0)
+            elif n.t == "deadline":
+                # Deadline group ends when its first command ends
                 return calc_node_duration(n.ch[0]) if n.ch else 0.0
             elif n.t == "race":
-                # Race ends on the fastest command
-                durs = [calc_node_duration(c) for c in n.ch if calc_node_duration(c) > 0.0]
+                # Race ends on the fastest command (named commands never finish on their own)
+                durs = [x for x in (calc_node_duration(c) for c in n.ch) if x > 0.0]
                 return min(durs) if durs else 0.0
             return 0.0
 
@@ -888,19 +910,26 @@ class E:
         self.cur_cmd = "Idle"
 
     def start(self):
-        if self.root:
+        if not self.root:
+            return
+        # Resume where we paused; only rebuild if never started or already finished
+        if self.exec is None or self.completed_t is not None or not self.started:
+            if self.completed_t is not None:
+                self.reset_robot_pose()
             self.exec = self.build_exec(self.root)
-            self.active = True
-            self.cur_cmd = "Running Auto"
+            self.started = True
+        self.active = True
+        self.cur_cmd = "Running Auto"
 
     def stop(self):
         self.active = False
         self.r.vx = 0.0
         self.r.vy = 0.0
         self.r.w_rot = 0.0
-        self.r.intake = False
-        self.r.shooting = False
-        self.cur_cmd = "Idle"
+        if not self.started:
+            self.r.intake = False
+            self.r.shooting = False
+        self.cur_cmd = "Paused" if self.started and self.completed_t is None else "Idle"
 
     def update(self, dt):
         self.dt = dt
@@ -908,6 +937,7 @@ class E:
             self.elapsed_t += dt
             if self.exec:
                 if self.exec["step"]():
+                    self.exec["end"]()
                     self.active = False
                     self.completed_t = self.elapsed_t
                     self.r.vx = 0.0
@@ -917,6 +947,12 @@ class E:
                     self.r.shooting = False
                     self.cur_cmd = f"Completed ({self.completed_t:.2f}s)"
 
+    # Each exec node is {"type", "step": () -> finished?, "end": () -> None}.
+    # "end" mirrors WPILib Command.end(): called once when the command finishes or is interrupted.
+    @staticmethod
+    def _mk(typ, step, end=None):
+        return {"type": typ, "step": step, "end": end or (lambda: None)}
+
     def build_exec(self, n):
         t = n.t
         d = n.d
@@ -925,32 +961,38 @@ class E:
             st = {"idx": 0}
             def step_seq():
                 while st["idx"] < len(cx):
-                    if cx[st["idx"]]["step"]():
+                    c = cx[st["idx"]]
+                    if c["step"]():
+                        c["end"]()
                         st["idx"] += 1
                     else:
                         return False
                 return True
-            return {"type": "seq", "step": step_seq}
+            def end_seq():
+                if st["idx"] < len(cx):
+                    cx[st["idx"]]["end"]()
+            return self._mk("seq", step_seq, end_seq)
 
-        elif t == "parallel":
+        elif t in ("parallel", "deadline", "race"):
             cx = [self.build_exec(c) for c in n.ch]
-            def step_par():
-                pdone = False
+            done = [False] * len(cx)
+            def step_grp():
                 for i, c in enumerate(cx):
-                    done = c["step"]()
-                    if i == 0 and done:
-                        pdone = True
-                return pdone
-            return {"type": "par", "step": step_par}
-
-        elif t == "race":
-            cx = [self.build_exec(c) for c in n.ch]
-            def step_race():
-                for c in cx:
-                    if c["step"]():
-                        return True
-                return False
-            return {"type": "race", "step": step_race}
+                    if not done[i] and c["step"]():
+                        c["end"]()
+                        done[i] = True
+                if t == "parallel":
+                    return all(done)
+                if t == "deadline":
+                    return done[0] if cx else True
+                return any(done) or not cx
+            def end_grp():
+                # Interrupt everything still running
+                for i, c in enumerate(cx):
+                    if not done[i]:
+                        c["end"]()
+                        done[i] = True
+            return self._mk(t, step_grp, end_grp)
 
         elif t == "wait":
             wt = float(d.get("waitTime", 1.0))
@@ -958,66 +1000,65 @@ class E:
             def step_wait():
                 st["t"] += self.dt
                 return st["t"] >= wt
-            return {"type": "wait", "step": step_wait}
+            return self._mk("wait", step_wait)
 
         elif t == "path":
             pn = d.get("pathName")
             tr = self.cache.get(pn)
-            dur = tr.tot_t if tr else 1.0
+            dur = tr.tot_t if tr else 0.0
             st = {"t": 0.0}
             def step_pth():
+                if not tr:
+                    self.cur_cmd = f"Missing path: {pn}"
+                    return True
                 st["t"] += self.dt
-                if tr:
-                    s = tr.sample(st["t"])
-                    tx, ty, trot = s["x"], s["y"], s["rot"]
-                    fvx, fvy, fw = s["vx"], s["vy"], s["w"]
-                    ex, ey = tx - self.r.x, ty - self.r.y
-                    cvx = fvx + 10.0 * ex
-                    cvy = fvy + 10.0 * ey
-                    spd = math.hypot(cvx, cvy)
-                    max_v = max(5.36, MV * 1.15)
-                    if spd > max_v:
-                        sc = max_v / spd
-                        cvx *= sc
-                        cvy *= sc
-                    dth = a_diff(trot, self.r.th)
-                    cw = max(-MAW, min(MAW, fw + 10.0 * dth))
-                    self.r.vx = cvx
-                    self.r.vy = cvy
-                    self.r.w_rot = cw
-                    self.r.x += self.r.vx * self.dt
-                    self.r.y += self.r.vy * self.dt
-                    self.r.th = n_ang(self.r.th + self.r.w_rot * self.dt)
+                s = tr.sample(st["t"])
+                # PPHolonomicDriveController: feedforward + P(10) on translation and rotation
+                ex, ey = s["x"] - self.r.x, s["y"] - self.r.y
+                cvx = s["vx"] + 10.0 * ex
+                cvy = s["vy"] + 10.0 * ey
+                spd = math.hypot(cvx, cvy)
+                max_v = max(5.36, MV * 1.15)
+                if spd > max_v:
+                    sc = max_v / spd
+                    cvx *= sc
+                    cvy *= sc
+                dth = a_diff(s["rot"], self.r.th)
+                cw = max(-MAW, min(MAW, s["w"] + 10.0 * dth))
+                self.r.vx = cvx
+                self.r.vy = cvy
+                self.r.w_rot = cw
+                self.r.x += cvx * self.dt
+                self.r.y += cvy * self.dt
+                self.r.th = n_ang(self.r.th + cw * self.dt)
                 self.cur_cmd = f"Path: {pn}"
-                if st["t"] >= dur:
-                    if tr and tr.v1 > 0.5:
-                        return True
-                    err = math.hypot(s["x"] - self.r.x, s["y"] - self.r.y) if tr else 0.0
-                    if err < 0.15 or st["t"] >= dur + 0.35:
-                        self.r.vx = 0.0
-                        self.r.vy = 0.0
-                        self.r.w_rot = 0.0
-                        return True
-                return False
-            return {"type": "path", "step": step_pth}
+                # PathPlanner's FollowPathCommand finishes when trajectory time elapses
+                return st["t"] >= dur
+            def end_pth():
+                if not tr or tr.v1 < 0.05:
+                    self.r.vx = 0.0
+                    self.r.vy = 0.0
+                    self.r.w_rot = 0.0
+            return self._mk("path", step_pth, end_pth)
 
         elif t == "named":
-            nm = d.get("name")
-            return self.build_named(nm)
+            return self.build_named(d.get("name"))
 
-        return {"type": "noop", "step": lambda: True}
+        return self._mk("noop", lambda: True)
 
     def build_named(self, nm):
         if nm == "ShootAutoAim":
-            st = {"t": 0.0, "shots": 0, "cd": 0.0}
+            # Mirrors CMD_AimBotAuto: rotate to hub, spin up, feed; also runs the roller. Never finishes
+            # on its own on the robot; in sim it ends once the hopper has been empty for 0.5s.
+            st = {"t": 0.0, "cd": 0.0, "empty_t": 0.0}
             def step_shoot():
                 st["t"] += self.dt
                 st["cd"] -= self.dt
+                self.r.intake = True
                 thub = self.fld.tgt_hub(self.r.al)
                 sp = self.r.shooter_pos()
                 dist = math.hypot(thub[0] - sp[0], thub[1] - sp[1])
-                req_rpm = get_rpm(dist, self.r.rpm)
-                self.r.tgt_rpm = req_rpm
+                self.r.tgt_rpm = get_rpm(dist, self.r.tgt_rpm)
                 if self.r.rpm < self.r.tgt_rpm:
                     self.r.rpm = min(self.r.tgt_rpm, self.r.rpm + 4000.0 * self.dt)
                 else:
@@ -1032,33 +1073,43 @@ class E:
 
                 rpm_ok = abs(self.r.rpm - self.r.tgt_rpm) <= 75.0
                 th_ok = abs(dth) < math.radians(3.0)
-                locked = rpm_ok and th_ok
-
-                if locked:
+                if rpm_ok and th_ok:
                     self.r.shooting = True
                     self.cur_cmd = f"AimBot [LOCKED]: {int(self.r.rpm)} RPM"
                     if st["cd"] <= 0.0 and self.r.hp > 0:
                         if self.r.shoot(self.fld, thub):
-                            st["shots"] += 1
                             st["cd"] = 0.05
                 else:
                     self.r.shooting = False
                     self.cur_cmd = f"AimBot [ALIGNING]: {int(self.r.rpm)} RPM"
 
-                if (self.r.hp == 0 and st["shots"] > 0) or st["t"] >= 3.0:
-                    self.r.shooting = False
-                    return True
-                return False
-            return {"type": "named", "step": step_shoot}
+                st["empty_t"] = st["empty_t"] + self.dt if self.r.hp <= 0 else 0.0
+                return st["empty_t"] >= 0.5
+            def end_shoot():
+                self.r.shooting = False
+                self.r.intake = False
+                self.r.w_rot = 0.0
+            return self._mk("named", step_shoot, end_shoot)
 
         elif nm == "Intake":
+            # RunCommand on the robot: runs until interrupted (e.g. by the race finishing)
             def step_intake():
                 self.r.intake = True
-                self.cur_cmd = "Intake [ACTIVE]"
-                return True
-            return {"type": "named", "step": step_intake}
+                if not self.cur_cmd.startswith("Path"):
+                    self.cur_cmd = "Intake [ACTIVE]"
+                return False
+            def end_intake():
+                self.r.intake = False
+            return self._mk("named", step_intake, end_intake)
 
-        return {"type": "noop", "step": lambda: True}
+        elif nm == "StopShooting":
+            def step_stop():
+                self.r.shooting = False
+                return True
+            return self._mk("named", step_stop)
+
+        # ReachedTarget / ResetReachedTarget / unknown: instant no-ops
+        return self._mk("noop", lambda: True)
 
 class Sim:
     def __init__(self, root):
@@ -1071,15 +1122,16 @@ class Sim:
         self.robs = [
             R(4.52, 7.36, 0.0, "B1", "Blue Top (L)", "Blue", "#8be9fd"),
             R(4.52, 0.64, 0.0, "B2", "Blue Bottom (R)", "Blue", "#50fa7b"),
-            R(FL - 4.52, 7.36, math.pi, "R1", "Red Top (L)", "Red", "#ff5555"),
-            R(FL - 4.52, 0.64, math.pi, "R2", "Red Bottom (R)", "Red", "#ffb86c")
+            R(FL - 4.52, FW - 7.36, math.pi, "R1", "Red Bottom (L)", "Red", "#ff5555"),
+            R(FL - 4.52, FW - 0.64, math.pi, "R2", "Red Top (R)", "Red", "#ffb86c")
         ]
         self.engs = [E(r, self.fld) for r in self.robs]
         self.cfgs = [
             {"mx": False, "my": False, "def": "L-Double-Tap-Trench-Depot.auto"},
             {"mx": False, "my": False, "def": "R-Double-Tap-Trench.auto"},
-            {"mx": True, "my": False, "def": "L-Double-Tap-Trench-Depot.auto"},
-            {"mx": True, "my": False, "def": "R-Double-Tap-Trench.auto"},
+            # Red uses PathPlanner's default rotational (180 deg) alliance flip, matching FlippingUtil
+            {"mx": True, "my": True, "def": "L-Double-Tap-Trench-Depot.auto"},
+            {"mx": True, "my": True, "def": "R-Double-Tap-Trench.auto"},
         ]
 
         self.spd = 1.0
