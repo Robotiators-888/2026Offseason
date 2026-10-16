@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.7782000748194084,
-        "y": 6.289323470385709
+        "x": 1.9066360660841433,
+        "y": 6.322579263395648
       },
       "isLocked": false,
       "linkedName": "L-Shoot-Bump"
@@ -17,15 +17,15 @@
     {
       "anchor": {
         "x": 3.2323253012048188,
-        "y": 7.367951807228916
+        "y": 7.368
       },
       "prevControl": {
-        "x": 2.818276619522206,
-        "y": 7.12988421810725
+        "x": 2.722397422144402,
+        "y": 7.000719884637069
       },
       "nextControl": {
-        "x": 3.4490542299732585,
-        "y": 7.492565496023063
+        "x": 3.478565304530905,
+        "y": 7.5453565646091265
       },
       "isLocked": false,
       "linkedName": null
@@ -36,8 +36,8 @@
         "y": 7.367951807228916
       },
       "prevControl": {
-        "x": 4.0140106743743225,
-        "y": 7.404366753654713
+        "x": 4.019793548828621,
+        "y": 7.390791255777574
       },
       "nextControl": null,
       "isLocked": false,
@@ -47,7 +47,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1,
-      "rotationDegrees": -22.249
+      "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],
