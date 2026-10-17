@@ -132,8 +132,8 @@ public class SUB_Shooter extends SubsystemBase {
 
                 shooterLowConfig.Feedback.SensorToMechanismRatio=Constants.Shooter.kGearRatio;
 
-                shooterLeader.getConfigurator().apply(shooterConfig);
-                shooterFollower.getConfigurator().apply(shooterConfig);
+                shooterLeader.getConfigurator().apply(shooterLowConfig);
+                shooterFollower.getConfigurator().apply(shooterLowConfig);
                 // Synchronize bottom flywheel to top flywheel
                 shooterFollower.setControl(
                     new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
@@ -150,14 +150,22 @@ public class SUB_Shooter extends SubsystemBase {
          * @return Calculated target exit velocity in RPM.
          */
         @Deprecated
-        public static double findoptimalRPM(final double distance, final double angle) {
-                double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
+        public static double findoptimalRPM(final double distance, final double angle, final double heightMeters) {
+                double denominator = 2 * (distance * Math.tan(angle) - heightMeters);
+                if (denominator <= 0.0 || Math.abs(Math.cos(angle)) < 1e-4) {
+                        return Constants.Shooter.kRPMIdle;
+                }
                 double exitvelocity = (1 / Math.cos(angle))
                     * Math.sqrt((Constants.Shooter.kGRAVITATIONAL_CONSTANT * distance * distance)
-                        / (2 * (distance * Math.tan(angle) - height)));
+                        / denominator);
                 double exitRPM = ((720 / Constants.Shooter.ShooterDiameter) * exitvelocity * 3.281)
                     / (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI);
-                return exitRPM;
+                return (Double.isNaN(exitRPM) || Double.isInfinite(exitRPM)) ? Constants.Shooter.kRPMIdle : exitRPM;
+        }
+
+        @Deprecated
+        public static double findoptimalRPM(final double distance, final double angle) {
+                return findoptimalRPM(distance, angle, Units.inchesToMeters(Constants.Hood.ScoreHeight));
         }
 
         /**

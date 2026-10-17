@@ -194,7 +194,7 @@ public class RobotContainer {
                         }
                 }));
                 roller.setDefaultCommand(new RunCommand(() -> { roller.stop(); }, roller));
-                linear.setDefaultCommand(new RunCommand(() -> { linear.forward(); }, linear));
+                linear.setDefaultCommand(new RunCommand(() -> { linear.BangBangExtender();}, linear));
                 shooter.setDefaultCommand(
                     new RunCommand(() -> { shooter.setRPM(Constants.Shooter.kRPMIdle); }, shooter));
                 index.setDefaultCommand(new RunCommand(() -> { index.set(0); }, index));
@@ -232,10 +232,10 @@ public class RobotContainer {
                 // return skibidi2;
                 // // return Commands.none();
 
-                return new CMD_AimBot(drivetrain, photonVision, index,
-                    hood, metering, shooter, linear, roller);
+                // return new CMD_AimBot(drivetrain, photonVision, index,
+                //     hood, metering, shooter, linear, roller);
 
-                // return autoChooser.getSelected();
+                return autoChooser.getSelected();
         }
 
         /**

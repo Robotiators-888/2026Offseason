@@ -136,6 +136,12 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel10BreakerFault");
                 if (powerDistribution.getFaults().Channel11BreakerFault)
                         Alert.registerError("PDH Channel11BreakerFault");
+                if (powerDistribution.getFaults().Channel12BreakerFault)
+                        Alert.registerError("PDH Channel12BreakerFault");
+                if (powerDistribution.getFaults().Channel13BreakerFault)
+                        Alert.registerError("PDH Channel13BreakerFault");
+                if (powerDistribution.getFaults().Channel14BreakerFault)
+                        Alert.registerError("PDH Channel14BreakerFault");
                 if (powerDistribution.getFaults().Channel15BreakerFault)
                         Alert.registerError("PDH Channel15BreakerFault");
                 if (powerDistribution.getFaults().Channel16BreakerFault)
@@ -166,10 +172,10 @@ public class RobotTelemetry {
                         Alert.registerError("PDH Channel6BreakerFault");
                 if (powerDistribution.getFaults().Channel7BreakerFault)
                         Alert.registerError("PDH Channel7BreakerFault");
-                if (powerDistribution.getFaults().Channel18BreakerFault)
-                        Alert.registerError("PDH Channel18BreakerFault");
+                if (powerDistribution.getFaults().Channel8BreakerFault)
+                        Alert.registerError("PDH ChannelBreakerFault");
                 if (powerDistribution.getFaults().Channel9BreakerFault)
-                        Alert.registerError("PDH Channel19BreakerFault");
+                        Alert.registerError("PDH Channel9BreakerFault");
         }
 
         /**

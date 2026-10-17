@@ -49,8 +49,8 @@ public class CMD_Shuttle extends RunCommand {
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric()
                 .withRotationalDeadband(0)
-                .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-                .withCenterOfRotation(shooterOffset);
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
 
         /**
          * Motion profiling constraints for rotation (0.75 rot/s max velocity, 1.5 rot/s^2 max
@@ -151,15 +151,15 @@ public class CMD_Shuttle extends RunCommand {
 
                 SmartDashboard.putBoolean("CMD_AimBot/isThetaErrorCorrect", isThetaErrorCorrect);
                 double distance = shooterPosition.getDistance(targetTranslation);
-                double hoodAngle = SUB_Hood.findoptimalangle(distance);
-                SmartDashboard.putNumber("CMD_AimBot/Target Distance (m)", distance);
-                SmartDashboard.putNumber("CMD_AimBot/Target Hood Angle (°)", 90 - Units.radiansToDegrees(hoodAngle));
+                double hoodAngle = SUB_Hood.findoptimalangle(distance, 0.0);
+                SmartDashboard.putNumber("CMD_Shuttle/Target Distance (m)", distance);
+                SmartDashboard.putNumber("CMD_Shuttle/Target Hood Angle (°)", 90 - Units.radiansToDegrees(hoodAngle));
                 hood.setPosition(Units.radiansToDegrees(hoodAngle));
-                double targetFlywheelRPM = SUB_Shooter.findoptimalRPM(distance,hoodAngle);
-                SmartDashboard.putNumber("CMD_AimBot/Target Flywheel RPM", targetFlywheelRPM);
+                double targetFlywheelRPM = SUB_Shooter.findoptimalRPM(distance, hoodAngle, 0.0);
+                SmartDashboard.putNumber("CMD_Shuttle/Target Flywheel RPM", targetFlywheelRPM);
                 shooter.setRPM(targetFlywheelRPM);
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
-                SmartDashboard.putNumber("CMD_AimBot/Exit Velocity (m per s)",exitVelocity);
+                SmartDashboard.putNumber("CMD_Shuttle/Exit Velocity (m per s)", exitVelocity);
 
                 boolean isShooterReady = shooter.atDesiredRPM();
 
@@ -179,9 +179,9 @@ public class CMD_Shuttle extends RunCommand {
                 if (isThetaErrorCorrect && isLocked) {
                         drivetrain.setControl(brakeRequest);
                 } else {
-                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
+                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed
                             + Math.copySign(
-                                Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                                Units.degreesToRadians(9), omegaSpeed)));
                 }
         }
 

@@ -93,9 +93,12 @@ public class SUB_Hood extends SubsystemBase {
          * @param distance Horizontal distance to target in meters.
          * @return Calculated optimal launch angle in radians.
          */
+        public static double findoptimalangle(final double distance, final double heightMeters) {
+                return (Math.PI / 4.0) + 0.5 * Math.atan2(heightMeters, distance);
+        }
+
         public static double findoptimalangle(final double distance) {
-                double height = Units.inchesToMeters(Constants.Hood.ScoreHeight);
-                return (Math.PI / 4.0) + 0.5 * Math.atan2(height, distance);
+                return findoptimalangle(distance, Units.inchesToMeters(Constants.Hood.ScoreHeight));
         }
 
         /**
