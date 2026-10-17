@@ -1,0 +1,120 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-Trench-NZCenter-FirstTap"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-NZCenter-Trench-FirstTap"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-Trench-TrenchShoot"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "ShootAutoAim"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.5
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-TrenchShoot-Trench"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-Trench-NZCenter-SecondTap"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-NZCenter-Trench-SecondTap"
+                      }
+                    },
+                    {
+                      "type": "path",
+                      "data": {
+                        "pathName": "R-Trench-TrenchShoot"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootAutoAim"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
