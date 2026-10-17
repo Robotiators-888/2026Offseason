@@ -292,7 +292,7 @@ public final class Constants {
                 public static final double kG = 0.0;
 
                 public static final double kHoodTolerance =
-                    (1.0/360.0); // Tolerance for hood position in rotations
+                    (2.0/360.0); // Tolerance for hood position in rotations
         }
 
         /** Metering system motor CAN IDs. */
