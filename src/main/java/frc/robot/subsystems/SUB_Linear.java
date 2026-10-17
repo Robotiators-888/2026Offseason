@@ -109,7 +109,7 @@ public class SUB_Linear extends SubsystemBase {
 
         public void BangBangExtender() {
                 if (linear.getEncoder().getPosition()<15.6) {
-                        linear.set(.75);
+                        linear.set(Constants.Linear.kLINEAR_MOTOR_SPEED * 2);
                 } else {
                         linear.stopMotor();
                 }

@@ -253,6 +253,7 @@ public class ControllerUtil {
                     .onFalse(new InstantCommand(() -> hood.resetEncoder(), hood));
 
                 Driver2.leftTrigger().whileTrue(new RunCommand(() -> hood.setPosition(hoodPosition), hood));
+                Driver2.povLeft().whileTrue(new RunCommand(()->linear.set(Constants.Linear.kLINEAR_MOTOR_SPEED*2), linear));
         }
 
         @Deprecated
