@@ -49,8 +49,8 @@ public class CMD_Shuttle extends RunCommand {
         private final SwerveRequest.FieldCentric drive =
             new SwerveRequest.FieldCentric()
                 .withRotationalDeadband(0)
-                .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-                .withCenterOfRotation(shooterOffset);
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
 
         /**
          * Motion profiling constraints for rotation (0.75 rot/s max velocity, 1.5 rot/s^2 max
