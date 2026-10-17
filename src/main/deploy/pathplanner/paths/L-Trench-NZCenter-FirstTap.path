@@ -1,0 +1,75 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.521795180722892,
+        "y": 7.367951807228916
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.74613777626608,
+        "y": 7.367951807228916
+      },
+      "isLocked": false,
+      "linkedName": "L-Start-Trench"
+    },
+    {
+      "anchor": {
+        "x": 8.295877318116975,
+        "y": 7.056176890156919
+      },
+      "prevControl": {
+        "x": 8.051445783132529,
+        "y": 7.63021686746988
+      },
+      "nextControl": {
+        "x": 8.39844404905624,
+        "y": 6.815302062343945
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.791269614835947,
+        "y": 5.4
+      },
+      "prevControl": {
+        "x": 7.996807228915662,
+        "y": 5.750650602409639
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "L-NZCenter"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0018903591682455,
+      "rotationDegrees": -100.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.25,
+    "maxAcceleration": 5.2,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0.0,
+    "rotation": -100.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0.0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

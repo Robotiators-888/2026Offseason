@@ -28,7 +28,12 @@
       "linkedName": "L-TrenchShoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -47,7 +52,7 @@
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 5.0,
+    "velocity": 2.0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true

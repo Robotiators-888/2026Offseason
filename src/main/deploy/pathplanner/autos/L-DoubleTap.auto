@@ -15,13 +15,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "L-Trench-NZCenter"
+                        "pathName": "L-Trench-NZCenter-FirstTap"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "L-NZCenter-Trench"
+                        "pathName": "L-NZCenter-Trench-FirstTap"
                       }
                     },
                     {
@@ -78,13 +78,13 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "L-Trench-NZCenter"
+                        "pathName": "L-Trench-NZCenter-SecondTap"
                       }
                     },
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "L-NZCenter-Trench"
+                        "pathName": "L-NZCenter-Trench-SecondTap"
                       }
                     },
                     {
