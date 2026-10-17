@@ -232,10 +232,10 @@ public class RobotContainer {
                 // return skibidi2;
                 // // return Commands.none();
 
-                return new CMD_AimBot(drivetrain, photonVision, index,
-                    hood, metering, shooter, linear, roller);
+                // return new CMD_AimBot(drivetrain, photonVision, index,
+                //     hood, metering, shooter, linear, roller);
 
-                // return autoChooser.getSelected();
+                return autoChooser.getSelected();
         }
 
         /**
