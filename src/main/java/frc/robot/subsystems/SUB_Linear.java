@@ -107,6 +107,14 @@ public class SUB_Linear extends SubsystemBase {
                     linear.getEncoder().getPosition(), position));
         }
 
+        public void BangBangExtender() {
+                if (linear.getEncoder().getPosition()<15.6) {
+                        linear.set(.75);
+                } else {
+                        linear.stopMotor();
+                }
+        }
+
         /**
          * Drives linear mechanism toward retracted backward setpoint using specified PIDController.
          *
