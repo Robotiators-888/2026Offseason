@@ -1,9 +1,12 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -21,10 +24,10 @@ import frc.robot.utils.Alert;
  */
 public class SUB_Index extends SubsystemBase {
         /** Left indexer SPARK Max motor controller (Follower). */
-        public final SparkMax LeftIndexer;
+        public final SparkFlex LeftIndexer;
 
         /** Right indexer SPARK Max motor controller (Leader). */
-        public final SparkMax RightIndexer;
+        public final SparkFlex RightIndexer;
 
         private static SUB_Index INSTANCE = null;
 
@@ -48,25 +51,25 @@ public class SUB_Index extends SubsystemBase {
         private SUB_Index() {
                 // Defines motors for indexing and metering
                 LeftIndexer =
-                    new SparkMax(Constants.Index.kINDEX_MOTOR_CANID, MotorType.kBrushless);
+                    new SparkFlex(Constants.Index.kINDEX_MOTOR_CANID, MotorType.kBrushless);
                 RightIndexer =
-                    new SparkMax(Constants.Index.kINDEX_FOLLOWER_WHEEL_CANID, MotorType.kBrushless);
+                    new SparkFlex(Constants.Index.kINDEX_FOLLOWER_WHEEL_CANID, MotorType.kBrushless);
 
                 // Configure main indexer motor 
-                SparkMaxConfig RightIndexConfig = new SparkMaxConfig();
+                SparkFlexConfig RightIndexConfig = new SparkFlexConfig();
                 RightIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
                 RightIndexConfig.inverted(false);
                 RightIndexConfig.signals.appliedOutputPeriodMs(10);
                 RightIndexConfig.idleMode(IdleMode.kCoast);
                 RightIndexer.configure(RightIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                    SparkMax.PersistMode.kPersistParameters);
+                    SparkFlex.PersistMode.kPersistParameters);
 
-                SparkMaxConfig LeftIndexConfig = new SparkMaxConfig();
+                SparkFlexConfig LeftIndexConfig = new SparkFlexConfig();
                 LeftIndexConfig.smartCurrentLimit(Constants.Index.kSmartCurrentLimit);
                 LeftIndexConfig.idleMode(IdleMode.kCoast);
                 LeftIndexConfig.follow(RightIndexer, true);
                 LeftIndexer.configure(LeftIndexConfig, SparkMax.ResetMode.kResetSafeParameters,
-                   SparkMax.PersistMode.kPersistParameters);
+                   SparkFlex.PersistMode.kPersistParameters);
 
                 RightIndexer.getEncoder().setPosition(0);
                 LeftIndexer.getEncoder().setPosition(0);
@@ -88,7 +91,7 @@ public class SUB_Index extends SubsystemBase {
          * @return Average velocity of the indexer in RPM.
          */
         public double indexRPM() {
-                return (RightIndexer.getEncoder().getVelocity()
+                return (Math.abs(RightIndexer.getEncoder().getVelocity())
                            + Math.abs(LeftIndexer.getEncoder().getVelocity()))
                     / 2;
         }
@@ -131,9 +134,9 @@ public class SUB_Index extends SubsystemBase {
                 SmartDashboard.putNumber(
                     "Index/Left Index Motor Temp", LeftIndexer.getMotorTemperature());
 
-                Alert.alertNeoFaults(RightIndexer);
-                Alert.alertNeoWarnings(RightIndexer);
-                Alert.alertNeoFaults(LeftIndexer);
-                Alert.alertNeoWarnings(LeftIndexer);
+                // Alert.alertNeoFaults(RightIndexer);
+                // Alert.alertNeoWarnings(RightIndexer);
+                // Alert.alertNeoFaults(LeftIndexer);
+                // Alert.alertNeoWarnings(LeftIndexer);
         }
 }

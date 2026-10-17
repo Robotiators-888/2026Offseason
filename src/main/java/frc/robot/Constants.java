@@ -167,9 +167,9 @@ public final class Constants {
                 public static final int kINDEX_FOLLOWER_WHEEL_CANID = 42;
 
                 /** Operating voltage for spindexer motor in volts. */
-                public static final double kINDEX_MOTOR_VOLTS = 8.5;
+                public static final double kINDEX_MOTOR_VOLTS = 6.0;
 
-                public static final int kSmartCurrentLimit = 15; // Amps
+                public static final int kSmartCurrentLimit = 40; // Amps
         }
 
         /** Field geometry and physical dimension constants in meters. */
@@ -267,7 +267,7 @@ public final class Constants {
                 public static final PIDController kHOOD_PID_CONTROLLER = new PIDController(4, 0, 0);
 
                 /** Scoring target height in inches. */
-                public static final double ScoreHeight = 55; // Hood launches balls approx 25 inches off the ground. Since the ball is 3 inches in radius, it must score at least at 72+3 inches in height to score, 25+55 = 80 giving a good buffer while still maitning all possible shots we take.
+                public static final double ScoreHeight = 65; // Hood launches balls approx 25 inches off the ground. Since the ball is 3 inches in radius, it must score at least at 72+3 inches in height to score, 25+55 = 80 giving a good buffer while still maitning all possible shots we take.
 
                 /** Gear reduction ratio for hood to belt (12:124) and for belt to motor (2:1). */
                 public static final double kGearRatio = (124.0 / 12.0) * (2.0/1.0);

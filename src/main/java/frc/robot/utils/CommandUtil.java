@@ -80,5 +80,7 @@ public class CommandUtil {
                 NamedCommands.registerCommand("StopShooting",
                     Commands.parallel(new InstantCommand(() -> { index.set(0); }, index),
                         new InstantCommand(() -> shooter.stop(), shooter)));
+
+                NamedCommands.registerCommand("ResetHood", new RunCommand(() -> hood.resetSafe(), hood).until(()->hood.atDesiredAngle()));
         }
 }

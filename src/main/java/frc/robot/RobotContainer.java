@@ -147,7 +147,8 @@ public class RobotContainer {
             new SwerveRequest.FieldCentric().withDriveRequestType(DriveRequestType.Velocity);
 
         /** Cache for tracking auto name changes in dashboard. */
-        private static String autoName, newAutoName;
+        private static String autoName = "Do Nothing";
+        private static String newAutoName;
 
         /** Previous alliance state tracker. */
         Optional<Alliance> lastAlliance = Optional.empty();
@@ -248,7 +249,7 @@ public class RobotContainer {
                 drivetrain.robotPosePublisher.set(drivetrain.getPose());
                 field.setRobotPose(drivetrain.getPose());
                 SmartDashboard.putData("Drivetrain/Field", field);
-                SmartDashboard.putNumber(autoName, listIndex);
+                // SmartDashboard.putNumber(autoName, listIndex);
                 SmartDashboard.putNumber(
                     "Shooter/Set RPM (In RobotContainer)", controllerUtil.targetRPM);
                 SmartDashboard.putNumber("Drivetrain/Angular Velocity Error (dps)",

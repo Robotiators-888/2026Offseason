@@ -147,7 +147,7 @@ public class CMD_AimBotAuto extends RunCommand {
          */
         @Override
         public void execute() {
-                roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM);
+                roller.setRPM(0);
                 // Set up poses
                 Pose2d currentPose = drivetrain.getPose();
 
@@ -229,6 +229,7 @@ public class CMD_AimBotAuto extends RunCommand {
         public void end(boolean interrupted) {
                 running = false;
                 SUB_Shooter.isShooting = false;
+                roller.stop();
         }
 
         /**
