@@ -86,6 +86,8 @@ public class SUB_Roller extends SubsystemBase {
                     Constants.Roller.kSupplyCurrentLowerLimit;
                 talonConfig.CurrentLimits.SupplyCurrentLowerTime =
                     Constants.Roller.kSupplyCurrentLowerTime;
+                talonConfig.CurrentLimits.StatorCurrentLimitEnable=true;
+                talonConfig.CurrentLimits.StatorCurrentLimit=800;
                 talonConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
                 talonConfig.Slot0.withKS(Constants.Roller.kS)
                     .withKV(Constants.Roller.kV)

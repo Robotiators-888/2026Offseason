@@ -3,6 +3,8 @@ package frc.robot.utils;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
@@ -16,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.CommandSwerveDrivetrain;
 import frc.robot.Constants;
+import frc.robot.Constants.Operator;
 import frc.robot.commands.CMD_AimBot;
 import frc.robot.commands.CMD_Shuttle;
 import frc.robot.subsystems.SUB_Hood;
@@ -168,7 +171,7 @@ public class ControllerUtil {
                     () -> { roller.setRPM(Constants.Roller.kROLLER_MOTOR_RPM); }, roller));
                 // Right Trigger: AimBot while held
                 Driver1.rightTrigger().whileTrue(new CMD_AimBot(drivetrain, photonVision, index,
-                    hood, metering, shooter, linear, roller));
+                    hood, metering, shooter, linear, roller, ()->MathUtil.applyDeadband(-Driver1.getLeftX(), Operator.kDriveDeadband)));
                 // Left Stick Button: Toggle field-relative driving mode
                 Driver1.leftStick().onTrue(
                     new InstantCommand(() -> { fieldRelative = !fieldRelative; }));

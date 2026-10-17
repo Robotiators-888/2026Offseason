@@ -32,6 +32,7 @@ import frc.robot.subsystems.SUB_Shooter;
 import pabeles.concurrency.IntOperatorTask.Max;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 /**
  * Command for automated vision-guided target alignment, hood positioning, and shooting feed
@@ -53,6 +54,7 @@ public class CMD_AimBot extends RunCommand {
         private final SUB_Shooter shooter;
         private final SUB_Linear linear;
         private final SUB_Roller roller;
+        private DoubleSupplier yInput;
         private boolean isLocked;
 
         /** Physical offsets for targeting calibration */
@@ -96,7 +98,7 @@ public class CMD_AimBot extends RunCommand {
          */
         public CMD_AimBot(CommandSwerveDrivetrain drivetrain, SUB_PhotonVision photonVision,
             SUB_Index index, SUB_Hood hood, SUB_Metering metering, SUB_Shooter shooter,
-            SUB_Linear linear, SUB_Roller roller) {
+            SUB_Linear linear, SUB_Roller roller, DoubleSupplier yInput) {
                 super(() -> {});
                 this.drivetrain = drivetrain;
                 this.photonVision = photonVision;
@@ -106,6 +108,7 @@ public class CMD_AimBot extends RunCommand {
                 this.metering = metering;
                 this.linear = linear;
                 this.roller = roller;
+                this.yInput = yInput;
                 robotAngleController.enableContinuousInput(-Math.PI, Math.PI);
                 addRequirements(drivetrain, metering, index, hood, shooter, linear, roller);
         }
@@ -185,8 +188,8 @@ public class CMD_AimBot extends RunCommand {
                 SmartDashboard.putNumber("CMD_AimBot/Target Hood Angle (°)", 90 - Units.radiansToDegrees(hoodAngle));
                 hood.setPosition(Units.radiansToDegrees(hoodAngle));
                 double targetFlywheelRPM = SUB_Shooter.findoptimalRPM(distance,hoodAngle);
-                SmartDashboard.putNumber("CMD_AimBot/Target Flywheel RPM", targetFlywheelRPM);
-                shooter.setRPM(targetFlywheelRPM);
+                SmartDashboard.putNumber("CMD_AimBot/Target Flywheel RPM", targetFlywheelRPM+200*yInput.getAsDouble());
+                shooter.setRPM(targetFlywheelRPM+200*yInput.getAsDouble());
                 double exitVelocity = (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI * Constants.Shooter.ShooterDiameter * targetFlywheelRPM) / (720 * 3.281);
                 SmartDashboard.putNumber("CMD_AimBot/Exit Velocity (m per s)",exitVelocity);
                 

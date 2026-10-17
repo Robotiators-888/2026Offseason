@@ -49,10 +49,10 @@ public final class Constants {
                 /** Gear ratio from motor to shooter flywheel (34:36 reduction). */
                 public static final double kGearRatio = 1.0588;
 
-                public static final double kSHOOTER_FLYWHEEL_kS = 25.0;//0.19;
+                public static final double kSHOOTER_FLYWHEEL_kS = 30.0;//0.19;
                 public static final double kSHOOTER_FLYWHEEL_kV = 0.0;//0.12+0.02; //Standard free speed value :skull:
                 public static final double kSHOOTER_FLYWHEEL_kA = 0.0;
-                public static final double kSHOOTER_FLYWHEEL_kP = 8.0;//0.15;
+                public static final double kSHOOTER_FLYWHEEL_kP = 10.0;//0.15;
                 public static final double kSHOOTER_FLYWHEEL_kI = 0.0;
                 public static final double kSHOOTER_FLYWHEEL_kD = 0.0;
 
@@ -102,7 +102,7 @@ public final class Constants {
                 // public static final double kROLLER_MOTOR_VOLTAGE = 10.91276304645254;
 
                 /** Target RPM for intake roller motors. */
-                public static final double kROLLER_MOTOR_RPM = 1500;
+                public static final double kROLLER_MOTOR_RPM = 2500;
 
                 /** Outer diameter of the intake roller in inches. */
                 public static final double kRollerDiameter = 3.0;
@@ -288,7 +288,7 @@ public final class Constants {
                 public static final double kA = 0.0;
                 public static final double kP = 150.0;
                 public static final double kI = 0.0;
-                public static final double kD = 1.5;
+                public static final double kD = 0.0;
                 public static final double kG = 0.0;
 
                 public static final double kHoodTolerance =
