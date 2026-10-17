@@ -29,6 +29,8 @@ import frc.robot.subsystems.SUB_Metering;
 import frc.robot.subsystems.SUB_PhotonVision;
 import frc.robot.subsystems.SUB_Roller;
 import frc.robot.subsystems.SUB_Shooter;
+import pabeles.concurrency.IntOperatorTask.Max;
+
 import java.util.Optional;
 
 /**
@@ -208,9 +210,9 @@ public class CMD_AimBot extends RunCommand {
                 if (isThetaErrorCorrect && isLocked) {
                     drivetrain.setControl(brakeRequest);
                 } else {
-                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed
+                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
                             + Math.copySign(
-                                Units.degreesToRadians(9), omegaSpeed)));
+                                Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
                 }
 
         }
