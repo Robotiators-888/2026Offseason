@@ -210,9 +210,9 @@ public class CMD_AimBot extends RunCommand {
                 if (isThetaErrorCorrect && isLocked) {
                     drivetrain.setControl(brakeRequest);
                 } else {
-                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed * MaxAngularRate
+                        drivetrain.setControl(drive.withRotationalRate(omegaSpeed
                             + Math.copySign(
-                                Units.degreesToRadians(9), omegaSpeed * MaxAngularRate)));
+                                Units.degreesToRadians(9), omegaSpeed)));
                 }
 
         }
