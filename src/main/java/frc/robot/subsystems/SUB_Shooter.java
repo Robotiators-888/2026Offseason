@@ -132,8 +132,8 @@ public class SUB_Shooter extends SubsystemBase {
 
                 shooterLowConfig.Feedback.SensorToMechanismRatio=Constants.Shooter.kGearRatio;
 
-                shooterLeader.getConfigurator().apply(shooterConfig);
-                shooterFollower.getConfigurator().apply(shooterConfig);
+                shooterLeader.getConfigurator().apply(shooterLowConfig);
+                shooterFollower.getConfigurator().apply(shooterLowConfig);
                 // Synchronize bottom flywheel to top flywheel
                 shooterFollower.setControl(
                     new Follower(shooterLeader.getDeviceID(), MotorAlignmentValue.Aligned));
