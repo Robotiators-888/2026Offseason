@@ -187,6 +187,7 @@ public class ControllerUtil {
 
                 // Left Trigger: Manual Shooter RPM and Hood control while held
                 Driver2.rightTrigger().whileTrue(new RunCommand(() -> {
+                        SUB_Shooter.isShooting = true;
                         shooter.setRPM(targetRPM);
                         double exitVelocity =
                             (Constants.Shooter.kSHOOTER_COMPRESSION_RATIO * Math.PI
@@ -210,7 +211,7 @@ public class ControllerUtil {
                                 .orElse(drivetrain.getPose().getTranslation()));
                         // hood.setPosition(Units.radiansToDegrees(
                         //     SUB_Hood.calculateLaunchAngle(distance, exitVelocity, true)));
-                }, shooter));
+                }, shooter)).onFalse(new InstantCommand(()->SUB_Shooter.isShooting=false));
                 // Right Trigger: Manual Indexer control while held
                 Driver2.rightBumper().whileTrue(new RunCommand(
                     () -> {
